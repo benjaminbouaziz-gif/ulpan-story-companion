@@ -11,7 +11,23 @@ import {
   adminRestoreSectionVersion,
   adminSaveSection,
   adminSectionVersions,
+  adminTranslatePage,
 } from "@/lib/admin-pages.functions";
+
+const BADGES: Record<string, string> = {
+  auto: "auto",
+  human: "corrigé à la main",
+  stale: "à retraduire",
+  stale_human: "à retraduire (version humaine)",
+  empty: "vide",
+  none: "",
+};
+
+function Badge({ state }: { state: string | undefined }) {
+  const label = state ? BADGES[state] : undefined;
+  if (!label) return null;
+  return <span className="label text-secondary-text ml-2">· {label}</span>;
+}
 
 export const Route = createFileRoute("/admin/pages")({
   head: () => ({
@@ -46,6 +62,7 @@ function PagesEditor() {
   const remove = useServerFn(adminDeleteSection);
   const versions = useServerFn(adminSectionVersions);
   const restore = useServerFn(adminRestoreSectionVersion);
+  const translatePage = useServerFn(adminTranslatePage);
 
   const [slug, setSlug] = useState("methode");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -61,6 +78,14 @@ function PagesEditor() {
   });
 
   const sections = listQuery.data?.sections ?? [];
+  const statuses = (listQuery.data?.statuses ?? {}) as Record<string, Record<string, string>>;
+  const toRetranslate = Object.values(statuses).reduce(
+    (n, fields) =>
+      n +
+      Object.values(fields).filter((v) => v === "stale" || v === "stale_human" || v === "empty")
+        .length,
+    0,
+  );
 
   useEffect(() => {
     const next: Record<string, Draft> = {};
@@ -117,6 +142,14 @@ function PagesEditor() {
     },
   });
 
+  const translateMutation = useMutation({
+    mutationFn: async (force: boolean) => translatePage({ data: { slug, force } }),
+    onSuccess: (r) => {
+      setMessage(r.ok ? `Anglais produit (${r.translated} champs).` : (r.error ?? "Échec."));
+      void qc.invalidateQueries({ queryKey: ["admin", "page-sections", slug] });
+    },
+  });
+
   const restoreMutation = useMutation({
     mutationFn: async (version_id: string) => restore({ data: { version_id } }),
     onSuccess: (r) => {
@@ -140,14 +173,6 @@ function PagesEditor() {
     );
   }
 
-  const englishMissing = sections.filter(
-    (s) =>
-      (s.title_fr && !s.title_en) ||
-      (s.body_fr && !s.body_en) ||
-      (s.kind === "steps" || s.kind === "faq" || s.kind === "facts"
-        ? JSON.stringify(s.data ?? {}).includes('_en":""')
-        : false),
-  ).length;
 
   const set = (id: string, patch: Partial<Draft>) =>
     setDrafts((d) => (d[id] ? { ...d, [id]: { ...d[id]!, ...patch } } : d));
@@ -165,14 +190,20 @@ function PagesEditor() {
         />
       </label>
 
-      {englishMissing > 0 ? (
-        <p className="label text-secondary-text mt-4">
-          Anglais incomplet : {englishMissing} section(s) sans traduction. Cette page ne sera
-          pas publiée sur ulpanstory.com tant qu'elles ne sont pas remplies.
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <p className="label text-secondary-text">
+          {toRetranslate > 0
+            ? `${toRetranslate} champ(s) anglais à produire ou à retraduire.`
+            : "Anglais à jour."}
         </p>
-      ) : (
-        <p className="label text-secondary-text mt-4">Anglais complet.</p>
-      )}
+        <button
+          type="button"
+          onClick={() => translateMutation.mutate(false)}
+          className="label touch border-line border px-4"
+        >
+          Traduire toute la page
+        </button>
+      </div>
 
       {message ? <p className="label mt-4">{message}</p> : null}
 
@@ -198,6 +229,7 @@ function PagesEditor() {
               </label>
               <label className="label mt-3 block">
                 Titre (en)
+                <Badge state={statuses[s.id]?.["title"]} />
                 <textarea
                   value={d.title_en}
                   onChange={(e) => set(s.id, { title_en: e.target.value })}
@@ -216,6 +248,7 @@ function PagesEditor() {
               </label>
               <label className="label mt-3 block">
                 Corps (en)
+                <Badge state={statuses[s.id]?.["body"]} />
                 <textarea
                   value={d.body_en}
                   onChange={(e) => set(s.id, { body_en: e.target.value })}
