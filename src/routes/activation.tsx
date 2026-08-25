@@ -37,26 +37,36 @@ function ActivationPage() {
   const finish = async () => {
     setState("opening");
     const qr = window.localStorage.getItem(QR_KEY);
-    const r = await confirm({ data: { qr_code: qr } });
-    setState("done");
-    if (r.bookSlug) {
-      void navigate({ to: "/compagnon/$book_slug", params: { book_slug: r.bookSlug } });
-    } else {
-      void navigate({ to: "/compagnon" });
+    try {
+      const r = await confirm({ data: { qr_code: qr } });
+      setState("done");
+      if (r.bookSlug) {
+        void navigate({ to: "/compagnon/$book_slug", params: { book_slug: r.bookSlug } });
+      } else {
+        void navigate({ to: "/compagnon" });
+      }
+    } catch {
+      // Session absente ou expirée : on revient au code à six chiffres.
+      setState("idle");
+      setError(t("access.codeError"));
     }
   };
 
   // Retour du lien magique : la session est déjà posée par le client.
   useEffect(() => {
     let cancelled = false;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) void finish();
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled || !data.session) return;
+      // On s'assure que le jeton est encore valide avant d'appeler le serveur.
+      const { data: user } = await supabase.auth.getUser();
+      if (!cancelled && user.user) void finish();
     });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const codeMutation = useMutation({
     mutationFn: async () => {
