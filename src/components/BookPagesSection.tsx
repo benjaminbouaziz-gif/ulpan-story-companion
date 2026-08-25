@@ -168,13 +168,38 @@ export function BookPagesSection({
       ) : null}
 
       <div className="mt-6 overflow-x-auto">
-        <BookSpread page={page} color={color} bookTitle={bookTitle} showGrid={grid} />
+        <div style={{ width: `${zoom * 100}%` }}>
+          <BookSpread page={page} color={color} bookTitle={bookTitle} showGrid={grid} />
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <p className="label text-secondary-text">
           {t("pages.chapter")} {page.chapter_no ?? "—"} · {t("pages.page")} {page.page_no}
         </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.max(1, Math.round((z - 0.5) * 2) / 2))}
+            disabled={zoom <= 1}
+            aria-label="Réduire"
+            className="label touch border-line border px-3 disabled:opacity-40"
+          >
+            −
+          </button>
+          <span className="label text-secondary-text w-12 text-center">
+            {Math.round(zoom * 100)} %
+          </span>
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.min(4, Math.round((z + 0.5) * 2) / 2))}
+            disabled={zoom >= 4}
+            aria-label="Agrandir"
+            className="label touch border-line border px-3 disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => setGrid((v) => !v)}
@@ -183,6 +208,7 @@ export function BookPagesSection({
           {grid ? t("pages.gridOff") : t("pages.grid")}
         </button>
       </div>
+
 
       {noteText ? <p className="label text-secondary-text mt-4">{noteText}</p> : null}
 
