@@ -29,7 +29,7 @@ export const Route = createFileRoute("/admin/extraits")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: SpreadEditor;
+  component: SpreadEditor,
 });
 
 function SpreadEditor() {
