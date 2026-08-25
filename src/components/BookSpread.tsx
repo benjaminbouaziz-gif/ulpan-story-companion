@@ -352,15 +352,18 @@ export function BookSpread({
   );
 
   const independentColumns = (
-    <>
-      <div
-        style={{
-          position: "absolute",
-          top: mm(gridTop),
-          left: mm(MM.marginSide),
-          width: mm(CONTENT_MM),
-        }}
-      >
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        marginTop: mm(gridTop),
+        marginBottom: mm(MM.marginBottom + MM.folioSize * 2),
+        paddingLeft: mm(MM.marginSide),
+        paddingRight: mm(MM.marginSide),
+        columnGap: mm(MM.marginSide * 2),
+      }}
+    >
+      <div style={{ width: mm(CONTENT_MM) }}>
         {blocks.map((b, i) => {
           const he = leftHebrew(b, page.support_kind);
           if (!he) return null;
@@ -371,14 +374,7 @@ export function BookSpread({
           );
         })}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          top: mm(gridTop),
-          left: mm(MM.pageW + MM.marginSide),
-          width: mm(CONTENT_MM),
-        }}
-      >
+      <div style={{ width: mm(CONTENT_MM) }}>
         <p
           style={{
             fontFamily: "var(--font-latin)",
@@ -392,7 +388,7 @@ export function BookSpread({
         </p>
         <KeysTable keys={page.keys} mm={mm} color={color} />
       </div>
-    </>
+    </div>
   );
 
   return (
