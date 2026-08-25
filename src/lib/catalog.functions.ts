@@ -1,20 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
+import { publicClient, toMirrorSegment } from "./catalog.server";
 
 export type Collection = Database["public"]["Tables"]["collections"]["Row"];
 export type Book = Database["public"]["Tables"]["books"]["Row"];
 export type Page = Database["public"]["Tables"]["pages"]["Row"];
 export type PageSection = Database["public"]["Tables"]["page_sections"]["Row"];
-
-function publicClient() {
-  return createClient<Database>(
-    process.env["SUPABASE_URL"]!,
-    process.env["SUPABASE_PUBLISHABLE_KEY"]!,
-    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-  );
-}
 
 export const getCollections = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
@@ -63,7 +55,7 @@ export const getBookBySlug = createServerFn({ method: "GET" })
       .select("*")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!book) return { book: null, collection: null };
+    if (!book) return { book: null, collection: null, segments: [] };
     let collection: Collection | null = null;
     if (book.collection_id) {
       const { data: c } = await supabase
@@ -73,7 +65,18 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         .maybeSingle();
       collection = (c as Collection) ?? null;
     }
-    return { book: book as Book, collection };
+    const { data: segments } = await supabase
+      .from("excerpt_segments")
+      .select("*")
+      .eq("book_id", book.id)
+      .eq("is_showcase", true)
+      .order("chapter_no", { ascending: true })
+      .order("sort_order", { ascending: true });
+    return {
+      book: book as Book,
+      collection,
+      segments: (segments ?? []).map(toMirrorSegment),
+    };
   });
 
 export const getPageBySlug = createServerFn({ method: "GET" })
@@ -93,3 +96,32 @@ export const getPageBySlug = createServerFn({ method: "GET" })
       .order("sort_order", { ascending: true });
     return { page: page as Page, sections: (sections ?? []) as PageSection[] };
   });
+
+/** Le passage vitrine : celui qui sert de démonstration du miroir. */
+export const getShowcaseSegments = createServerFn({ method: "GET" }).handler(async () => {
+  const supabase = publicClient();
+  const { data: book } = await supabase
+    .from("books")
+    .select("*")
+    .order("tome_no", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!book) return { book: null, collection: null, segments: [] };
+  let collection: Collection | null = null;
+  if (book.collection_id) {
+    const { data: c } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("id", book.collection_id)
+      .maybeSingle();
+    collection = (c as Collection) ?? null;
+  }
+  const { data: segments } = await supabase
+    .from("excerpt_segments")
+    .select("*")
+    .eq("book_id", book.id)
+    .eq("is_showcase", true)
+    .order("chapter_no", { ascending: true })
+    .order("sort_order", { ascending: true });
+  return { book: book as Book, collection, segments: (segments ?? []).map(toMirrorSegment) };
+});
