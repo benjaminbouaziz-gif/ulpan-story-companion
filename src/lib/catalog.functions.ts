@@ -128,6 +128,7 @@ export const getPageBySlug = createServerFn({ method: "GET" })
       page: null as Page | null,
       sections: [] as PageSection[],
       books: {} as Record<string, Book>,
+      colors: {} as Record<string, string | null>,
       spreads: {} as Record<string, SpreadBundle>,
     };
     const { data: page } = await supabase
@@ -153,10 +154,30 @@ export const getPageBySlug = createServerFn({ method: "GET" })
       ),
     );
     const books: Record<string, Book> = {};
+    const colors: Record<string, string | null> = {};
     const spreads: Record<string, SpreadBundle> = {};
     if (bookIds.length > 0) {
       const { data: bookRows } = await supabase.from("books").select("*").in("id", bookIds);
       for (const b of (bookRows ?? []) as Book[]) books[b.id] = b;
+
+      const collectionIds = Array.from(
+        new Set(
+          Object.values(books)
+            .map((b) => b.collection_id)
+            .filter((v): v is string => typeof v === "string"),
+        ),
+      );
+      const collections: Record<string, Collection> = {};
+      if (collectionIds.length > 0) {
+        const { data: rows } = await supabase
+          .from("collections")
+          .select("*")
+          .in("id", collectionIds);
+        for (const c of (rows ?? []) as Collection[]) collections[c.id] = c;
+      }
+      for (const b of Object.values(books)) {
+        colors[b.id] = (b.collection_id ? collections[b.collection_id]?.color_hex : null) ?? null;
+      }
 
       const spreadIds = sections
         .filter((s) => s.kind === "book_spread")
@@ -164,15 +185,6 @@ export const getPageBySlug = createServerFn({ method: "GET" })
         .filter((v): v is string => typeof v === "string" && !!books[v]);
       for (const id of Array.from(new Set(spreadIds))) {
         const book = books[id]!;
-        let collection: Collection | null = null;
-        if (book.collection_id) {
-          const { data: c } = await supabase
-            .from("collections")
-            .select("*")
-            .eq("id", book.collection_id)
-            .maybeSingle();
-          collection = (c as Collection) ?? null;
-        }
         const { data: rows } = await supabase
           .from("spread_paragraphs")
           .select("*")
@@ -180,13 +192,14 @@ export const getPageBySlug = createServerFn({ method: "GET" })
           .order("sort_order", { ascending: true });
         spreads[id] = {
           book,
-          collection,
+          collection: (book.collection_id ? collections[book.collection_id] : null) ?? null,
           paragraphs: (rows ?? []).map(toSpreadParagraph),
         };
       }
     }
 
-    return { page: page as Page | null, sections, books, spreads };
+    return { page: page as Page | null, sections, books, colors, spreads };
+
   });
 
 

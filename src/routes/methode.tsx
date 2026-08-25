@@ -41,17 +41,21 @@ function MethodPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto w-full max-w-[68ch]">
-        <h1 className="text-[30px]">{t("nav.method")}</h1>
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-[65ch]">
+          <h1 className="text-[30px]">{t("nav.method")}</h1>
+        </div>
 
-        <div className="mt-10">
+        <div className="mt-12">
           <PageSections
             sections={data.sections}
             books={data.books}
+            colors={data.colors}
             spreads={data.spreads}
           />
         </div>
       </div>
+
     </PageShell>
   );
 }
