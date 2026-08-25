@@ -13,24 +13,49 @@ function s(v: unknown): string {
 }
 
 /**
+ * Les pages qui s'écrivent séparément dans chaque langue. La méthode française
+ * et la méthode anglaise ne décrivent pas le même objet : les trous ne tombent
+ * pas sur les mêmes mots, le vocabulaire glosé n'est pas le même. Une version
+ * anglaise traduite décrirait un livre qui n'existe pas.
+ */
+export const MANUAL_ONLY_PAGES = ["methode"] as const;
+
+export function isManualPage(slug: string): boolean {
+  return (MANUAL_ONLY_PAGES as readonly string[]).includes(slug);
+}
+
+/** Une section marquée français seulement n'attend pas d'anglais. */
+export function sectionLocales(row: Row): string[] {
+  const raw = row["locales"];
+  const list = Array.isArray(raw) ? raw.filter((v): v is string => typeof v === "string") : [];
+  return list.length > 0 ? list : ["fr", "en"];
+}
+
+/**
  * L'état de chaque champ anglais : vide, auto, corrigé à la main, ou à
  * retraduire parce que le français a bougé depuis la dernière traduction.
  */
-export async function sectionFieldStatus(row: Row): Promise<Record<string, string>> {
+export async function sectionFieldStatus(
+  row: Row,
+  opts?: { manual?: boolean },
+): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
+  const locales = sectionLocales(row);
   for (const field of ["title", "body"]) {
     const fr = s(row[`${field}_fr`]);
     const en = s(row[`${field}_en`]);
     const source = s(row[`${field}_en_source`]);
     const hash = s(row[`${field}_en_hash`]);
-    if (!fr.trim()) out[field] = "none";
-    else if (!en.trim()) out[field] = "empty";
+    if (!locales.includes("en")) out[field] = "fr_only";
+    else if (!fr.trim()) out[field] = "none";
+    else if (!en.trim()) out[field] = opts?.manual ? "to_write" : "empty";
     else if (hash && hash !== (await hashText(fr)))
-      out[field] = source === "human" ? "stale_human" : "stale";
+      out[field] = opts?.manual ? "human" : source === "human" ? "stale_human" : "stale";
     else out[field] = source === "human" ? "human" : "auto";
   }
   return out;
 }
+
 
 /**
  * À l'enregistrement : tout anglais vide ou marqué auto dont le français a
