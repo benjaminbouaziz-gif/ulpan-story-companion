@@ -1,6 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import type {
+  BlockKind,
+  BookPage,
+  GlossaryWord,
+  PageBlock,
+  PageKey,
+  PageSupportKind,
+} from "./book-page";
 import type { GlossaryItem, SpreadParagraph, SupportKind } from "./spread";
+
 
 /** Client de lecture publique : les politiques RLS anon s'appliquent. */
 export function publicClient() {
