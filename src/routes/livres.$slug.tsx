@@ -3,7 +3,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
+import { BookPagesSection } from "@/components/BookPagesSection";
 import { SpreadSection } from "@/components/SpreadSection";
+
 import { pickLang, useI18n } from "@/i18n/context";
 import { bookQuery } from "@/lib/queries";
 
