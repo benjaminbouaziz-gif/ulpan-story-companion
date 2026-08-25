@@ -18,13 +18,22 @@ function AdminHome() {
   return (
     <PageShell>
       <h1 className="text-[30px]">Administration</h1>
-      <Link
-        to="/admin/extraits"
-        className="label touch mt-6 inline-flex items-center border-b border-current"
-      >
-        {t("admin.excerpt")}
-      </Link>
+      <div className="mt-6 flex flex-col gap-3">
+        <Link
+          to="/admin/extraits"
+          className="label touch inline-flex items-center border-b border-current self-start"
+        >
+          {t("admin.excerpt")}
+        </Link>
+        <Link
+          to="/admin/pages"
+          className="label touch inline-flex items-center border-b border-current self-start"
+        >
+          Pages éditoriales
+        </Link>
+      </div>
       <p className="body-text text-secondary-text mt-8">{t("soon")}</p>
+
     </PageShell>
   );
 }
