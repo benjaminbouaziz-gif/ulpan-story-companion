@@ -89,6 +89,28 @@ const fr = {
   "access.yourBook": "Le livre que vous tenez",
   "admin.excerpt": "Double page de démonstration",
   "admin.forbidden": "Accès réservé.",
+  "companion.signedOut": "Votre espace lecteur s'ouvre avec le QR code de votre livre.",
+  "companion.signIn": "J'ai un code ou un lien",
+  "companion.myBooks": "Vos livres",
+  "companion.noBooks": "Aucun livre n'est encore ouvert. Scannez le QR code imprimé dans votre exemplaire.",
+  "companion.open": "Ouvrir",
+  "companion.locked": "Ce livre n'est pas ouvert sur votre compte.",
+  "companion.lockedBody": "Scannez le QR code imprimé dans votre exemplaire pour l'ouvrir.",
+  "companion.glossary": "Glossaire",
+  "companion.glossaryNote": "Tous les mots du livre, dans l'ordre de la lecture.",
+  "companion.quiz": "Entraînement",
+  "companion.quizNote": "Les mots du chapitre, une question à la fois.",
+  "companion.quizStart": "Commencer",
+  "companion.quizNext": "Suivante",
+  "companion.quizDone": "Série terminée",
+  "companion.quizAgain": "Recommencer",
+  "companion.quizScore": "Réponses justes",
+  "companion.progress": "Votre entraînement jusqu'ici",
+  "companion.audio": "Lecture audio",
+  "companion.audioSoon": "Les lectures audio sont en cours d'enregistrement. Elles apparaîtront ici dès qu'elles seront prêtes.",
+  "companion.loading": "Ouverture…",
+  "companion.words": "mots",
+
 
 } as const;
 
