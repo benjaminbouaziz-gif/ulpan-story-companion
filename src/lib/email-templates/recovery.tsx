@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -9,61 +9,45 @@ import {
   Html,
   Preview,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
+
+import { brand, button, code, container, footer, h1, main, text, wordmark } from "./theme";
 
 interface RecoveryEmailProps {
-  siteName: string
-  confirmationUrl: string
+  siteName: string;
+  confirmationUrl: string;
+  token?: string;
 }
 
-export const RecoveryEmail = ({
-  siteName,
-  confirmationUrl,
-}: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
+export const RecoveryEmail = ({ siteName, confirmationUrl, token }: RecoveryEmailProps) => (
+  <Html lang="fr" dir="ltr">
     <Head />
-    <Preview>Reset your password for {siteName}</Preview>
+    <Preview>Réinitialiser votre mot de passe</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Reset your password</Heading>
+        <Text style={wordmark}>{siteName}</Text>
+        <Heading style={h1}>Nouveau mot de passe</Heading>
         <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
+          Ouvrez le lien ci-dessous pour choisir un nouveau mot de passe. Il expire après un court
+          délai.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Reset Password
+          Choisir un mot de passe
         </Button>
+        {token ? (
+          <>
+            <Text style={{ ...text, margin: "28px 0 8px", color: brand.muted, fontSize: "14px" }}>
+              Code de secours :
+            </Text>
+            <Text style={code}>{token}</Text>
+          </>
+        ) : null}
         <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
+          Si vous n’avez rien demandé, ignorez ce courrier : votre mot de passe reste inchangé.
         </Text>
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default RecoveryEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+export default RecoveryEmail;
