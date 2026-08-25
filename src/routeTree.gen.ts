@@ -17,6 +17,7 @@ import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as CompagnonIndexRouteImport } from './routes/compagnon.index'
+import { Route as CompagnonBook_slugRouteImport } from './routes/compagnon.$book_slug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const CompagnonIndexRoute = CompagnonIndexRouteImport.update({
   path: '/compagnon/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompagnonBook_slugRoute = CompagnonBook_slugRouteImport.update({
+  id: '/compagnon/$book_slug',
+  path: '/compagnon/$book_slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LivresSlugRoute = LivresSlugRouteImport.update({
   id: '/livres/$slug',
   path: '/livres/$slug',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
+  '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
+  '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
+  '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
+    | '/compagnon/$book_slug'
     | '/livres/$slug'
     | '/collections/'
     | '/compagnon/'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
+    | '/compagnon/$book_slug'
     | '/livres/$slug'
     | '/collections'
     | '/compagnon'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
+    | '/compagnon/$book_slug'
     | '/livres/$slug'
     | '/collections/'
     | '/compagnon/'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
+  CompagnonBook_slugRoute: typeof CompagnonBook_slugRoute
   LivresSlugRoute: typeof LivresSlugRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   CompagnonIndexRoute: typeof CompagnonIndexRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompagnonIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compagnon/$book_slug': {
+      id: '/compagnon/$book_slug'
+      path: '/compagnon/$book_slug'
+      fullPath: '/compagnon/$book_slug'
+      preLoaderRoute: typeof CompagnonBook_slugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/livres/$slug': {
       id: '/livres/$slug'
       path: '/livres/$slug'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
+  CompagnonBook_slugRoute: CompagnonBook_slugRoute,
   LivresSlugRoute: LivresSlugRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   CompagnonIndexRoute: CompagnonIndexRoute,
