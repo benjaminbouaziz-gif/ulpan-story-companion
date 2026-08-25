@@ -83,12 +83,15 @@ function PagesEditor() {
   });
 
   const sections = listQuery.data?.sections ?? [];
+  const manual = Boolean(listQuery.data?.manual);
   const statuses = (listQuery.data?.statuses ?? {}) as Record<string, Record<string, string>>;
-  const toRetranslate = Object.values(statuses).reduce(
+  // « français seulement » est un choix, pas un manque : on ne le compte pas.
+  const missing = Object.values(statuses).reduce(
     (n, fields) =>
       n +
-      Object.values(fields).filter((v) => v === "stale" || v === "stale_human" || v === "empty")
-        .length,
+      Object.values(fields).filter(
+        (v) => v === "stale" || v === "stale_human" || v === "empty" || v === "to_write",
+      ).length,
     0,
   );
 
@@ -101,6 +104,8 @@ function PagesEditor() {
         is_locked: s.is_locked,
         sort_order: s.sort_order,
         is_visible: s.is_visible,
+        locales: Array.isArray(s.locales) && s.locales.length > 0 ? s.locales : ["fr", "en"],
+
         title_fr: s.title_fr ?? "",
         title_en: s.title_en ?? "",
         body_fr: s.body_fr ?? "",
