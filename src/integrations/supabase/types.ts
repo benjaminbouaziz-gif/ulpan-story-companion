@@ -340,67 +340,55 @@ export type Database = {
           },
         ]
       }
-      excerpt_segments: {
+      excerpt_paragraphs: {
         Row: {
-          audio_end_ms: number | null
-          audio_start_ms: number | null
+          audio_path: string | null
           book_id: string
-          chapter_no: number
           created_at: string
-          hard_words_en: string | null
-          hard_words_fr: string | null
-          he_nikud: string
-          he_plain: string
+          has_nikud: boolean
+          he: string
           id: string
-          is_showcase: boolean
           sort_order: number
+          stage_label_en: string | null
+          stage_label_fr: string | null
+          stage_no: number
           support_en: string | null
           support_fr: string | null
-          tokens: Json
-          translit: string | null
           updated_at: string
         }
         Insert: {
-          audio_end_ms?: number | null
-          audio_start_ms?: number | null
+          audio_path?: string | null
           book_id: string
-          chapter_no?: number
           created_at?: string
-          hard_words_en?: string | null
-          hard_words_fr?: string | null
-          he_nikud: string
-          he_plain?: string
+          has_nikud?: boolean
+          he: string
           id?: string
-          is_showcase?: boolean
           sort_order?: number
+          stage_label_en?: string | null
+          stage_label_fr?: string | null
+          stage_no?: number
           support_en?: string | null
           support_fr?: string | null
-          tokens?: Json
-          translit?: string | null
           updated_at?: string
         }
         Update: {
-          audio_end_ms?: number | null
-          audio_start_ms?: number | null
+          audio_path?: string | null
           book_id?: string
-          chapter_no?: number
           created_at?: string
-          hard_words_en?: string | null
-          hard_words_fr?: string | null
-          he_nikud?: string
-          he_plain?: string
+          has_nikud?: boolean
+          he?: string
           id?: string
-          is_showcase?: boolean
           sort_order?: number
+          stage_label_en?: string | null
+          stage_label_fr?: string | null
+          stage_no?: number
           support_en?: string | null
           support_fr?: string | null
-          tokens?: Json
-          translit?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "excerpt_segments_book_id_fkey"
+            foreignKeyName: "excerpt_paragraphs_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
@@ -415,6 +403,7 @@ export type Database = {
           created_at: string
           form_he: string | null
           id: string
+          is_showcase: boolean
           lemma_he: string
           note_en: string | null
           note_fr: string | null
@@ -429,6 +418,7 @@ export type Database = {
           created_at?: string
           form_he?: string | null
           id?: string
+          is_showcase?: boolean
           lemma_he: string
           note_en?: string | null
           note_fr?: string | null
@@ -443,6 +433,7 @@ export type Database = {
           created_at?: string
           form_he?: string | null
           id?: string
+          is_showcase?: boolean
           lemma_he?: string
           note_en?: string | null
           note_fr?: string | null
