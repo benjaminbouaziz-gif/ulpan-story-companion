@@ -5,7 +5,7 @@ import {
   getCollections,
   getPageBySlug,
   getPublishedBooks,
-  getShowcaseExcerpt,
+  getShowcaseSpread,
 } from "./catalog.functions";
 
 export const collectionsQuery = queryOptions({
@@ -19,8 +19,8 @@ export const publishedBooksQuery = queryOptions({
 });
 
 export const showcaseQuery = queryOptions({
-  queryKey: ["showcase-excerpt"],
-  queryFn: () => getShowcaseExcerpt(),
+  queryKey: ["showcase-spread"],
+  queryFn: () => getShowcaseSpread(),
 });
 
 export const collectionQuery = (slug: string) =>
