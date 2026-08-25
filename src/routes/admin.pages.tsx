@@ -206,18 +206,29 @@ function PagesEditor() {
 
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <p className="label text-secondary-text">
-          {toRetranslate > 0
-            ? `${toRetranslate} champ(s) anglais à produire ou à retraduire.`
-            : "Anglais à jour."}
+          {missing > 0
+            ? manual
+              ? `${missing} champ(s) anglais à rédiger.`
+              : `${missing} champ(s) anglais à produire ou à retraduire.`
+            : manual
+              ? "Anglais rédigé."
+              : "Anglais à jour."}
         </p>
-        <button
-          type="button"
-          onClick={() => translateMutation.mutate(false)}
-          className="label touch border-line border px-4"
-        >
-          Traduire toute la page
-        </button>
+        {manual ? (
+          <p className="label text-secondary-text">
+            Cette page s'écrit séparément dans chaque langue.
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => translateMutation.mutate(false)}
+            className="label touch border-line border px-4"
+          >
+            Traduire toute la page
+          </button>
+        )}
       </div>
+
 
       {message ? <p className="label mt-4">{message}</p> : null}
 
