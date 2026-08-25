@@ -20,6 +20,8 @@ const BADGES: Record<string, string> = {
   stale: "à retraduire",
   stale_human: "à retraduire (version humaine)",
   empty: "vide",
+  to_write: "à rédiger",
+  fr_only: "français seulement",
   none: "",
 };
 
@@ -28,6 +30,7 @@ function Badge({ state }: { state: string | undefined }) {
   if (!label) return null;
   return <span className="label text-secondary-text ml-2">· {label}</span>;
 }
+
 
 export const Route = createFileRoute("/admin/pages")({
   head: () => ({
