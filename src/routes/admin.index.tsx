@@ -22,7 +22,7 @@ function AdminHome() {
         to="/admin/extraits"
         className="label touch mt-6 inline-flex items-center border-b border-current"
       >
-        {t("admin.segments")}
+        {t("admin.excerpt")}
       </Link>
       <p className="body-text text-secondary-text mt-8">{t("soon")}</p>
     </PageShell>

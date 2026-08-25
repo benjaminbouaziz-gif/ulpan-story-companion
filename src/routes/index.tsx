@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { MirrorReader } from "@/components/MirrorReader";
+import { Excerpt } from "@/components/Excerpt";
 import { useI18n, pickLang } from "@/i18n/context";
 import { collectionsQuery, publishedBooksQuery, showcaseQuery } from "@/lib/queries";
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Des livres pour apprendre l'hébreu en lisant de vraies histoires : hébreu vocalisé à gauche, soutien à droite qui se retire au fil du livre.",
+          "Des livres pour apprendre l'hébreu en lisant de vraies histoires : un passage qui commence en hébreu vocalisé traduit et finit en hébreu seul.",
       },
       { property: "og:title", content: "Ulpan Story — lire l'hébreu, pas l'étudier" },
       {
@@ -49,11 +49,10 @@ function Home() {
 
       <section className="border-line mt-12 border-t pt-8">
         <h2 className="text-[24px]">{t("home.method.title")}</h2>
-        <div className="mt-4">
-          <MirrorReader
-            segments={showcase.segments.slice(0, 2)}
+        <div className="mt-6">
+          <Excerpt
+            paragraphs={showcase.paragraphs.slice(0, 1)}
             color={showcase.collection?.color_hex ?? null}
-            showSlider={false}
           />
         </div>
         <Link to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
