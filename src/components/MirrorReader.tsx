@@ -261,13 +261,13 @@ function SegmentBlock({
                 return (
                   <li
                     key={`${segment.id}-w-${i}`}
-                    className="label text-secondary-text"
+                    className="text-secondary-text"
                     style={highlight(activeIndex === i)}
                   >
-                    <span dir="rtl" lang="he" className="not-italic">
+                    <span dir="rtl" lang="he" className="hebrew-sm align-middle">
                       {token.he_nikud}
-                    </span>{" "}
-                    — {gloss}
+                    </span>
+                    <span className="label"> — {gloss}</span>
                   </li>
                 );
               })}
@@ -311,7 +311,9 @@ function GlossarySheet({ token, onClose }: { token: MirrorToken; onClose: () => 
           <HebrewText size="lg" className="mt-2">
             {token.he_nikud}
           </HebrewText>
-          <p className="label text-secondary-text mt-1">{stripNikud(token.he_nikud)}</p>
+          <p className="hebrew-sm text-secondary-text mt-1" dir="rtl" lang="he">
+            {stripNikud(token.he_nikud)}
+          </p>
           {token.translit ? <p className="body-text mt-2 italic">{token.translit}</p> : null}
           <p className="body-text mt-3">{gloss ?? t("mirror.noGloss")}</p>
           {note ? <p className="body-text text-secondary-text mt-2">{note}</p> : null}
