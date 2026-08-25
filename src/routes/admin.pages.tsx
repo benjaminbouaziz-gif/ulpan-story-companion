@@ -49,12 +49,14 @@ type Draft = {
   is_locked: boolean;
   sort_order: number;
   is_visible: boolean;
+  locales: string[];
   title_fr: string;
   title_en: string;
   body_fr: string;
   body_en: string;
   data_json: string;
 };
+
 
 function PagesEditor() {
   const { t } = useI18n();
