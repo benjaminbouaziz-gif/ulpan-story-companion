@@ -7,8 +7,10 @@ import {
   autoEnglishPatch,
   isManualPage,
   sectionFieldStatus,
+  sectionLocales,
   translateDataObject,
 } from "./translate-pages.server";
+
 
 /** Les sections d'une page : lecture, écriture, versions, traduction. */
 export const adminListSections = createServerFn({ method: "GET" })
