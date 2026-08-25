@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Ulpan Story Companion"
+const SITE_NAME = "Ulpan Story"
 const SENDER_DOMAIN = "notify.ulpanstory.com"
 const ROOT_DOMAIN = "ulpanstory.com"
 const FROM_DOMAIN = "ulpanstory.com"
@@ -28,17 +28,18 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
             signup: {
-              subject: 'Confirm your email',
+              subject: 'Confirmez votre adresse — Ulpan Story',
               render: (data) =>
                 React.createElement(SignupEmail, {
                   siteName: SITE_NAME,
                   siteUrl: SITE_URL,
                   recipient: data.email,
                   confirmationUrl: data.url,
+                  token: data.token ?? undefined,
                 }),
             },
             invite: {
-              subject: "You've been invited",
+              subject: "Votre invitation — Ulpan Story",
               render: (data) =>
                 React.createElement(InviteEmail, {
                   siteName: SITE_NAME,
@@ -47,23 +48,25 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             magiclink: {
-              subject: 'Your login link',
+              subject: 'Votre lien d’accès — Ulpan Story',
               render: (data) =>
                 React.createElement(MagicLinkEmail, {
                   siteName: SITE_NAME,
                   confirmationUrl: data.url,
+                  token: data.token ?? undefined,
                 }),
             },
             recovery: {
-              subject: 'Reset your password',
+              subject: 'Nouveau mot de passe — Ulpan Story',
               render: (data) =>
                 React.createElement(RecoveryEmail, {
                   siteName: SITE_NAME,
                   confirmationUrl: data.url,
+                  token: data.token ?? undefined,
                 }),
             },
             email_change: {
-              subject: 'Confirm your new email',
+              subject: 'Confirmez votre nouvelle adresse — Ulpan Story',
               render: (data) =>
                 React.createElement(EmailChangeEmail, {
                   siteName: SITE_NAME,
@@ -74,7 +77,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             reauthentication: {
-              subject: 'Your verification code',
+              subject: 'Votre code de vérification — Ulpan Story',
               render: (data) =>
                 React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
             },
