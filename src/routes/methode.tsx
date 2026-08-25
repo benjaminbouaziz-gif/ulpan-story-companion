@@ -36,15 +36,14 @@ export const Route = createFileRoute("/methode")({
 });
 
 function MethodPage() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { data } = useSuspenseQuery(pageQuery(PAGE));
 
   return (
     <PageShell>
       <div className="mx-auto w-full max-w-[68ch]">
-        <h1 className="text-[30px]">
-          {pickLang(lang, data.page?.title_fr, data.page?.title_en) ?? t("nav.method")}
-        </h1>
+        <h1 className="text-[30px]">{t("nav.method")}</h1>
+
         <div className="mt-10">
           <PageSections
             sections={data.sections}
