@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import type { ExcerptParagraph, GlossaryItem } from "./excerpt";
+import type { GlossaryItem, SpreadParagraph, SupportKind } from "./spread";
 
 /** Client de lecture publique : les politiques RLS anon s'appliquent. */
 export function publicClient() {
@@ -11,21 +11,20 @@ export function publicClient() {
   );
 }
 
-type ParagraphRow = Database["public"]["Tables"]["excerpt_paragraphs"]["Row"];
+type SpreadRow = Database["public"]["Tables"]["spread_paragraphs"]["Row"];
 type GlossaryRow = Database["public"]["Tables"]["glossary_entries"]["Row"];
 
-export function toParagraph(row: ParagraphRow): ExcerptParagraph {
+export function toSpreadParagraph(row: SpreadRow): SpreadParagraph {
   return {
     id: row.id,
     sort_order: row.sort_order,
     stage_no: row.stage_no,
-    stage_label_fr: row.stage_label_fr,
-    stage_label_en: row.stage_label_en,
     he: row.he,
-    has_nikud: row.has_nikud,
+    he_has_nikud: row.he_has_nikud,
+    support_kind: row.support_kind as SupportKind,
     support_fr: row.support_fr,
     support_en: row.support_en,
-    audio_path: row.audio_path,
+    support_he: row.support_he,
   };
 }
 
