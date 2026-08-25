@@ -1,13 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { publicClient, toGlossaryItem, toSpreadParagraph } from "./catalog.server";
+import {
+  loadBookPages,
+  loadGlossaryWords,
+  publicClient,
+  toGlossaryItem,
+  toSpreadParagraph,
+} from "./catalog.server";
+import type { BookPage, GlossaryWord } from "./book-page";
 import type { GlossaryItem, SpreadParagraph } from "./spread";
 
 export type Collection = Database["public"]["Tables"]["collections"]["Row"];
 export type Book = Database["public"]["Tables"]["books"]["Row"];
 export type Page = Database["public"]["Tables"]["pages"]["Row"];
 export type PageSection = Database["public"]["Tables"]["page_sections"]["Row"];
+
 
 export const getCollections = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
