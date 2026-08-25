@@ -65,10 +65,14 @@ export const adminSaveSegment = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
-    const { id, ...patch } = data;
+    const { id, is_showcase, ...patch } = data;
     const { error } = await context.supabase
       .from("excerpt_segments")
-      .update({ ...patch, tokens: patch.tokens })
+      .update({
+        ...patch,
+        tokens: patch.tokens,
+        ...(is_showcase === undefined ? {} : { is_showcase }),
+      })
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
     return { ok: true, error: null as string | null };
