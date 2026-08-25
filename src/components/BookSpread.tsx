@@ -241,7 +241,12 @@ export function BookSpread({
     .filter(Boolean)
     .join(" · ");
 
-  const chapterTitleLatin = pickLang(lang, page.chapter_title_fr, page.chapter_title_en);
+  // Les étapes « trous » et « vocalisation » ne reprennent pas le titre du chapitre.
+  const showChapterTitles = page.support_kind !== "cloze" && page.support_kind !== "nikud";
+  const chapterTitleLatin = showChapterTitles
+    ? pickLang(lang, page.chapter_title_fr, page.chapter_title_en)
+    : null;
+  const chapterTitleHe = showChapterTitles ? page.chapter_title_he : null;
   const folio = page.folio ?? page.page_no;
 
   const headStyle = {
