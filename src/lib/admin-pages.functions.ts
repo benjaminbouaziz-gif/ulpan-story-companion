@@ -125,7 +125,14 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
+    if (isManualPage(data.slug))
+      return {
+        ok: false,
+        translated: 0,
+        error: "Cette page s'écrit séparément dans chaque langue.",
+      };
     const { data: page } = await context.supabase
+
       .from("pages")
       .select("id")
       .eq("slug", data.slug)
