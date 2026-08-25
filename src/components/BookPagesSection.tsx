@@ -200,8 +200,8 @@ export function BookPagesSection({
           </span>
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.min(4, Math.round((z + 0.5) * 2) / 2))}
-            disabled={zoom >= 4}
+            onClick={() => setZoom((z) => Math.min(6, Math.round((z + 0.5) * 2) / 2))}
+            disabled={zoom >= 6}
             aria-label="Agrandir"
             className="label touch border-line border px-3 disabled:opacity-40"
           >
