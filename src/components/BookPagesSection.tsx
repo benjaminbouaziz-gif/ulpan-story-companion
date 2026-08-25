@@ -128,8 +128,7 @@ export function BookPagesSection({
   const [index, setIndex] = useState(0);
   const [grid, setGrid] = useState(false);
   const [reading, setReading] = useState(false);
-  // Les caractères du livre se lisent à trois fois la taille papier par défaut.
-  const [zoom, setZoom] = useState(3);
+  const [zoom, setZoom] = useState(1);
 
 
   if (pages.length === 0) return null;
@@ -200,8 +199,8 @@ export function BookPagesSection({
           </span>
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.min(6, Math.round((z + 0.5) * 2) / 2))}
-            disabled={zoom >= 6}
+            onClick={() => setZoom((z) => Math.min(4, Math.round((z + 0.5) * 2) / 2))}
+            disabled={zoom >= 4}
             aria-label="Agrandir"
             className="label touch border-line border px-3 disabled:opacity-40"
           >
