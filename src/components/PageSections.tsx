@@ -92,7 +92,7 @@ export function PageSections({
                 chapter={pickLang(lang, b.spread_chapter_fr, b.spread_chapter_en) ?? ""}
                 folio={b.spread_folio_left ?? 42}
                 claim={null}
-                note={body ?? undefined}
+                note={body}
               />
             </Block>
           );
