@@ -16,7 +16,7 @@ import { brand, button, code, container, footer, h1, main, text, wordmark } from
 interface RecoveryEmailProps {
   siteName: string;
   confirmationUrl: string;
-  token?: string;
+  token?: string | undefined;
 }
 
 export const RecoveryEmail = ({ siteName, confirmationUrl, token }: RecoveryEmailProps) => (

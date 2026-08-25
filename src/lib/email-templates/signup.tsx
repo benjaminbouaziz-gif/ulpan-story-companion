@@ -19,7 +19,7 @@ interface SignupEmailProps {
   siteUrl: string;
   recipient: string;
   confirmationUrl: string;
-  token?: string;
+  token?: string | undefined;
 }
 
 export const SignupEmail = ({
