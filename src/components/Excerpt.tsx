@@ -60,7 +60,7 @@ export function GlossaryList({ items }: { items: GlossaryItem[] }) {
     <dl className="mx-auto grid max-w-[65ch] grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
       {items.map((item) => (
         <div key={item.id} className="border-line border-b pb-2">
-          <dt dir="rtl" lang="he" className="hebrew-sm text-right">
+          <dt dir="rtl" lang="he" className="hebrew text-right">
             {item.lemma_he}
           </dt>
           <dd className="body-text text-secondary-text text-[0.85em]">
