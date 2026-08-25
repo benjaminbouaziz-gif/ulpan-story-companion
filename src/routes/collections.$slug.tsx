@@ -93,13 +93,24 @@ function CollectionPage() {
           <ul className="mt-4 flex flex-col gap-3">
             {data.books.map((b) => (
               <li key={b.id} className="border-line border p-4">
-                <Link to="/livres/$slug" params={{ slug: b.slug }} className="block">
-                  <p className="label text-secondary-text">
-                    {t("books.volume")} {b.tome_no}
-                  </p>
-                  <h3 className="mt-1 text-[20px]">{pickLang(lang, b.title_fr, b.title_en)}</h3>
-                  {b.title_he ? <HebrewText className="mt-2">{b.title_he}</HebrewText> : null}
+                <Link to="/livres/$slug" params={{ slug: b.slug }} className="flex items-start gap-4">
+                  {b.cover_url ? (
+                    <img
+                      src={b.cover_url}
+                      alt={pickLang(lang, b.title_fr, b.title_en) ?? ""}
+                      loading="lazy"
+                      className="border-line w-24 shrink-0 border"
+                    />
+                  ) : null}
+                  <span className="block">
+                    <p className="label text-secondary-text">
+                      {t("books.volume")} {b.tome_no}
+                    </p>
+                    <h3 className="mt-1 text-[20px]">{pickLang(lang, b.title_fr, b.title_en)}</h3>
+                    {b.title_he ? <HebrewText className="mt-2">{b.title_he}</HebrewText> : null}
+                  </span>
                 </Link>
+
               </li>
             ))}
           </ul>
