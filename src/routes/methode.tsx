@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Excerpt, GlossaryList } from "@/components/Excerpt";
+import { Spread } from "@/components/Spread";
+
 import { pickLang, useI18n } from "@/i18n/context";
 import { showcaseQuery } from "@/lib/queries";
 
