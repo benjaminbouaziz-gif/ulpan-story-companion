@@ -236,12 +236,43 @@ function PagesEditor() {
         {sections.map((s) => {
           const d = drafts[s.id];
           if (!d) return null;
+          const note = (s.data as { admin_note_fr?: unknown } | null)?.admin_note_fr;
+          const frOnly = d.locales.includes("fr") && !d.locales.includes("en");
+          const enOnly = d.locales.includes("en") && !d.locales.includes("fr");
           return (
             <section key={s.id} className="border-line mt-8 border-t pt-5 first:mt-0">
               <p className="label text-secondary-text">
                 {d.sort_order}. {d.kind}
                 {d.is_locked ? " · gabarit" : ""}
+                {frOnly ? " · français seulement" : ""}
+                {enOnly ? " · anglais seulement" : ""}
               </p>
+
+              {typeof note === "string" && note.trim() ? (
+                <p className="label text-secondary-text border-line mt-3 border-l-2 pl-3">{note}</p>
+              ) : null}
+
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                <span className="label text-secondary-text">Publiée en</span>
+                {(["fr", "en"] as const).map((l) => (
+                  <label key={l} className="label flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={d.locales.includes(l)}
+                      onChange={(e) =>
+                        set(s.id, {
+                          locales: e.target.checked
+                            ? Array.from(new Set([...d.locales, l]))
+                            : d.locales.filter((x) => x !== l),
+                        })
+                      }
+                    />
+                    {l === "fr" ? "français" : "anglais"}
+                  </label>
+                ))}
+              </div>
+
+
 
               <label className="label mt-4 block">
                 Titre (fr)
