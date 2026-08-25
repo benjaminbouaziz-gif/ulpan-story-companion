@@ -131,6 +131,10 @@ function PagesEditor() {
           id: d.id,
           sort_order: d.sort_order,
           is_visible: d.is_visible,
+          locales: (d.locales.filter((l) => l === "fr" || l === "en") as ("fr" | "en")[]).length
+            ? (d.locales.filter((l) => l === "fr" || l === "en") as ("fr" | "en")[])
+            : (["fr"] as ("fr" | "en")[]),
+
           title_fr: d.title_fr.trim() ? d.title_fr : null,
           title_en: d.title_en.trim() ? d.title_en : null,
           body_fr: d.body_fr.trim() ? d.body_fr : null,
