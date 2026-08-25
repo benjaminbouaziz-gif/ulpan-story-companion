@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
-import { SpreadSection } from "@/components/SpreadSection";
-import { pickLang, useI18n } from "@/i18n/context";
-import { showcaseQuery } from "@/lib/queries";
+import { PageSections } from "@/components/PageSections";
+import { useI18n } from "@/i18n/context";
+import { pageQuery } from "@/lib/queries";
+
+const PAGE = "methode";
 
 export const Route = createFileRoute("/methode")({
   head: () => ({
@@ -12,18 +14,19 @@ export const Route = createFileRoute("/methode")({
       {
         name: "description",
         content:
-          "La double page du livre, reproduite au millimètre : hébreu à gauche, soutien à droite, quatre étapes jusqu'à l'hébreu seul.",
+          "Comment un livre Ulpan Story vous mène de l'hébreu vocalisé avec traduction à l'hébreu seul, sans voyelles : les quatre étapes, la double page et ses règles.",
       },
       { property: "og:title", content: "La méthode — Ulpan Story" },
       {
         property: "og:description",
-        content: "La double page du livre, à ses proportions réelles.",
+        content:
+          "Les quatre étapes d'un livre Ulpan Story, et la double page telle qu'elle est imprimée.",
       },
-      { property: "og:type", content: "website" },
+      { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(showcaseQuery),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
   component: MethodPage,
   errorComponent: () => (
     <PageShell>
@@ -33,24 +36,22 @@ export const Route = createFileRoute("/methode")({
 });
 
 function MethodPage() {
-  const { t, lang } = useI18n();
-  const { data } = useSuspenseQuery(showcaseQuery);
-  const book = data.book;
+  const { t } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE));
 
   return (
     <PageShell>
-      <h1 className="text-[30px]">{t("nav.method")}</h1>
-      <SpreadSection
-        paragraphs={data.paragraphs}
-        color={data.collection?.color_hex ?? null}
-        runningHead={
-          pickLang(lang, book?.spread_running_head_fr, book?.spread_running_head_en) ??
-          pickLang(lang, book?.title_fr, book?.title_en) ??
-          ""
-        }
-        chapter={pickLang(lang, book?.spread_chapter_fr, book?.spread_chapter_en) ?? ""}
-        folio={book?.spread_folio_left ?? 42}
-      />
+      <div className="mx-auto w-full max-w-[68ch]">
+        <h1 className="text-[30px]">{t("nav.method")}</h1>
+
+        <div className="mt-10">
+          <PageSections
+            sections={data.sections}
+            books={data.books}
+            spreads={data.spreads}
+          />
+        </div>
+      </div>
     </PageShell>
   );
 }

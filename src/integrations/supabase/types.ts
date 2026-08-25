@@ -418,6 +418,7 @@ export type Database = {
           created_at: string
           data: Json
           id: string
+          is_locked: boolean
           is_visible: boolean
           kind: Database["public"]["Enums"]["section_kind"]
           page_id: string
@@ -432,6 +433,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          is_locked?: boolean
           is_visible?: boolean
           kind: Database["public"]["Enums"]["section_kind"]
           page_id: string
@@ -446,6 +448,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          is_locked?: boolean
           is_visible?: boolean
           kind?: Database["public"]["Enums"]["section_kind"]
           page_id?: string
@@ -699,6 +702,8 @@ export type Database = {
         | "hebrew_sample"
         | "faq"
         | "cta"
+        | "book_spread"
+        | "facts"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -849,6 +854,8 @@ export const Constants = {
         "hebrew_sample",
         "faq",
         "cta",
+        "book_spread",
+        "facts",
       ],
     },
   },
