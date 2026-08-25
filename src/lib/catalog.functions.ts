@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { publicClient, toMirrorSegment } from "./catalog.server";
+import { publicClient, toGlossaryItem, toParagraph } from "./catalog.server";
+import type { ExcerptParagraph, GlossaryItem } from "./excerpt";
 
 export type Collection = Database["public"]["Tables"]["collections"]["Row"];
 export type Book = Database["public"]["Tables"]["books"]["Row"];
@@ -37,13 +38,28 @@ export const getCollectionBySlug = createServerFn({ method: "GET" })
       .select("*")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!collection) return { collection: null, books: [] as Book[] };
+    if (!collection)
+      return { collection: null, books: [] as Book[], paragraphs: [] as ExcerptParagraph[] };
     const { data: books } = await supabase
       .from("books")
       .select("*")
       .eq("collection_id", collection.id)
       .order("tome_no", { ascending: true });
-    return { collection: collection as Collection, books: (books ?? []) as Book[] };
+    const list = (books ?? []) as Book[];
+    let paragraphs: ExcerptParagraph[] = [];
+    const first = list[0];
+    if (first) {
+      const { data: rows } = await supabase
+        .from("excerpt_paragraphs")
+        .select("*")
+        .eq("book_id", first.id)
+        .order("sort_order", { ascending: true });
+      const all = (rows ?? []).map(toParagraph);
+      // Le ton en un coup d'œil : le premier paragraphe et le dernier.
+      paragraphs =
+        all.length > 1 ? [all[0]!, all[all.length - 1]!] : all;
+    }
+    return { collection: collection as Collection, books: list, paragraphs };
   });
 
 export const getBookBySlug = createServerFn({ method: "GET" })
@@ -55,7 +71,13 @@ export const getBookBySlug = createServerFn({ method: "GET" })
       .select("*")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!book) return { book: null, collection: null, segments: [] };
+    if (!book)
+      return {
+        book: null,
+        collection: null,
+        paragraphs: [] as ExcerptParagraph[],
+        glossary: [] as GlossaryItem[],
+      };
     let collection: Collection | null = null;
     if (book.collection_id) {
       const { data: c } = await supabase
@@ -65,17 +87,23 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         .maybeSingle();
       collection = (c as Collection) ?? null;
     }
-    const { data: segments } = await supabase
-      .from("excerpt_segments")
-      .select("*")
-      .eq("book_id", book.id)
-      .eq("is_showcase", true)
-      .order("chapter_no", { ascending: true })
-      .order("sort_order", { ascending: true });
+    const [{ data: rows }, { data: gloss }] = await Promise.all([
+      supabase
+        .from("excerpt_paragraphs")
+        .select("*")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("glossary_entries")
+        .select("*")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+    ]);
     return {
       book: book as Book,
       collection,
-      segments: (segments ?? []).map(toMirrorSegment),
+      paragraphs: (rows ?? []).map(toParagraph),
+      glossary: (gloss ?? []).map(toGlossaryItem),
     };
   });
 
@@ -97,8 +125,8 @@ export const getPageBySlug = createServerFn({ method: "GET" })
     return { page: page as Page, sections: (sections ?? []) as PageSection[] };
   });
 
-/** Le passage vitrine : celui qui sert de démonstration du miroir. */
-export const getShowcaseSegments = createServerFn({ method: "GET" }).handler(async () => {
+/** L'extrait démonstratif de référence : celui du premier tome publié. */
+export const getShowcaseExcerpt = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
   const { data: book } = await supabase
     .from("books")
@@ -106,7 +134,13 @@ export const getShowcaseSegments = createServerFn({ method: "GET" }).handler(asy
     .order("tome_no", { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (!book) return { book: null, collection: null, segments: [] };
+  if (!book)
+    return {
+      book: null,
+      collection: null,
+      paragraphs: [] as ExcerptParagraph[],
+      glossary: [] as GlossaryItem[],
+    };
   let collection: Collection | null = null;
   if (book.collection_id) {
     const { data: c } = await supabase
@@ -116,12 +150,22 @@ export const getShowcaseSegments = createServerFn({ method: "GET" }).handler(asy
       .maybeSingle();
     collection = (c as Collection) ?? null;
   }
-  const { data: segments } = await supabase
-    .from("excerpt_segments")
-    .select("*")
-    .eq("book_id", book.id)
-    .eq("is_showcase", true)
-    .order("chapter_no", { ascending: true })
-    .order("sort_order", { ascending: true });
-  return { book: book as Book, collection, segments: (segments ?? []).map(toMirrorSegment) };
+  const [{ data: rows }, { data: gloss }] = await Promise.all([
+    supabase
+      .from("excerpt_paragraphs")
+      .select("*")
+      .eq("book_id", book.id)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("glossary_entries")
+      .select("*")
+      .eq("book_id", book.id)
+      .order("sort_order", { ascending: true }),
+  ]);
+  return {
+    book: book as Book,
+    collection,
+    paragraphs: (rows ?? []).map(toParagraph),
+    glossary: (gloss ?? []).map(toGlossaryItem),
+  };
 });

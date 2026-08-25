@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
+import { Excerpt } from "@/components/Excerpt";
 import { pickLang, useI18n } from "@/i18n/context";
 import { collectionQuery } from "@/lib/queries";
 
@@ -64,6 +65,14 @@ function CollectionPage() {
           {pickLang(lang, collection.for_whom_fr, collection.for_whom_en)}
         </p>
       </section>
+
+      {data.paragraphs.length > 0 ? (
+        <section className="border-line mt-8 border-t pt-6">
+          <div className="mt-2">
+            <Excerpt paragraphs={data.paragraphs} color={collection.color_hex} />
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("collections.volumes")}</h2>

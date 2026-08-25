@@ -17,9 +17,7 @@ const fr = {
 
   "home.lede":
     "Vous allez à l'oulpan deux soirs par semaine. Vous apprenez des règles, vous faites des exercices — et entre deux cours, vous n'avez rien à lire à votre niveau. C'est ce trou-là que nous comblons.",
-  "home.method.title": "La méthode, en deux pages",
-  "home.method.left": "Page de gauche : l'hébreu vocalisé.",
-  "home.method.right": "Page de droite : un soutien qui se retire au fil du livre.",
+  "home.method.title": "La méthode",
   "home.method.link": "Lire la méthode",
   "home.collections.title": "Les collections",
   "home.collections.link": "Voir toutes les collections",
@@ -60,15 +58,15 @@ const fr = {
   "empty.page": "Cette page n'a pas encore de contenu publié.",
   "soon": "Cet écran arrive dans une prochaine étape.",
   "back.home": "Retour à l'accueil",
-  "mirror.support": "Soutien",
-  "mirror.empty": "Ce passage n'est pas encore aligné.",
-  "mirror.glossary": "Glossaire",
-  "mirror.noGloss": "Pas encore de définition pour ce mot.",
-  "mirror.tapForGlossary": "Touchez un mot pour ouvrir le glossaire.",
-  "mirror.title": "Le miroir",
-  "mirror.tryIt": "Essayez : bougez le curseur, touchez un mot.",
-  "mirror.longPress": "Appui long sur un mot : le glossaire s'ouvre.",
-  "admin.segments": "Extraits alignés",
+  "excerpt.empty": "L'extrait de ce livre n'est pas encore en ligne.",
+  "excerpt.before": "Lisez ce passage jusqu'en bas.",
+  "excerpt.after1":
+    "Les six derniers mots que vous venez de lire étaient en hébreu, sans voyelles, sans traduction.",
+  "excerpt.after2": "C'est la dernière page du livre.",
+  "excerpt.glossary": "Glossaire du passage",
+  "excerpt.glossaryFull":
+    "La liste complète du chapitre est dans le compagnon, avec sa version imprimable.",
+  "admin.excerpt": "Extrait démonstratif",
   "admin.forbidden": "Accès réservé.",
 } as const;
 
@@ -89,9 +87,7 @@ const en: Record<DictKey, string> = {
 
   "home.lede":
     "You go to the ulpan two evenings a week. You learn rules, you do exercises — and between classes there is nothing to read at your level. That is the gap we fill.",
-  "home.method.title": "The method, in two pages",
-  "home.method.left": "Left page: Hebrew with nikud.",
-  "home.method.right": "Right page: support that withdraws as the book goes on.",
+  "home.method.title": "The method",
   "home.method.link": "Read the method",
   "home.collections.title": "Collections",
   "home.collections.link": "See all collections",
@@ -132,15 +128,15 @@ const en: Record<DictKey, string> = {
   "empty.page": "This page has no published content yet.",
   "soon": "This screen arrives in a later step.",
   "back.home": "Back to home",
-  "mirror.support": "Support",
-  "mirror.empty": "This passage is not aligned yet.",
-  "mirror.glossary": "Glossary",
-  "mirror.noGloss": "No definition for this word yet.",
-  "mirror.tapForGlossary": "Tap a word to open the glossary.",
-  "mirror.title": "The mirror",
-  "mirror.tryIt": "Try it: move the slider, tap a word.",
-  "mirror.longPress": "Long-press a word: the glossary opens.",
-  "admin.segments": "Aligned excerpts",
+  "excerpt.empty": "This book's excerpt is not online yet.",
+  "excerpt.before": "Read this passage to the bottom.",
+  "excerpt.after1":
+    "The last six words you just read were Hebrew, without vowels, without translation.",
+  "excerpt.after2": "That is the last page of the book.",
+  "excerpt.glossary": "Glossary of this passage",
+  "excerpt.glossaryFull":
+    "The full chapter list is in the companion, with a printable version.",
+  "admin.excerpt": "Demonstration excerpt",
   "admin.forbidden": "Restricted access.",
 };
 
