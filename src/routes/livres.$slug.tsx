@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
+import { MirrorReader } from "@/components/MirrorReader";
 import { pickLang, useI18n } from "@/i18n/context";
 import { bookQuery } from "@/lib/queries";
 
@@ -76,14 +77,11 @@ function BookPage() {
       <p className="body-text mt-8">{pickLang(lang, book.blurb_fr, book.blurb_en)}</p>
 
       <section className="border-line mt-8 border-t pt-6">
-        <h2 className="label text-secondary-text">{t("books.excerpt")}</h2>
-        {book.excerpt_he ? <HebrewText className="mt-4">{book.excerpt_he}</HebrewText> : null}
-        <p className="body-text border-line mt-4 border-t pt-4">
-          <span className="label text-secondary-text block">{t("books.translation")}</span>
-          <span className="mt-2 block">
-            {pickLang(lang, book.excerpt_translation_fr, book.excerpt_translation_en)}
-          </span>
-        </p>
+        <h2 className="text-[22px]">{t("books.excerpt")}</h2>
+        <p className="body-text text-secondary-text mt-2">{t("mirror.tryIt")}</p>
+        <div className="mt-5">
+          <MirrorReader segments={data.segments} color={collection?.color_hex ?? null} />
+        </div>
       </section>
 
       {learnList.length > 0 ? (
