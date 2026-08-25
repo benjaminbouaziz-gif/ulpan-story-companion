@@ -140,7 +140,7 @@ function KeysTable({
           className="border-b"
           style={{
             display: "grid",
-            gridTemplateColumns: `${mm(MM.keyNoW)} ${mm(MM.keyHeW)} ${mm(MM.keyTranslitW)} minmax(0,1fr)`,
+            gridTemplateColumns: "max-content max-content max-content minmax(0,1fr)",
             alignItems: "baseline",
             columnGap: mm(1.2),
             paddingBottom: mm(1),
@@ -401,11 +401,10 @@ export function BookSpread({
         className="relative"
         style={{
           width: mm(SPREAD_MM),
-          height: mm(MM.pageH),
+          minHeight: mm(MM.pageH),
           background: "#F3F1EA",
           color: "#15171A",
           boxShadow: "0 18px 36px -26px rgba(0,0,0,.5)",
-          overflow: "hidden",
         }}
       >
         {/* Titres courants */}
