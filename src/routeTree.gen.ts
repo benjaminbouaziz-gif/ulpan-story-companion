@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
   id: '/confidentialite',
   path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
@@ -56,6 +62,7 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/confidentialite': typeof ConfidentialiteRoute
+  '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/confidentialite': typeof ConfidentialiteRoute
+  '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/confidentialite': typeof ConfidentialiteRoute
+  '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/confidentialite'
+    | '/contact'
     | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/confidentialite'
+    | '/contact'
     | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/confidentialite'
+    | '/contact'
     | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
+  ContactRoute: typeof ContactRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/confidentialite'
       fullPath: '/confidentialite'
       preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentions-legales': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
+  ContactRoute: ContactRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
