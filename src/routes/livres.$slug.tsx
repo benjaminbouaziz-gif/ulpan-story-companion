@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { Excerpt, GlossaryList } from "@/components/Excerpt";
+import { SpreadSection } from "@/components/SpreadSection";
 import { pickLang, useI18n } from "@/i18n/context";
 import { bookQuery } from "@/lib/queries";
 
@@ -78,25 +78,17 @@ function BookPage() {
 
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("books.excerpt")}</h2>
-        <p className="body-text mt-3">{t("excerpt.before")}</p>
-        <div className="mt-8">
-          <Excerpt paragraphs={data.paragraphs} color={collection?.color_hex ?? null} />
-        </div>
-        <div className="mx-auto mt-10 max-w-[65ch]">
-          <p className="body-text">{t("excerpt.after1")}</p>
-          <p className="body-text">{t("excerpt.after2")}</p>
-        </div>
-        {data.glossary.length > 0 ? (
-          <div className="mt-10">
-            <h3 className="mx-auto max-w-[65ch] text-[20px]">{t("excerpt.glossary")}</h3>
-            <div className="mt-4">
-              <GlossaryList items={data.glossary} />
-            </div>
-            <p className="body-text text-secondary-text mx-auto mt-4 max-w-[65ch] text-[0.85em]">
-              {t("excerpt.glossaryFull")}
-            </p>
-          </div>
-        ) : null}
+        <SpreadSection
+          paragraphs={data.paragraphs}
+          color={collection?.color_hex ?? null}
+          runningHead={
+            pickLang(lang, book.spread_running_head_fr, book.spread_running_head_en) ??
+            pickLang(lang, book.title_fr, book.title_en) ??
+            ""
+          }
+          chapter={pickLang(lang, book.spread_chapter_fr, book.spread_chapter_en) ?? ""}
+          folio={book.spread_folio_left ?? 42}
+        />
       </section>
 
       {learnList.length > 0 ? (
