@@ -1,9 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
-import { Excerpt, GlossaryList } from "@/components/Excerpt";
-import { Spread } from "@/components/Spread";
-
+import { SpreadSection } from "@/components/SpreadSection";
 import { pickLang, useI18n } from "@/i18n/context";
 import { showcaseQuery } from "@/lib/queries";
 
@@ -14,12 +12,12 @@ export const Route = createFileRoute("/methode")({
       {
         name: "description",
         content:
-          "Un passage à lire jusqu'en bas : l'hébreu vocalisé au départ, l'hébreu seul à l'arrivée. La méthode se montre, elle ne s'explique pas.",
+          "La double page du livre, reproduite au millimètre : hébreu à gauche, soutien à droite, quatre étapes jusqu'à l'hébreu seul.",
       },
       { property: "og:title", content: "La méthode — Ulpan Story" },
       {
         property: "og:description",
-        content: "Lisez ce passage jusqu'en bas.",
+        content: "La double page du livre, à ses proportions réelles.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -37,62 +35,22 @@ export const Route = createFileRoute("/methode")({
 function MethodPage() {
   const { t, lang } = useI18n();
   const { data } = useSuspenseQuery(showcaseQuery);
+  const book = data.book;
 
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("nav.method")}</h1>
-      <p className="body-text mt-6">{t("excerpt.before")}</p>
-
-      {data.paragraphs.length > 0 && data.book ? (
-        <section className="mt-10">
-          <Spread
-            paragraphs={data.paragraphs}
-            color={data.collection?.color_hex ?? null}
-            title={pickLang(lang, data.book.title_fr, data.book.title_en) ?? ""}
-            chapter={t("spread.chapter")}
-          />
-          <p className="label text-secondary-text mt-3">{t("spread.caption")}</p>
-          <p className="body-text mt-2">{t("spread.watch")}</p>
-          <a
-            href="#lecture"
-            className="label touch mt-4 inline-flex items-center border-b border-current"
-          >
-            {t("spread.read")}
-          </a>
-        </section>
-      ) : null}
-
-      <div id="lecture" className="border-line mt-14 border-t pt-10">
-        <Excerpt paragraphs={data.paragraphs} color={data.collection?.color_hex ?? null} />
-      </div>
-
-      <div className="mx-auto mt-10 max-w-[65ch]">
-        <p className="body-text">{t("excerpt.after1")}</p>
-        <p className="body-text">{t("excerpt.after2")}</p>
-      </div>
-
-
-      {data.glossary.length > 0 ? (
-        <section className="border-line mt-14 border-t pt-8">
-          <h2 className="mx-auto max-w-[65ch] text-[22px]">{t("excerpt.glossary")}</h2>
-          <div className="mt-5">
-            <GlossaryList items={data.glossary} />
-          </div>
-          <p className="body-text text-secondary-text mx-auto mt-5 max-w-[65ch] text-[0.85em]">
-            {t("excerpt.glossaryFull")}
-          </p>
-        </section>
-      ) : null}
-
-      {data.book ? (
-        <Link
-          to="/livres/$slug"
-          params={{ slug: data.book.slug }}
-          className="label touch mx-auto mt-10 flex max-w-[65ch] items-center border-b border-current"
-        >
-          {pickLang(lang, data.book.title_fr, data.book.title_en)}
-        </Link>
-      ) : null}
+      <SpreadSection
+        paragraphs={data.paragraphs}
+        color={data.collection?.color_hex ?? null}
+        runningHead={
+          pickLang(lang, book?.spread_running_head_fr, book?.spread_running_head_en) ??
+          pickLang(lang, book?.title_fr, book?.title_en) ??
+          ""
+        }
+        chapter={pickLang(lang, book?.spread_chapter_fr, book?.spread_chapter_en) ?? ""}
+        folio={book?.spread_folio_left ?? 42}
+      />
     </PageShell>
   );
 }

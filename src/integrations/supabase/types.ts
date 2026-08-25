@@ -116,6 +116,11 @@ export type Database = {
           sample_pdf_url: string | null
           slug: string
           spine_mm: number | null
+          spread_chapter_en: string | null
+          spread_chapter_fr: string | null
+          spread_folio_left: number | null
+          spread_running_head_en: string | null
+          spread_running_head_fr: string | null
           status: Database["public"]["Enums"]["book_status"]
           subtitle_en: string | null
           subtitle_fr: string | null
@@ -156,6 +161,11 @@ export type Database = {
           sample_pdf_url?: string | null
           slug: string
           spine_mm?: number | null
+          spread_chapter_en?: string | null
+          spread_chapter_fr?: string | null
+          spread_folio_left?: number | null
+          spread_running_head_en?: string | null
+          spread_running_head_fr?: string | null
           status?: Database["public"]["Enums"]["book_status"]
           subtitle_en?: string | null
           subtitle_fr?: string | null
@@ -196,6 +206,11 @@ export type Database = {
           sample_pdf_url?: string | null
           slug?: string
           spine_mm?: number | null
+          spread_chapter_en?: string | null
+          spread_chapter_fr?: string | null
+          spread_folio_left?: number | null
+          spread_running_head_en?: string | null
+          spread_running_head_fr?: string | null
           status?: Database["public"]["Enums"]["book_status"]
           subtitle_en?: string | null
           subtitle_fr?: string | null
@@ -333,62 +348,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "events_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      excerpt_paragraphs: {
-        Row: {
-          audio_path: string | null
-          book_id: string
-          created_at: string
-          has_nikud: boolean
-          he: string
-          id: string
-          sort_order: number
-          stage_label_en: string | null
-          stage_label_fr: string | null
-          stage_no: number
-          support_en: string | null
-          support_fr: string | null
-          updated_at: string
-        }
-        Insert: {
-          audio_path?: string | null
-          book_id: string
-          created_at?: string
-          has_nikud?: boolean
-          he: string
-          id?: string
-          sort_order?: number
-          stage_label_en?: string | null
-          stage_label_fr?: string | null
-          stage_no?: number
-          support_en?: string | null
-          support_fr?: string | null
-          updated_at?: string
-        }
-        Update: {
-          audio_path?: string | null
-          book_id?: string
-          created_at?: string
-          has_nikud?: boolean
-          he?: string
-          id?: string
-          sort_order?: number
-          stage_label_en?: string | null
-          stage_label_fr?: string | null
-          stage_no?: number
-          support_en?: string | null
-          support_fr?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "excerpt_paragraphs_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
@@ -623,6 +582,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "quiz_questions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spread_paragraphs: {
+        Row: {
+          book_id: string
+          created_at: string
+          he: string
+          he_has_nikud: boolean
+          id: string
+          sort_order: number
+          stage_no: number
+          support_en: string | null
+          support_fr: string | null
+          support_he: string | null
+          support_kind: string
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          he: string
+          he_has_nikud?: boolean
+          id?: string
+          sort_order?: number
+          stage_no: number
+          support_en?: string | null
+          support_fr?: string | null
+          support_he?: string | null
+          support_kind?: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          he?: string
+          he_has_nikud?: boolean
+          id?: string
+          sort_order?: number
+          stage_no?: number
+          support_en?: string | null
+          support_fr?: string | null
+          support_he?: string | null
+          support_kind?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spread_paragraphs_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"

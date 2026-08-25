@@ -66,11 +66,14 @@ const fr = {
   "excerpt.glossary": "Glossaire du passage",
   "excerpt.glossaryFull":
     "La liste complète du chapitre est dans le compagnon, avec sa version imprimable.",
-  "spread.caption": "A5 × 2 · proportions réelles · hébreu à gauche, soutien à droite",
-  "spread.watch": "Regardez la page de droite se vider, ligne après ligne.",
-  "spread.read": "Lire cette page en grand",
-  "spread.chapter": "Chapitre trois",
-  "admin.excerpt": "Extrait démonstratif",
+  "spread.claim": "C'est la double page du livre. Pas une illustration, pas une maquette pour le site : le format, les marges, la typographie et la mise en page sont exactement ceux que vous aurez entre les mains. Les quatre paragraphes montrent les quatre étapes que le livre traverse, de la première à la dernière page.",
+  "spread.note": "Les quatre étapes sont réunies ici pour la démonstration. Dans le livre, chaque double page appartient à une seule étape.",
+  "spread.readBig": "Lire cette page en grand",
+  "spread.stage": "Étape",
+  "spread.of": "sur",
+  "spread.next": "Étape suivante",
+  "spread.prev": "Étape précédente",
+  "admin.excerpt": "Double page de démonstration",
   "admin.forbidden": "Accès réservé.",
 
 } as const;
@@ -141,11 +144,14 @@ const en: Record<DictKey, string> = {
   "excerpt.glossary": "Glossary of this passage",
   "excerpt.glossaryFull":
     "The full chapter list is in the companion, with a printable version.",
-  "spread.caption": "A5 × 2 · real proportions · Hebrew on the left, support on the right",
-  "spread.watch": "Watch the right-hand page empty out, line after line.",
-  "spread.read": "Read this page at full size",
-  "spread.chapter": "Chapter three",
-  "admin.excerpt": "Demonstration excerpt",
+  "spread.claim": "This is the book's double page. Not an illustration, not a mock-up for the website: the format, margins, typography and layout are exactly those you will hold in your hands. The four paragraphs show the four stages the book goes through, from its first page to its last.",
+  "spread.note": "The four stages are gathered here for the demonstration. In the book, each double page belongs to a single stage.",
+  "spread.readBig": "Read this page at full size",
+  "spread.stage": "Stage",
+  "spread.of": "of",
+  "spread.next": "Next stage",
+  "spread.prev": "Previous stage",
+  "admin.excerpt": "Demonstration double page",
   "admin.forbidden": "Restricted access.",
 
 };
