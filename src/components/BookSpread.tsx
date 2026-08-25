@@ -270,10 +270,10 @@ export function BookSpread({
         gridTemplateColumns: `${mm(CONTENT_MM)} ${mm(MM.marginSide * 2)} ${mm(CONTENT_MM)}`,
       }}
     >
-      {chapterTitleLatin || page.chapter_title_he ? (
+      {chapterTitleLatin || chapterTitleHe ? (
         <>
           <div data-band-left style={{ paddingBottom: mm(MM.chapterGap) }}>
-            {page.chapter_title_he ? (
+            {chapterTitleHe ? (
               <p
                 dir="rtl"
                 lang="he"
@@ -285,7 +285,7 @@ export function BookSpread({
                   margin: 0,
                 }}
               >
-                {page.chapter_title_he}
+                {chapterTitleHe}
               </p>
             ) : null}
           </div>
