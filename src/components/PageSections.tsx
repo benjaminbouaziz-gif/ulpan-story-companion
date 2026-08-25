@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { pickLang, useI18n } from "@/i18n/context";
 import type { Book, PageSection, SpreadBundle } from "@/lib/catalog.functions";
+import { BookPagesSection } from "./BookPagesSection";
 import { SpreadSection } from "./SpreadSection";
+
 
 /**
  * Le rendu des sections d'une page éditoriale. Aucune phrase n'est écrite ici :
