@@ -27,7 +27,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.textSize = textSize;
+    document.documentElement.dataset["textSize"] = textSize;
   }, [textSize]);
 
   useEffect(() => {
