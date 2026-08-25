@@ -89,7 +89,7 @@ export function GlossaryPage({
                 style={{
                   display: "grid",
                   gridTemplateColumns: gridColumns,
-                  columnGap: mm(1),
+                  columnGap: mm(3),
                   fontFamily: "var(--font-ui)",
                   fontSize: mm(MM.keyNoSize),
                   letterSpacing: "0.18em",
@@ -110,7 +110,7 @@ export function GlossaryPage({
                   style={{
                     display: "grid",
                     gridTemplateColumns: gridColumns,
-                    columnGap: mm(1),
+                    columnGap: mm(3),
                     alignItems: "baseline",
                     paddingTop: mm(0.9),
                     paddingBottom: mm(0.9),

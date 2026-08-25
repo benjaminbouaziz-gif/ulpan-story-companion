@@ -142,7 +142,7 @@ function KeysTable({
             display: "grid",
             gridTemplateColumns: "max-content max-content max-content minmax(0,1fr)",
             alignItems: "baseline",
-            columnGap: mm(1.2),
+            columnGap: mm(3.6),
             paddingBottom: mm(1),
             paddingTop: mm(1),
             borderColor: "rgba(21,23,26,.14)",
