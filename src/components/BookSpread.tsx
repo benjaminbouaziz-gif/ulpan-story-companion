@@ -241,7 +241,12 @@ export function BookSpread({
     .filter(Boolean)
     .join(" · ");
 
-  const chapterTitleLatin = pickLang(lang, page.chapter_title_fr, page.chapter_title_en);
+  // Les étapes « trous » et « vocalisation » ne reprennent pas le titre du chapitre.
+  const showChapterTitles = page.support_kind !== "cloze" && page.support_kind !== "nikud";
+  const chapterTitleLatin = showChapterTitles
+    ? pickLang(lang, page.chapter_title_fr, page.chapter_title_en)
+    : null;
+  const chapterTitleHe = showChapterTitles ? page.chapter_title_he : null;
   const folio = page.folio ?? page.page_no;
 
   const headStyle = {
@@ -265,10 +270,10 @@ export function BookSpread({
         gridTemplateColumns: `${mm(CONTENT_MM)} ${mm(MM.marginSide * 2)} ${mm(CONTENT_MM)}`,
       }}
     >
-      {chapterTitleLatin || page.chapter_title_he ? (
+      {chapterTitleLatin || chapterTitleHe ? (
         <>
           <div data-band-left style={{ paddingBottom: mm(MM.chapterGap) }}>
-            {page.chapter_title_he ? (
+            {chapterTitleHe ? (
               <p
                 dir="rtl"
                 lang="he"
@@ -280,7 +285,7 @@ export function BookSpread({
                   margin: 0,
                 }}
               >
-                {page.chapter_title_he}
+                {chapterTitleHe}
               </p>
             ) : null}
           </div>
