@@ -7,20 +7,20 @@ import { pickLang, useI18n } from "@/i18n/context";
 import { collectionQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/collections/$slug")({
-  head: ({ loaderData }) => {
-    const name = loaderData?.collection?.name_fr ?? "Collection";
-    const tagline =
-      loaderData?.collection?.tagline_fr ??
-      "Une collection de lectures en hébreu vocalisé.";
-    return {
-      meta: [
-        { title: `${name} — Ulpan Story` },
-        { name: "description", content: tagline },
-        { property: "og:title", content: `${name} — Ulpan Story` },
-        { property: "og:description", content: tagline },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "Collection — Ulpan Story" },
+      {
+        name: "description",
+        content: "Les tomes de la collection, leur niveau et leur état de parution.",
+      },
+      { property: "og:title", content: "Collection — Ulpan Story" },
+      {
+        property: "og:description",
+        content: "Une collection de lectures en hébreu vocalisé.",
+      },
+    ],
+  }),
   loader: ({ context, params }) => context.queryClient.ensureQueryData(collectionQuery(params.slug)),
   component: CollectionPage,
 });
