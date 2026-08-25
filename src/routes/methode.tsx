@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { PageSections } from "@/components/PageSections";
-import { pickLang, useI18n } from "@/i18n/context";
+import { useI18n } from "@/i18n/context";
 import { pageQuery } from "@/lib/queries";
 
 const PAGE = "methode";
