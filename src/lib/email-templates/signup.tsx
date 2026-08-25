@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -10,13 +10,16 @@ import {
   Link,
   Preview,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
+
+import { brand, button, code, container, footer, h1, link, main, text, wordmark } from "./theme";
 
 interface SignupEmailProps {
-  siteName: string
-  siteUrl: string
-  recipient: string
-  confirmationUrl: string
+  siteName: string;
+  siteUrl: string;
+  recipient: string;
+  confirmationUrl: string;
+  token?: string;
 }
 
 export const SignupEmail = ({
@@ -24,61 +27,42 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   confirmationUrl,
+  token,
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="fr" dir="ltr">
     <Head />
-    <Preview>Confirm your email for {siteName}</Preview>
+    <Preview>Confirmez votre adresse pour ouvrir les contenus du livre</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
+        <Text style={wordmark}>{siteName}</Text>
+        <Heading style={h1}>Confirmez votre adresse</Heading>
         <Text style={text}>
-          Thanks for signing up for{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          !
-        </Text>
-        <Text style={text}>
-          Please confirm your email address (
+          Vous avez demandé l’accès aux contenus offerts avec votre livre. Confirmez l’adresse{" "}
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
-          </Link>
-          ) by clicking the button below:
+          </Link>{" "}
+          en ouvrant le lien ci-dessous.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Verify Email
+          Ouvrir mon compagnon
         </Button>
+        {token ? (
+          <>
+            <Text style={{ ...text, margin: "28px 0 8px", color: brand.muted, fontSize: "14px" }}>
+              Si le lien ne fonctionne pas, saisissez ce code sur la page d’activation :
+            </Text>
+            <Text style={code}>{token}</Text>
+          </>
+        ) : null}
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          Si vous n’êtes pas à l’origine de cette demande, ignorez ce courrier.{" "}
+          <Link href={siteUrl} style={link}>
+            {siteUrl.replace(/^https?:\/\//, "")}
+          </Link>
         </Text>
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default SignupEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+export default SignupEmail;
