@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Lamed } from "./Bandeau.lamed";
+import { Lamed } from "./Lamed";
 
 /**
  * Le bandeau : bande pleine de la couleur de la collection, en bas de bloc,
