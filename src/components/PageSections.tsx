@@ -68,14 +68,26 @@ function Column({ children }: { children: ReactNode }) {
   return <div className="mx-auto w-full max-w-[65ch]">{children}</div>;
 }
 
-function Block({ children, rule }: { children: ReactNode; rule: string | null }) {
+function Block({
+  children,
+  rule,
+  first,
+}: {
+  children: ReactNode;
+  rule: string | null;
+  first: boolean;
+}) {
   return (
     <section className="mt-16 first:mt-0">
-      <hr
-        className="mb-16 h-px w-16 border-0 first:hidden"
-        style={{ background: rule ?? "var(--color-line)" }}
-        aria-hidden
-      />
+      {first ? null : (
+        <div className="mx-auto mb-16 w-full max-w-[65ch]">
+          <hr
+            className="h-px w-16 border-0"
+            style={{ background: rule ?? "var(--color-line)" }}
+            aria-hidden
+          />
+        </div>
+      )}
       {children}
     </section>
   );
@@ -111,14 +123,14 @@ export function PageSections({
         const rawBody = pickLang(lang, s.body_fr, s.body_en);
         const title = rawTitle ? resolveTokens(rawTitle, book) : null;
         const body = rawBody ? resolveTokens(rawBody, book) : null;
-        const separator = si === 0 ? null : color;
+        const separator = color;
 
         if (s.kind === "book_spread") {
           const bundle = bookId ? spreads[bookId] : undefined;
           if (!bundle) return null;
           const b = bundle.book;
           return (
-            <Block key={s.id} rule={separator}>
+            <Block key={s.id} rule={separator} first={si === 0}>
               {title ? (
                 <Column>
                   <p style={{ fontSize: "calc(19px * var(--text-scale))", lineHeight: 1.55 }}>
@@ -152,7 +164,7 @@ export function PageSections({
             }))
             .filter((f): f is { value: string; label: string | null } => Boolean(f.value));
           return (
-            <Block key={s.id} rule={separator}>
+            <Block key={s.id} rule={separator} first={si === 0}>
               <Column>
                 {title ? <h2 className="text-[24px]">{title}</h2> : null}
                 <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
@@ -186,7 +198,7 @@ export function PageSections({
         if (s.kind === "steps") {
           const steps = Array.isArray(d["steps"]) ? (d["steps"] as Json[]) : [];
           return (
-            <Block key={s.id} rule={separator}>
+            <Block key={s.id} rule={separator} first={si === 0}>
               <Column>
                 {title ? <h2 className="text-[24px]">{title}</h2> : null}
                 <ol className="mt-8">
@@ -217,7 +229,7 @@ export function PageSections({
         if (s.kind === "faq") {
           const items = Array.isArray(d["items"]) ? (d["items"] as Json[]) : [];
           return (
-            <Block key={s.id} rule={separator}>
+            <Block key={s.id} rule={separator} first={si === 0}>
               <Column>
                 {title ? <h2 className="text-[24px]">{title}</h2> : null}
                 <dl className="mt-6">
@@ -239,7 +251,7 @@ export function PageSections({
 
         if (s.kind === "quote") {
           return (
-            <Block key={s.id} rule={separator}>
+            <Block key={s.id} rule={separator} first={si === 0}>
               <Column>
                 <blockquote
                   className="border-line border-l-2 pl-4"
@@ -254,7 +266,7 @@ export function PageSections({
 
         if (s.kind === "heading") {
           return (
-            <Block key={s.id} rule={separator}>
+            <Block key={s.id} rule={separator} first={si === 0}>
               <Column>
                 <h2 className="text-[24px]">{title ?? ""}</h2>
               </Column>
@@ -264,7 +276,7 @@ export function PageSections({
 
         // richtext et tout le reste : un titre, un corps.
         return (
-          <Block key={s.id} rule={separator}>
+          <Block key={s.id} rule={separator} first={si === 0}>
             <Column>
               {title ? <h2 className="text-[24px]">{title}</h2> : null}
               {body ? (
