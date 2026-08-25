@@ -36,7 +36,7 @@ export function MirrorReader({
   initialLevel?: SupportLevel;
   showSlider?: boolean;
 }) {
-  const { lang, t } = useI18n();
+  const { t } = useI18n();
   const [level, setLevel] = useState<SupportLevel>(initialLevel);
   const [active, setActive] = useState<Active>(null);
   const [sheet, setSheet] = useState<MirrorToken | null>(null);
