@@ -66,8 +66,13 @@ const fr = {
   "excerpt.glossary": "Glossaire du passage",
   "excerpt.glossaryFull":
     "La liste complète du chapitre est dans le compagnon, avec sa version imprimable.",
+  "spread.caption": "A5 × 2 · proportions réelles · hébreu à gauche, soutien à droite",
+  "spread.watch": "Regardez la page de droite se vider, ligne après ligne.",
+  "spread.read": "Lire cette page en grand",
+  "spread.chapter": "Chapitre trois",
   "admin.excerpt": "Extrait démonstratif",
   "admin.forbidden": "Accès réservé.",
+
 } as const;
 
 export type DictKey = keyof typeof fr;
