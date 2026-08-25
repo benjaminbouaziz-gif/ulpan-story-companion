@@ -399,6 +399,7 @@ export function BookSpread({
         style={{
           width: mm(SPREAD_MM),
           minHeight: mm(MM.pageH),
+          display: "flow-root",
           background: "#F3F1EA",
           color: "#15171A",
           boxShadow: "0 18px 36px -26px rgba(0,0,0,.5)",
