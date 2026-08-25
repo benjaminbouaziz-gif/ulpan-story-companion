@@ -211,7 +211,10 @@ export const getPageBySlug = createServerFn({ method: "GET" })
           book,
           collection: (book.collection_id ? collections[book.collection_id] : null) ?? null,
           paragraphs: (rows ?? []).map(toSpreadParagraph),
+          pages: await loadBookPages(supabase, id),
+          words: await loadGlossaryWords(supabase, id),
         };
+
       }
     }
 
