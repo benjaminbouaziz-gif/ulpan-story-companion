@@ -146,7 +146,10 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
     let error: string | null = null;
     for (const s of sections ?? []) {
       const row = s as unknown as Record<string, unknown>;
+      // Une section propre à une langue n'attend pas de traduction.
+      if (!sectionLocales(row).includes("en")) continue;
       const jobs: { field: string; fr: string }[] = [];
+
       for (const field of ["title", "body"] as const) {
         const fr = (row[`${field}_fr`] as string | null) ?? "";
         const en = (row[`${field}_en`] as string | null) ?? "";
