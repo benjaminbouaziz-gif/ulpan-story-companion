@@ -141,8 +141,13 @@ const en: Record<DictKey, string> = {
   "excerpt.glossary": "Glossary of this passage",
   "excerpt.glossaryFull":
     "The full chapter list is in the companion, with a printable version.",
+  "spread.caption": "A5 × 2 · real proportions · Hebrew on the left, support on the right",
+  "spread.watch": "Watch the right-hand page empty out, line after line.",
+  "spread.read": "Read this page at full size",
+  "spread.chapter": "Chapter three",
   "admin.excerpt": "Demonstration excerpt",
   "admin.forbidden": "Restricted access.",
+
 };
 
 export const dictionaries: Record<Lang, Record<DictKey, string>> = { fr, en };
