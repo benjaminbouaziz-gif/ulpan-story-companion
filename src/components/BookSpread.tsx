@@ -209,7 +209,8 @@ export function BookSpread({
   const mm: MMFn = (v) => `${v * ppm}px`;
   const shared = usesSharedGrid(page.support_kind);
   const blocks = [...page.blocks].sort((a, b) => a.sort_order - b.sort_order);
-  const gridTop = MM.marginTop + MM.runheadSize * 1.2 + MM.runheadGap;
+  // Le titre courant, au triple du corps, peut tenir sur deux lignes.
+  const gridTop = MM.marginTop + MM.runheadSize * 2.8 + MM.runheadGap;
 
   // La trame : le haut de chaque bande, relevé sur le rendu réel. Les traits
   // doivent former des lignes continues d'une page à l'autre.
