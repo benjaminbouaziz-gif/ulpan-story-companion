@@ -144,7 +144,7 @@ export const MM = {
   supportHeLine: 1.66,
   supportOffset: 1.5,
   supportHeOffset: 0.5,
-  blockGap: 1.4,
+  blockGap: 5,
   folioSize: 3,
   folioBottom: 9,
   keyNoSize: 2,
