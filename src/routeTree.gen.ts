@@ -14,6 +14,7 @@ import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
+import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as CompagnonIndexRouteImport } from './routes/compagnon.index'
@@ -43,6 +44,11 @@ const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
 const MethodeRoute = MethodeRouteImport.update({
   id: '/methode',
   path: '/methode',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BQr_codeRoute = BQr_codeRouteImport.update({
+  id: '/b/$qr_code',
+  path: '/b/$qr_code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
+  BQr_codeRoute: typeof BQr_codeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   CompagnonBook_slugRoute: typeof CompagnonBook_slugRoute
   LivresSlugRoute: typeof LivresSlugRoute
@@ -195,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/methode'
       fullPath: '/methode'
       preLoaderRoute: typeof MethodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/b/$qr_code': {
+      id: '/b/$qr_code'
+      path: '/b/$qr_code'
+      fullPath: '/b/$qr_code'
+      preLoaderRoute: typeof BQr_codeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collections/': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
+  BQr_codeRoute: BQr_codeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   CompagnonBook_slugRoute: CompagnonBook_slugRoute,
   LivresSlugRoute: LivresSlugRoute,
