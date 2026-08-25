@@ -46,7 +46,7 @@ function Home() {
 
       <section className="border-line mt-12 border-t pt-8">
         <h2 className="text-[24px]">{t("home.method.title")}</h2>
-        <Link className="mt-4" to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
+        <Link to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
           {t("home.method.link")}
         </Link>
       </section>
