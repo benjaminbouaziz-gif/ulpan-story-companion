@@ -124,7 +124,8 @@ export function PageSections({
 
   return (
     <div>
-      {sections.map((s, si) => {
+      {visible.map((s, si) => {
+
         const d = sectionData(s);
         const bookId = str(d["book_id"]);
         const book = bookId ? books[bookId] : undefined;
