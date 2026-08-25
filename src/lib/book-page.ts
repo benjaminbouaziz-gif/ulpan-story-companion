@@ -123,7 +123,14 @@ export function leftHebrew(block: PageBlock, kind: PageSupportKind): string | nu
 
 const nonEmpty = (v: string | null | undefined) => Boolean(v && v.trim().length > 0);
 
-/** Mesures de la page imprimée, en millimètres. Rien ici n'est décoratif. */
+/**
+ * Mesures de la page imprimée, en millimètres. Rien ici n'est décoratif.
+ * Les corps de texte sont rendus au triple du papier : à l'écran, un corps de
+ * 3,8 mm est illisible. Les largeurs de colonnes et les blancs suivent, sinon
+ * les caractères se chevauchent.
+ */
+const X = 3;
+
 export const MM = {
   pageW: 148,
   pageH: 210,
@@ -131,37 +138,37 @@ export const MM = {
   marginSide: 16,
   marginBottom: 14,
   fold: 0.3,
-  runheadSize: 2.3,
+  runheadSize: 2.3 * X,
   runheadGap: 7,
-  chapterLatin: 5.4,
-  chapterHebrew: 5.8,
-  chapterGap: 6,
-  hebrewSize: 3.8,
+  chapterLatin: 5.4 * X,
+  chapterHebrew: 5.8 * X,
+  chapterGap: 6 * X,
+  hebrewSize: 3.8 * X,
   hebrewLine: 1.66,
-  supportSize: 2.85,
+  supportSize: 2.85 * X,
   supportLine: 1.56,
-  supportHeSize: 3.5,
+  supportHeSize: 3.5 * X,
   supportHeLine: 1.66,
-  supportOffset: 1.5,
-  supportHeOffset: 0.5,
-  blockGap: 5,
-  folioSize: 3,
+  supportOffset: 1.5 * X,
+  supportHeOffset: 0.5 * X,
+  blockGap: 5 * X,
+  folioSize: 3 * X,
   folioBottom: 9,
-  keyNoSize: 2,
-  keyNoW: 6,
-  keyHeW: 24,
-  keyHeSize: 3.5,
-  keyTranslitW: 22,
-  keyTranslitSize: 2.6,
-  keySenseSize: 2.6,
+  keyNoSize: 2 * X,
+  keyNoW: 6 * X,
+  keyHeW: 24 * X,
+  keyHeSize: 3.5 * X,
+  keyTranslitW: 22 * X,
+  keyTranslitSize: 2.6 * X,
+  keySenseSize: 2.6 * X,
   glossGutter: 8,
   glossHeadRule: 0.3,
   glossEntryRule: 0.12,
-  glossNoW: 5.5,
-  glossHeW: 17,
-  glossHeSize: 3.2,
-  glossTranslitW: 15,
-  glossBodySize: 2.3,
+  glossNoW: 5.5 * X,
+  glossHeW: 17 * X,
+  glossHeSize: 3.2 * X,
+  glossTranslitW: 15 * X,
+  glossBodySize: 2.3 * X,
   glossPerColumn: 22,
 } as const;
 

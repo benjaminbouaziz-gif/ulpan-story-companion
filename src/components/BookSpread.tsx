@@ -140,9 +140,9 @@ function KeysTable({
           className="border-b"
           style={{
             display: "grid",
-            gridTemplateColumns: `${mm(MM.keyNoW)} ${mm(MM.keyHeW)} ${mm(MM.keyTranslitW)} minmax(0,1fr)`,
+            gridTemplateColumns: "max-content max-content max-content minmax(0,1fr)",
             alignItems: "baseline",
-            columnGap: mm(1.2),
+            columnGap: mm(3.6),
             paddingBottom: mm(1),
             paddingTop: mm(1),
             borderColor: "rgba(21,23,26,.14)",
@@ -209,7 +209,8 @@ export function BookSpread({
   const mm: MMFn = (v) => `${v * ppm}px`;
   const shared = usesSharedGrid(page.support_kind);
   const blocks = [...page.blocks].sort((a, b) => a.sort_order - b.sort_order);
-  const gridTop = MM.marginTop + MM.runheadSize * 1.2 + MM.runheadGap;
+  // Le titre courant, au triple du corps, peut tenir sur deux lignes.
+  const gridTop = MM.marginTop + MM.runheadSize * 2.8 + MM.runheadGap;
 
   // La trame : le haut de chaque bande, relevé sur le rendu réel. Les traits
   // doivent former des lignes continues d'une page à l'autre.
@@ -262,9 +263,9 @@ export function BookSpread({
     <div
       ref={gridRef}
       style={{
-        position: "absolute",
-        top: mm(gridTop),
-        left: mm(MM.marginSide),
+        marginTop: mm(gridTop),
+        marginLeft: mm(MM.marginSide),
+        marginBottom: mm(MM.marginBottom + MM.folioSize * 2),
         width: mm(SPREAD_MM - MM.marginSide * 2),
         display: "grid",
         gridTemplateColumns: `${mm(CONTENT_MM)} ${mm(MM.marginSide * 2)} ${mm(CONTENT_MM)}`,
@@ -352,15 +353,18 @@ export function BookSpread({
   );
 
   const independentColumns = (
-    <>
-      <div
-        style={{
-          position: "absolute",
-          top: mm(gridTop),
-          left: mm(MM.marginSide),
-          width: mm(CONTENT_MM),
-        }}
-      >
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        marginTop: mm(gridTop),
+        marginBottom: mm(MM.marginBottom + MM.folioSize * 2),
+        paddingLeft: mm(MM.marginSide),
+        paddingRight: mm(MM.marginSide),
+        columnGap: mm(MM.marginSide * 2),
+      }}
+    >
+      <div style={{ width: mm(CONTENT_MM) }}>
         {blocks.map((b, i) => {
           const he = leftHebrew(b, page.support_kind);
           if (!he) return null;
@@ -371,14 +375,7 @@ export function BookSpread({
           );
         })}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          top: mm(gridTop),
-          left: mm(MM.pageW + MM.marginSide),
-          width: mm(CONTENT_MM),
-        }}
-      >
+      <div style={{ width: mm(CONTENT_MM) }}>
         <p
           style={{
             fontFamily: "var(--font-latin)",
@@ -392,7 +389,7 @@ export function BookSpread({
         </p>
         <KeysTable keys={page.keys} mm={mm} color={color} />
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -401,11 +398,11 @@ export function BookSpread({
         className="relative"
         style={{
           width: mm(SPREAD_MM),
-          height: mm(MM.pageH),
+          minHeight: mm(MM.pageH),
+          display: "flow-root",
           background: "#F3F1EA",
           color: "#15171A",
           boxShadow: "0 18px 36px -26px rgba(0,0,0,.5)",
-          overflow: "hidden",
         }}
       >
         {/* Titres courants */}

@@ -38,11 +38,12 @@ export function GlossaryPage({
   if (words.length === 0) return null;
   const mm = (v: number) => `${v * ppm}px`;
 
-  const perColumn = Math.max(MM.glossPerColumn, Math.ceil(words.length / 2));
-  const columns = [words.slice(0, perColumn), words.slice(perColumn)].filter((c) => c.length > 0);
-  const columnW = (CONTENT_MM - MM.glossGutter) / 2;
+  // Au triple du corps papier, le glossaire tient sur une seule colonne et
+  // chaque colonne du tableau prend la largeur de son contenu.
+  const columns = [words];
+  const columnW = CONTENT_MM;
 
-  const gridColumns = `${mm(MM.glossNoW)} ${mm(MM.glossHeW)} ${mm(MM.glossTranslitW)} minmax(0,1fr)`;
+  const gridColumns = "max-content max-content max-content minmax(0,1fr)";
 
   return (
     <div ref={holder} className="w-full">
@@ -50,7 +51,7 @@ export function GlossaryPage({
         className="relative"
         style={{
           width: mm(MM.pageW),
-          height: mm(MM.pageH),
+          minHeight: mm(MM.pageH),
           background: "#F3F1EA",
           color: "#15171A",
           paddingTop: mm(MM.marginTop),
@@ -58,7 +59,6 @@ export function GlossaryPage({
           paddingRight: mm(MM.marginSide),
           paddingBottom: mm(MM.marginBottom),
           boxShadow: "0 18px 36px -26px rgba(0,0,0,.5)",
-          overflow: "hidden",
         }}
       >
         <p
@@ -89,7 +89,7 @@ export function GlossaryPage({
                 style={{
                   display: "grid",
                   gridTemplateColumns: gridColumns,
-                  columnGap: mm(1),
+                  columnGap: mm(3),
                   fontFamily: "var(--font-ui)",
                   fontSize: mm(MM.keyNoSize),
                   letterSpacing: "0.18em",
@@ -110,7 +110,7 @@ export function GlossaryPage({
                   style={{
                     display: "grid",
                     gridTemplateColumns: gridColumns,
-                    columnGap: mm(1),
+                    columnGap: mm(3),
                     alignItems: "baseline",
                     paddingTop: mm(0.9),
                     paddingBottom: mm(0.9),
