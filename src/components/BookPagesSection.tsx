@@ -237,7 +237,9 @@ export function BookPagesSection({
         <div className="border-line mt-12 border-t pt-8">
           <h3 className="text-[22px]">{t("gloss.title")}</h3>
           <div className="mt-6 overflow-x-auto">
-            <GlossaryPage words={words} color={color} />
+            <div style={{ width: `${zoom * 100}%` }}>
+              <GlossaryPage words={words} color={color} maxPxPerMm={3.78 * zoom} />
+            </div>
           </div>
         </div>
       ) : null}
