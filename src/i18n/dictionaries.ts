@@ -181,6 +181,28 @@ const en: Record<DictKey, string> = {
   "access.yourBook": "The book you are holding",
   "admin.excerpt": "Demonstration double page",
   "admin.forbidden": "Restricted access.",
+  "companion.signedOut": "Your reader area opens with the QR code in your book.",
+  "companion.signIn": "I have a code or a link",
+  "companion.myBooks": "Your books",
+  "companion.noBooks": "No book is open yet. Scan the QR code printed in your copy.",
+  "companion.open": "Open",
+  "companion.locked": "This book is not open on your account.",
+  "companion.lockedBody": "Scan the QR code printed in your copy to open it.",
+  "companion.glossary": "Glossary",
+  "companion.glossaryNote": "Every word of the book, in reading order.",
+  "companion.quiz": "Training",
+  "companion.quizNote": "The words of the chapter, one question at a time.",
+  "companion.quizStart": "Begin",
+  "companion.quizNext": "Next",
+  "companion.quizDone": "Round finished",
+  "companion.quizAgain": "Start again",
+  "companion.quizScore": "Correct answers",
+  "companion.progress": "Your training so far",
+  "companion.audio": "Audio reading",
+  "companion.audioSoon": "The audio readings are being recorded. They appear here as soon as they are ready.",
+  "companion.loading": "Opening…",
+  "companion.words": "words",
+
 
 };
 
