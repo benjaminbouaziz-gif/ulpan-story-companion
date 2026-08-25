@@ -43,6 +43,7 @@ export const adminSaveSection = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         sort_order: z.number().int(),
         is_visible: z.boolean(),
+        locales: z.array(z.enum(["fr", "en"])).min(1),
         title_fr: z.string().nullable(),
         title_en: z.string().nullable(),
         body_fr: z.string().nullable(),
@@ -66,9 +67,18 @@ export const adminSaveSection = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!current) return { ok: false, error: "Section introuvable." };
 
+    const { data: ownerPage } = await context.supabase
+      .from("pages")
+      .select("slug")
+      .eq("id", current.page_id)
+      .maybeSingle();
+    // La page méthode s'écrit à la main dans chaque langue.
+    const manual = isManualPage(ownerPage?.slug ?? "");
+
     const patch: Record<string, unknown> = {
       sort_order: data.sort_order,
       is_visible: data.is_visible,
+      locales: data.locales,
       title_fr: data.title_fr,
       title_en: data.title_en,
       body_fr: data.body_fr,
@@ -87,13 +97,16 @@ export const adminSaveSection = createServerFn({ method: "POST" })
     }
 
     // Un français modifié : l'anglais auto ou vide est retraduit.
-    const auto = await autoEnglishPatch(context.supabase, context.userId, current, {
-      title_fr: data.title_fr,
-      title_en: (patch["title_en_source"] as string) === "human" ? null : data.title_en,
-      body_fr: data.body_fr,
-      body_en: (patch["body_en_source"] as string) === "human" ? null : data.body_en,
-      data: parsed,
-    });
+    const auto =
+      manual || !data.locales.includes("en")
+        ? { patch: {}, error: null }
+        : await autoEnglishPatch(context.supabase, context.userId, current, {
+            title_fr: data.title_fr,
+            title_en: (patch["title_en_source"] as string) === "human" ? null : data.title_en,
+            body_fr: data.body_fr,
+            body_en: (patch["body_en_source"] as string) === "human" ? null : data.body_en,
+            data: parsed,
+          });
     Object.assign(patch, auto.patch);
 
     const { error } = await context.supabase
@@ -102,6 +115,7 @@ export const adminSaveSection = createServerFn({ method: "POST" })
       .eq("id", data.id);
     return { ok: !error, error: error?.message ?? auto.error ?? null };
   });
+
 
 /** Retraduit tous les champs d'une page, y compris les anglais obsolètes. */
 export const adminTranslatePage = createServerFn({ method: "POST" })
