@@ -3,7 +3,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./admin-spread.server";
 import { hashText, translateFields } from "./translate.server";
-import { autoEnglishPatch, sectionFieldStatus, translateDataObject } from "./translate-pages.server";
+import {
+  autoEnglishPatch,
+  isManualPage,
+  sectionFieldStatus,
+  translateDataObject,
+} from "./translate-pages.server";
 
 /** Les sections d'une page : lecture, écriture, versions, traduction. */
 export const adminListSections = createServerFn({ method: "GET" })
@@ -11,12 +16,13 @@ export const adminListSections = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
+    const manual = isManualPage(data.slug);
     const { data: page } = await context.supabase
       .from("pages")
       .select("*")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!page) return { page: null, sections: [], statuses: {} };
+    if (!page) return { page: null, sections: [], statuses: {}, manual };
     const { data: sections } = await context.supabase
       .from("page_sections")
       .select("*")
@@ -24,9 +30,10 @@ export const adminListSections = createServerFn({ method: "GET" })
       .order("sort_order", { ascending: true });
     const rows = sections ?? [];
     const statuses: Record<string, Record<string, string>> = {};
-    for (const s of rows) statuses[s.id] = await sectionFieldStatus(s);
-    return { page, sections: rows, statuses };
+    for (const s of rows) statuses[s.id] = await sectionFieldStatus(s, { manual });
+    return { page, sections: rows, statuses, manual };
   });
+
 
 export const adminSaveSection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
