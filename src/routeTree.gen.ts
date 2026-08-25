@@ -17,6 +17,8 @@ import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -64,6 +66,16 @@ const MethodeRoute = MethodeRouteImport.update({
   path: '/methode',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminExtraitsRoute = AdminExtraitsRouteImport.update({
+  id: '/extraits',
+  path: '/extraits',
+  getParentRoute: () => AdminRoute,
+} as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
   path: '/b/$qr_code',
@@ -98,32 +110,35 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activation': typeof ActivationRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/extraits': typeof AdminExtraitsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activation': typeof ActivationRoute
-  '/admin': typeof AdminRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/extraits': typeof AdminExtraitsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
 }
@@ -131,16 +146,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/activation': typeof ActivationRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/extraits': typeof AdminExtraitsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
 }
@@ -155,26 +172,29 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/extraits'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
+    | '/admin/'
     | '/collections/'
     | '/compagnon/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/activation'
-    | '/admin'
     | '/confidentialite'
     | '/connexion'
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/extraits'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
+    | '/admin'
     | '/collections'
     | '/compagnon'
   id:
@@ -187,10 +207,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/extraits'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
+    | '/admin/'
     | '/collections/'
     | '/compagnon/'
   fileRoutesById: FileRoutesById
@@ -198,7 +220,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivationRoute: typeof ActivationRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ConnexionRoute: typeof ConnexionRoute
   ContactRoute: typeof ContactRoute
@@ -270,6 +292,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MethodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/extraits': {
+      id: '/admin/extraits'
+      path: '/extraits'
+      fullPath: '/admin/extraits'
+      preLoaderRoute: typeof AdminExtraitsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/b/$qr_code': {
       id: '/b/$qr_code'
       path: '/b/$qr_code'
@@ -315,10 +351,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminExtraitsRoute: typeof AdminExtraitsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminExtraitsRoute: AdminExtraitsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivationRoute: ActivationRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ConnexionRoute: ConnexionRoute,
   ContactRoute: ContactRoute,

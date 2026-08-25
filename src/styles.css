@@ -122,6 +122,17 @@
   font-variant-ligatures: none;
 }
 
+/* Petit hébreu pour les listes mot à mot : mêmes garde-fous. */
+@utility hebrew-sm {
+  font-family: var(--font-hebrew);
+  font-size: calc(16px * var(--text-scale));
+  line-height: 1.8;
+  letter-spacing: normal;
+  text-transform: none;
+  font-stretch: normal;
+  font-variant-ligatures: none;
+}
+
 @utility hebrew-lg {
   font-family: var(--font-hebrew);
   font-size: calc(28px * var(--text-scale));

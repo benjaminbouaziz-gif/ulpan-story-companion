@@ -340,6 +340,74 @@ export type Database = {
           },
         ]
       }
+      excerpt_segments: {
+        Row: {
+          audio_end_ms: number | null
+          audio_start_ms: number | null
+          book_id: string
+          chapter_no: number
+          created_at: string
+          hard_words_en: string | null
+          hard_words_fr: string | null
+          he_nikud: string
+          he_plain: string
+          id: string
+          is_showcase: boolean
+          sort_order: number
+          support_en: string | null
+          support_fr: string | null
+          tokens: Json
+          translit: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_end_ms?: number | null
+          audio_start_ms?: number | null
+          book_id: string
+          chapter_no?: number
+          created_at?: string
+          hard_words_en?: string | null
+          hard_words_fr?: string | null
+          he_nikud: string
+          he_plain?: string
+          id?: string
+          is_showcase?: boolean
+          sort_order?: number
+          support_en?: string | null
+          support_fr?: string | null
+          tokens?: Json
+          translit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_end_ms?: number | null
+          audio_start_ms?: number | null
+          book_id?: string
+          chapter_no?: number
+          created_at?: string
+          hard_words_en?: string | null
+          hard_words_fr?: string | null
+          he_nikud?: string
+          he_plain?: string
+          id?: string
+          is_showcase?: boolean
+          sort_order?: number
+          support_en?: string | null
+          support_fr?: string | null
+          tokens?: Json
+          translit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "excerpt_segments_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       glossary_entries: {
         Row: {
           book_id: string
@@ -571,14 +639,42 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "editor" | "user"
       book_status:
         | "idea"
         | "writing"
@@ -727,6 +823,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "editor", "user"],
       book_status: [
         "idea",
         "writing",

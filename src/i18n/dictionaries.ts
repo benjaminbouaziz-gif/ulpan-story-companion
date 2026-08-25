@@ -60,6 +60,16 @@ const fr = {
   "empty.page": "Cette page n'a pas encore de contenu publié.",
   "soon": "Cet écran arrive dans une prochaine étape.",
   "back.home": "Retour à l'accueil",
+  "mirror.support": "Soutien",
+  "mirror.empty": "Ce passage n'est pas encore aligné.",
+  "mirror.glossary": "Glossaire",
+  "mirror.noGloss": "Pas encore de définition pour ce mot.",
+  "mirror.tapForGlossary": "Touchez un mot pour ouvrir le glossaire.",
+  "mirror.title": "Le miroir",
+  "mirror.tryIt": "Essayez : bougez le curseur, touchez un mot.",
+  "mirror.longPress": "Appui long sur un mot : le glossaire s'ouvre.",
+  "admin.segments": "Extraits alignés",
+  "admin.forbidden": "Accès réservé.",
 } as const;
 
 export type DictKey = keyof typeof fr;
@@ -122,6 +132,16 @@ const en: Record<DictKey, string> = {
   "empty.page": "This page has no published content yet.",
   "soon": "This screen arrives in a later step.",
   "back.home": "Back to home",
+  "mirror.support": "Support",
+  "mirror.empty": "This passage is not aligned yet.",
+  "mirror.glossary": "Glossary",
+  "mirror.noGloss": "No definition for this word yet.",
+  "mirror.tapForGlossary": "Tap a word to open the glossary.",
+  "mirror.title": "The mirror",
+  "mirror.tryIt": "Try it: move the slider, tap a word.",
+  "mirror.longPress": "Long-press a word: the glossary opens.",
+  "admin.segments": "Aligned excerpts",
+  "admin.forbidden": "Restricted access.",
 };
 
 export const dictionaries: Record<Lang, Record<DictKey, string>> = { fr, en };
