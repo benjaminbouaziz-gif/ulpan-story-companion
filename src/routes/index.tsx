@@ -3,8 +3,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
+import { MirrorReader } from "@/components/MirrorReader";
 import { useI18n, pickLang } from "@/i18n/context";
-import { collectionsQuery, publishedBooksQuery } from "@/lib/queries";
+import { collectionsQuery, publishedBooksQuery, showcaseQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/")({
     await Promise.all([
       context.queryClient.ensureQueryData(collectionsQuery),
       context.queryClient.ensureQueryData(publishedBooksQuery),
+      context.queryClient.ensureQueryData(showcaseQuery),
     ]);
   },
   component: Home,
@@ -35,6 +37,7 @@ function Home() {
   const { t, lang } = useI18n();
   const { data: collectionsData } = useSuspenseQuery(collectionsQuery);
   const { data: booksData } = useSuspenseQuery(publishedBooksQuery);
+  const { data: showcase } = useSuspenseQuery(showcaseQuery);
   const collections = collectionsData.collections;
   const books = booksData.books;
 
@@ -46,21 +49,12 @@ function Home() {
 
       <section className="border-line mt-12 border-t pt-8">
         <h2 className="text-[24px]">{t("home.method.title")}</h2>
-        <div className="mt-4 flex flex-col gap-4">
-          <div className="border-line border p-4">
-            <p className="label text-secondary-text">{t("home.method.left")}</p>
-            <HebrewText className="mt-3">
-              אֵלִי כֹּהֵן נוֹלַד בְּמִצְרַיִם. הוּא לָמַד עִבְרִית בַּבַּיִת.
-            </HebrewText>
-          </div>
-          <div className="border-line border p-4">
-            <p className="label text-secondary-text">{t("home.method.right")}</p>
-            <p className="body-text mt-3">
-              {lang === "en"
-                ? "Eli Cohen was born in Egypt. He learned Hebrew at home."
-                : "Eli Cohen est né en Égypte. Il a appris l'hébreu à la maison."}
-            </p>
-          </div>
+        <div className="mt-4">
+          <MirrorReader
+            segments={showcase.segments.slice(0, 2)}
+            color={showcase.collection?.color_hex ?? null}
+            showSlider={false}
+          />
         </div>
         <Link to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
           {t("home.method.link")}
