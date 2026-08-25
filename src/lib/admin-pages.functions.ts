@@ -117,14 +117,15 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
     let translated = 0;
     let error: string | null = null;
     for (const s of sections ?? []) {
+      const row = s as unknown as Record<string, unknown>;
       const jobs: { field: string; fr: string }[] = [];
       for (const field of ["title", "body"] as const) {
-        const fr = (s[`${field}_fr`] as string | null) ?? "";
-        const en = (s[`${field}_en`] as string | null) ?? "";
-        const source = (s[`${field}_en_source`] as string | null) ?? null;
+        const fr = (row[`${field}_fr`] as string | null) ?? "";
+        const en = (row[`${field}_en`] as string | null) ?? "";
+        const source = (row[`${field}_en_source`] as string | null) ?? null;
         if (!fr.trim()) continue;
         if (source === "human" && !data.force) continue;
-        if (en.trim() && source === "auto" && s[`${field}_en_hash`] === (await hashText(fr)))
+        if (en.trim() && source === "auto" && row[`${field}_en_hash`] === (await hashText(fr)))
           continue;
         jobs.push({ field, fr });
       }
@@ -140,7 +141,7 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
           patch[`${r.field}_en`] = r.en;
           patch[`${r.field}_en_source`] = "auto";
           patch[`${r.field}_en_hash`] = await hashText(
-            (s[`${r.field}_fr`] as string | null) ?? "",
+            (row[`${r.field}_fr`] as string | null) ?? "",
           );
           translated += 1;
         }

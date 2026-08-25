@@ -42,10 +42,11 @@ export async function autoEnglishPatch(
   current: Row,
   next: { title_fr: string | null; title_en: string | null; body_fr: string | null; body_en: string | null; data: unknown },
 ): Promise<{ patch: Record<string, unknown>; error: string | null }> {
+  const target = next as unknown as Record<string, unknown>;
   const jobs: { field: string; fr: string }[] = [];
   for (const field of ["title", "body"] as const) {
-    const fr = s(next[`${field}_fr`]);
-    const en = s(next[`${field}_en`]);
+    const fr = s(target[`${field}_fr`]);
+    const en = s(target[`${field}_en`]);
     const source = s(current[`${field}_en_source`]);
     if (!fr.trim()) continue;
     if (source === "human") continue;
@@ -64,7 +65,7 @@ export async function autoEnglishPatch(
   for (const r of run.results) {
     patch[`${r.field}_en`] = r.en;
     patch[`${r.field}_en_source`] = "auto";
-    patch[`${r.field}_en_hash`] = await hashText(s(next[`${r.field}_fr`]));
+    patch[`${r.field}_en_hash`] = await hashText(s(target[`${r.field}_fr`]));
   }
   return { patch, error: run.error };
 }
