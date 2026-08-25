@@ -3,7 +3,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
+import { BookPagesSection } from "@/components/BookPagesSection";
 import { SpreadSection } from "@/components/SpreadSection";
+
 import { pickLang, useI18n } from "@/i18n/context";
 import { bookQuery } from "@/lib/queries";
 
@@ -78,18 +80,29 @@ function BookPage() {
 
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("books.excerpt")}</h2>
-        <SpreadSection
-          paragraphs={data.paragraphs}
-          color={collection?.color_hex ?? null}
-          runningHead={
-            pickLang(lang, book.spread_running_head_fr, book.spread_running_head_en) ??
-            pickLang(lang, book.title_fr, book.title_en) ??
-            ""
-          }
-          chapter={pickLang(lang, book.spread_chapter_fr, book.spread_chapter_en) ?? ""}
-          folio={book.spread_folio_left ?? 42}
-        />
+        {data.pages.length > 0 ? (
+          <BookPagesSection
+            pages={data.pages}
+            words={data.words}
+            color={collection?.color_hex ?? null}
+            bookTitle={pickLang(lang, book.title_fr, book.title_en) ?? ""}
+            showGlossary
+          />
+        ) : (
+          <SpreadSection
+            paragraphs={data.paragraphs}
+            color={collection?.color_hex ?? null}
+            runningHead={
+              pickLang(lang, book.spread_running_head_fr, book.spread_running_head_en) ??
+              pickLang(lang, book.title_fr, book.title_en) ??
+              ""
+            }
+            chapter={pickLang(lang, book.spread_chapter_fr, book.spread_chapter_en) ?? ""}
+            folio={book.spread_folio_left ?? 42}
+          />
+        )}
       </section>
+
 
       {learnList.length > 0 ? (
         <section className="border-line mt-8 border-t pt-6">

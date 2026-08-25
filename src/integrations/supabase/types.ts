@@ -176,6 +176,68 @@ export type Database = {
           },
         ]
       }
+      book_pages: {
+        Row: {
+          book_id: string
+          chapter_no: number | null
+          chapter_title_en: string | null
+          chapter_title_fr: string | null
+          chapter_title_he: string | null
+          created_at: string
+          folio: number | null
+          id: string
+          is_published: boolean
+          page_no: number
+          running_head_en: string | null
+          running_head_fr: string | null
+          support_kind: string
+          updated_at: string
+          validated_at: string | null
+        }
+        Insert: {
+          book_id: string
+          chapter_no?: number | null
+          chapter_title_en?: string | null
+          chapter_title_fr?: string | null
+          chapter_title_he?: string | null
+          created_at?: string
+          folio?: number | null
+          id?: string
+          is_published?: boolean
+          page_no: number
+          running_head_en?: string | null
+          running_head_fr?: string | null
+          support_kind: string
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Update: {
+          book_id?: string
+          chapter_no?: number | null
+          chapter_title_en?: string | null
+          chapter_title_fr?: string | null
+          chapter_title_he?: string | null
+          created_at?: string
+          folio?: number | null
+          id?: string
+          is_published?: boolean
+          page_no?: number
+          running_head_en?: string | null
+          running_head_fr?: string | null
+          support_kind?: string
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       books: {
         Row: {
           amazon_asin: string | null
@@ -553,7 +615,10 @@ export type Database = {
           book_id: string
           chapter_no: number | null
           created_at: string
+          first_page: number | null
           form_he: string | null
+          gloss_no: number | null
+          he_nikud: string | null
           id: string
           is_showcase: boolean
           lemma_he: string
@@ -570,7 +635,10 @@ export type Database = {
           book_id: string
           chapter_no?: number | null
           created_at?: string
+          first_page?: number | null
           form_he?: string | null
+          gloss_no?: number | null
+          he_nikud?: string | null
           id?: string
           is_showcase?: boolean
           lemma_he: string
@@ -587,7 +655,10 @@ export type Database = {
           book_id?: string
           chapter_no?: number | null
           created_at?: string
+          first_page?: number | null
           form_he?: string | null
+          gloss_no?: number | null
+          he_nikud?: string | null
           id?: string
           is_showcase?: boolean
           lemma_he?: string
@@ -606,6 +677,100 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_blocks: {
+        Row: {
+          block_kind: string
+          created_at: string
+          he_nikud: string | null
+          he_plain: string | null
+          id: string
+          page_id: string
+          sort_order: number
+          support_en: string | null
+          support_en_hash: string | null
+          support_en_source: string | null
+          support_fr: string | null
+        }
+        Insert: {
+          block_kind?: string
+          created_at?: string
+          he_nikud?: string | null
+          he_plain?: string | null
+          id?: string
+          page_id: string
+          sort_order?: number
+          support_en?: string | null
+          support_en_hash?: string | null
+          support_en_source?: string | null
+          support_fr?: string | null
+        }
+        Update: {
+          block_kind?: string
+          created_at?: string
+          he_nikud?: string | null
+          he_plain?: string | null
+          id?: string
+          page_id?: string
+          sort_order?: number
+          support_en?: string | null
+          support_en_hash?: string | null
+          support_en_source?: string | null
+          support_fr?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_blocks_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "book_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_keys: {
+        Row: {
+          created_at: string
+          gloss_no: number | null
+          he_nikud: string
+          id: string
+          page_id: string
+          sense_en: string | null
+          sense_fr: string | null
+          sort_order: number
+          translit: string | null
+        }
+        Insert: {
+          created_at?: string
+          gloss_no?: number | null
+          he_nikud: string
+          id?: string
+          page_id: string
+          sense_en?: string | null
+          sense_fr?: string | null
+          sort_order?: number
+          translit?: string | null
+        }
+        Update: {
+          created_at?: string
+          gloss_no?: number | null
+          he_nikud?: string
+          id?: string
+          page_id?: string
+          sense_en?: string | null
+          sense_fr?: string | null
+          sort_order?: number
+          translit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_keys_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "book_pages"
             referencedColumns: ["id"]
           },
         ]
