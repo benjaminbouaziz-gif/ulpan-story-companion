@@ -14,6 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_codes: {
+        Row: {
+          attempts: number
+          book_id: string | null
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          attempts?: number
+          book_id?: string | null
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          attempts?: number
+          book_id?: string | null
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_codes_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_runs: {
+        Row: {
+          cost_usd: number | null
+          created_at: string
+          created_by: string | null
+          entity: string | null
+          entity_id: string | null
+          error: string | null
+          fields: number
+          id: string
+          input_chars: number
+          kind: string
+          model: string | null
+          ok: boolean
+          output_chars: number
+        }
+        Insert: {
+          cost_usd?: number | null
+          created_at?: string
+          created_by?: string | null
+          entity?: string | null
+          entity_id?: string | null
+          error?: string | null
+          fields?: number
+          id?: string
+          input_chars?: number
+          kind: string
+          model?: string | null
+          ok?: boolean
+          output_chars?: number
+        }
+        Update: {
+          cost_usd?: number | null
+          created_at?: string
+          created_by?: string | null
+          entity?: string | null
+          entity_id?: string | null
+          error?: string | null
+          fields?: number
+          id?: string
+          input_chars?: number
+          kind?: string
+          model?: string | null
+          ok?: boolean
+          output_chars?: number
+        }
+        Relationships: []
+      }
       audio_tracks: {
         Row: {
           book_id: string
@@ -94,6 +183,8 @@ export type Database = {
           amazon_url_fr: string | null
           amazon_url_other: string | null
           blurb_en: string | null
+          blurb_en_hash: string | null
+          blurb_en_source: string | null
           blurb_fr: string | null
           chapters_count: number | null
           collection_id: string | null
@@ -103,9 +194,13 @@ export type Database = {
           excerpt_translation_en: string | null
           excerpt_translation_fr: string | null
           expected_at: string | null
+          figures_verified_at: string | null
           id: string
           isbn: string | null
+          kdp_page_count: number | null
           level_note_en: string | null
+          level_note_en_hash: string | null
+          level_note_en_source: string | null
           level_note_fr: string | null
           page_count: number | null
           price_eur: number | null
@@ -119,6 +214,7 @@ export type Database = {
           spread_chapter_en: string | null
           spread_chapter_fr: string | null
           spread_folio_left: number | null
+          spread_pages: number | null
           spread_running_head_en: string | null
           spread_running_head_fr: string | null
           status: Database["public"]["Enums"]["book_status"]
@@ -130,6 +226,8 @@ export type Database = {
           tome_no: number | null
           updated_at: string
           what_you_learn_en: Json
+          what_you_learn_en_hash: string | null
+          what_you_learn_en_source: string | null
           what_you_learn_fr: Json
           words_unique: number | null
         }
@@ -139,6 +237,8 @@ export type Database = {
           amazon_url_fr?: string | null
           amazon_url_other?: string | null
           blurb_en?: string | null
+          blurb_en_hash?: string | null
+          blurb_en_source?: string | null
           blurb_fr?: string | null
           chapters_count?: number | null
           collection_id?: string | null
@@ -148,9 +248,13 @@ export type Database = {
           excerpt_translation_en?: string | null
           excerpt_translation_fr?: string | null
           expected_at?: string | null
+          figures_verified_at?: string | null
           id?: string
           isbn?: string | null
+          kdp_page_count?: number | null
           level_note_en?: string | null
+          level_note_en_hash?: string | null
+          level_note_en_source?: string | null
           level_note_fr?: string | null
           page_count?: number | null
           price_eur?: number | null
@@ -164,6 +268,7 @@ export type Database = {
           spread_chapter_en?: string | null
           spread_chapter_fr?: string | null
           spread_folio_left?: number | null
+          spread_pages?: number | null
           spread_running_head_en?: string | null
           spread_running_head_fr?: string | null
           status?: Database["public"]["Enums"]["book_status"]
@@ -175,6 +280,8 @@ export type Database = {
           tome_no?: number | null
           updated_at?: string
           what_you_learn_en?: Json
+          what_you_learn_en_hash?: string | null
+          what_you_learn_en_source?: string | null
           what_you_learn_fr?: Json
           words_unique?: number | null
         }
@@ -184,6 +291,8 @@ export type Database = {
           amazon_url_fr?: string | null
           amazon_url_other?: string | null
           blurb_en?: string | null
+          blurb_en_hash?: string | null
+          blurb_en_source?: string | null
           blurb_fr?: string | null
           chapters_count?: number | null
           collection_id?: string | null
@@ -193,9 +302,13 @@ export type Database = {
           excerpt_translation_en?: string | null
           excerpt_translation_fr?: string | null
           expected_at?: string | null
+          figures_verified_at?: string | null
           id?: string
           isbn?: string | null
+          kdp_page_count?: number | null
           level_note_en?: string | null
+          level_note_en_hash?: string | null
+          level_note_en_source?: string | null
           level_note_fr?: string | null
           page_count?: number | null
           price_eur?: number | null
@@ -209,6 +322,7 @@ export type Database = {
           spread_chapter_en?: string | null
           spread_chapter_fr?: string | null
           spread_folio_left?: number | null
+          spread_pages?: number | null
           spread_running_head_en?: string | null
           spread_running_head_fr?: string | null
           status?: Database["public"]["Enums"]["book_status"]
@@ -220,6 +334,8 @@ export type Database = {
           tome_no?: number | null
           updated_at?: string
           what_you_learn_en?: Json
+          what_you_learn_en_hash?: string | null
+          what_you_learn_en_source?: string | null
           what_you_learn_fr?: Json
           words_unique?: number | null
         }
@@ -238,8 +354,12 @@ export type Database = {
           color_hex: string
           created_at: string
           description_en: string | null
+          description_en_hash: string | null
+          description_en_source: string | null
           description_fr: string | null
           for_whom_en: string | null
+          for_whom_en_hash: string | null
+          for_whom_en_source: string | null
           for_whom_fr: string | null
           hero_image_url: string | null
           id: string
@@ -248,7 +368,13 @@ export type Database = {
           name_fr: string
           slug: string
           sort_order: number
+          story_nature_en: string | null
+          story_nature_en_hash: string | null
+          story_nature_en_source: string | null
+          story_nature_fr: string | null
           tagline_en: string | null
+          tagline_en_hash: string | null
+          tagline_en_source: string | null
           tagline_fr: string | null
           updated_at: string
         }
@@ -256,8 +382,12 @@ export type Database = {
           color_hex?: string
           created_at?: string
           description_en?: string | null
+          description_en_hash?: string | null
+          description_en_source?: string | null
           description_fr?: string | null
           for_whom_en?: string | null
+          for_whom_en_hash?: string | null
+          for_whom_en_source?: string | null
           for_whom_fr?: string | null
           hero_image_url?: string | null
           id?: string
@@ -266,7 +396,13 @@ export type Database = {
           name_fr: string
           slug: string
           sort_order?: number
+          story_nature_en?: string | null
+          story_nature_en_hash?: string | null
+          story_nature_en_source?: string | null
+          story_nature_fr?: string | null
           tagline_en?: string | null
+          tagline_en_hash?: string | null
+          tagline_en_source?: string | null
           tagline_fr?: string | null
           updated_at?: string
         }
@@ -274,8 +410,12 @@ export type Database = {
           color_hex?: string
           created_at?: string
           description_en?: string | null
+          description_en_hash?: string | null
+          description_en_source?: string | null
           description_fr?: string | null
           for_whom_en?: string | null
+          for_whom_en_hash?: string | null
+          for_whom_en_source?: string | null
           for_whom_fr?: string | null
           hero_image_url?: string | null
           id?: string
@@ -284,7 +424,13 @@ export type Database = {
           name_fr?: string
           slug?: string
           sort_order?: number
+          story_nature_en?: string | null
+          story_nature_en_hash?: string | null
+          story_nature_en_source?: string | null
+          story_nature_fr?: string | null
           tagline_en?: string | null
+          tagline_en_hash?: string | null
+          tagline_en_source?: string | null
           tagline_fr?: string | null
           updated_at?: string
         }
@@ -316,6 +462,53 @@ export type Database = {
           snapshot?: Json
         }
         Relationships: []
+      }
+      email_signups: {
+        Row: {
+          book_id: string | null
+          confirmed_at: string | null
+          confirmed_ip_hash: string | null
+          consent_asked_at: string
+          consent_token: string
+          created_at: string
+          email: string
+          id: string
+          lang: string
+          qr_code: string | null
+        }
+        Insert: {
+          book_id?: string | null
+          confirmed_at?: string | null
+          confirmed_ip_hash?: string | null
+          consent_asked_at?: string
+          consent_token: string
+          created_at?: string
+          email: string
+          id?: string
+          lang?: string
+          qr_code?: string | null
+        }
+        Update: {
+          book_id?: string | null
+          confirmed_at?: string | null
+          confirmed_ip_hash?: string | null
+          consent_asked_at?: string
+          consent_token?: string
+          created_at?: string
+          email?: string
+          id?: string
+          lang?: string
+          qr_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_signups_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -367,6 +560,8 @@ export type Database = {
           note_en: string | null
           note_fr: string | null
           sense_en: string | null
+          sense_en_hash: string | null
+          sense_en_source: string | null
           sense_fr: string | null
           sort_order: number
           translit: string | null
@@ -382,6 +577,8 @@ export type Database = {
           note_en?: string | null
           note_fr?: string | null
           sense_en?: string | null
+          sense_en_hash?: string | null
+          sense_en_source?: string | null
           sense_fr?: string | null
           sort_order?: number
           translit?: string | null
@@ -397,6 +594,8 @@ export type Database = {
           note_en?: string | null
           note_fr?: string | null
           sense_en?: string | null
+          sense_en_hash?: string | null
+          sense_en_source?: string | null
           sense_fr?: string | null
           sort_order?: number
           translit?: string | null
@@ -414,9 +613,13 @@ export type Database = {
       page_sections: {
         Row: {
           body_en: string | null
+          body_en_hash: string | null
+          body_en_source: string | null
           body_fr: string | null
           created_at: string
           data: Json
+          data_en_hash: string | null
+          data_en_source: string | null
           id: string
           is_locked: boolean
           is_visible: boolean
@@ -424,14 +627,20 @@ export type Database = {
           page_id: string
           sort_order: number
           title_en: string | null
+          title_en_hash: string | null
+          title_en_source: string | null
           title_fr: string | null
           updated_at: string
         }
         Insert: {
           body_en?: string | null
+          body_en_hash?: string | null
+          body_en_source?: string | null
           body_fr?: string | null
           created_at?: string
           data?: Json
+          data_en_hash?: string | null
+          data_en_source?: string | null
           id?: string
           is_locked?: boolean
           is_visible?: boolean
@@ -439,14 +648,20 @@ export type Database = {
           page_id: string
           sort_order?: number
           title_en?: string | null
+          title_en_hash?: string | null
+          title_en_source?: string | null
           title_fr?: string | null
           updated_at?: string
         }
         Update: {
           body_en?: string | null
+          body_en_hash?: string | null
+          body_en_source?: string | null
           body_fr?: string | null
           created_at?: string
           data?: Json
+          data_en_hash?: string | null
+          data_en_source?: string | null
           id?: string
           is_locked?: boolean
           is_visible?: boolean
@@ -454,6 +669,8 @@ export type Database = {
           page_id?: string
           sort_order?: number
           title_en?: string | null
+          title_en_hash?: string | null
+          title_en_source?: string | null
           title_fr?: string | null
           updated_at?: string
         }
