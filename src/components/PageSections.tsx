@@ -109,16 +109,23 @@ export function PageSections({
   spreads: Record<string, SpreadBundle>;
 }) {
   const { t, lang } = useI18n();
-  if (sections.length === 0)
+  // Une section peut n'exister que dans une langue : ce n'est pas un manque.
+  const visible = sections.filter((s) => {
+    const locales = Array.isArray(s.locales) && s.locales.length > 0 ? s.locales : ["fr", "en"];
+    return locales.includes(lang);
+  });
+  if (visible.length === 0)
     return (
       <Column>
         <p className="body-text">{t("empty.page")}</p>
       </Column>
     );
 
+
   return (
     <div>
-      {sections.map((s, si) => {
+      {visible.map((s, si) => {
+
         const d = sectionData(s);
         const bookId = str(d["book_id"]);
         const book = bookId ? books[bookId] : undefined;

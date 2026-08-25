@@ -3,7 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./admin-spread.server";
 import { hashText, translateFields } from "./translate.server";
-import { autoEnglishPatch, sectionFieldStatus, translateDataObject } from "./translate-pages.server";
+import {
+  autoEnglishPatch,
+  isManualPage,
+  sectionFieldStatus,
+  sectionLocales,
+  translateDataObject,
+} from "./translate-pages.server";
+
 
 /** Les sections d'une page : lecture, écriture, versions, traduction. */
 export const adminListSections = createServerFn({ method: "GET" })
@@ -11,12 +18,13 @@ export const adminListSections = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
+    const manual = isManualPage(data.slug);
     const { data: page } = await context.supabase
       .from("pages")
       .select("*")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!page) return { page: null, sections: [], statuses: {} };
+    if (!page) return { page: null, sections: [], statuses: {}, manual };
     const { data: sections } = await context.supabase
       .from("page_sections")
       .select("*")
@@ -24,9 +32,10 @@ export const adminListSections = createServerFn({ method: "GET" })
       .order("sort_order", { ascending: true });
     const rows = sections ?? [];
     const statuses: Record<string, Record<string, string>> = {};
-    for (const s of rows) statuses[s.id] = await sectionFieldStatus(s);
-    return { page, sections: rows, statuses };
+    for (const s of rows) statuses[s.id] = await sectionFieldStatus(s, { manual });
+    return { page, sections: rows, statuses, manual };
   });
+
 
 export const adminSaveSection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -36,6 +45,7 @@ export const adminSaveSection = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         sort_order: z.number().int(),
         is_visible: z.boolean(),
+        locales: z.array(z.enum(["fr", "en"])).min(1),
         title_fr: z.string().nullable(),
         title_en: z.string().nullable(),
         body_fr: z.string().nullable(),
@@ -59,9 +69,18 @@ export const adminSaveSection = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!current) return { ok: false, error: "Section introuvable." };
 
+    const { data: ownerPage } = await context.supabase
+      .from("pages")
+      .select("slug")
+      .eq("id", current.page_id)
+      .maybeSingle();
+    // La page méthode s'écrit à la main dans chaque langue.
+    const manual = isManualPage(ownerPage?.slug ?? "");
+
     const patch: Record<string, unknown> = {
       sort_order: data.sort_order,
       is_visible: data.is_visible,
+      locales: data.locales,
       title_fr: data.title_fr,
       title_en: data.title_en,
       body_fr: data.body_fr,
@@ -80,13 +99,16 @@ export const adminSaveSection = createServerFn({ method: "POST" })
     }
 
     // Un français modifié : l'anglais auto ou vide est retraduit.
-    const auto = await autoEnglishPatch(context.supabase, context.userId, current, {
-      title_fr: data.title_fr,
-      title_en: (patch["title_en_source"] as string) === "human" ? null : data.title_en,
-      body_fr: data.body_fr,
-      body_en: (patch["body_en_source"] as string) === "human" ? null : data.body_en,
-      data: parsed,
-    });
+    const auto =
+      manual || !data.locales.includes("en")
+        ? { patch: {}, error: null }
+        : await autoEnglishPatch(context.supabase, context.userId, current, {
+            title_fr: data.title_fr,
+            title_en: (patch["title_en_source"] as string) === "human" ? null : data.title_en,
+            body_fr: data.body_fr,
+            body_en: (patch["body_en_source"] as string) === "human" ? null : data.body_en,
+            data: parsed,
+          });
     Object.assign(patch, auto.patch);
 
     const { error } = await context.supabase
@@ -96,6 +118,7 @@ export const adminSaveSection = createServerFn({ method: "POST" })
     return { ok: !error, error: error?.message ?? auto.error ?? null };
   });
 
+
 /** Retraduit tous les champs d'une page, y compris les anglais obsolètes. */
 export const adminTranslatePage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -104,7 +127,14 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
+    if (isManualPage(data.slug))
+      return {
+        ok: false,
+        translated: 0,
+        error: "Cette page s'écrit séparément dans chaque langue.",
+      };
     const { data: page } = await context.supabase
+
       .from("pages")
       .select("id")
       .eq("slug", data.slug)
@@ -118,7 +148,10 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
     let error: string | null = null;
     for (const s of sections ?? []) {
       const row = s as unknown as Record<string, unknown>;
+      // Une section propre à une langue n'attend pas de traduction.
+      if (!sectionLocales(row).includes("en")) continue;
       const jobs: { field: string; fr: string }[] = [];
+
       for (const field of ["title", "body"] as const) {
         const fr = (row[`${field}_fr`] as string | null) ?? "";
         const en = (row[`${field}_en`] as string | null) ?? "";

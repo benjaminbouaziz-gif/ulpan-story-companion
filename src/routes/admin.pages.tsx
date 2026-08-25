@@ -20,6 +20,8 @@ const BADGES: Record<string, string> = {
   stale: "à retraduire",
   stale_human: "à retraduire (version humaine)",
   empty: "vide",
+  to_write: "à rédiger",
+  fr_only: "français seulement",
   none: "",
 };
 
@@ -28,6 +30,7 @@ function Badge({ state }: { state: string | undefined }) {
   if (!label) return null;
   return <span className="label text-secondary-text ml-2">· {label}</span>;
 }
+
 
 export const Route = createFileRoute("/admin/pages")({
   head: () => ({
@@ -46,12 +49,14 @@ type Draft = {
   is_locked: boolean;
   sort_order: number;
   is_visible: boolean;
+  locales: string[];
   title_fr: string;
   title_en: string;
   body_fr: string;
   body_en: string;
   data_json: string;
 };
+
 
 function PagesEditor() {
   const { t } = useI18n();
@@ -78,12 +83,15 @@ function PagesEditor() {
   });
 
   const sections = listQuery.data?.sections ?? [];
+  const manual = Boolean(listQuery.data?.manual);
   const statuses = (listQuery.data?.statuses ?? {}) as Record<string, Record<string, string>>;
-  const toRetranslate = Object.values(statuses).reduce(
+  // « français seulement » est un choix, pas un manque : on ne le compte pas.
+  const missing = Object.values(statuses).reduce(
     (n, fields) =>
       n +
-      Object.values(fields).filter((v) => v === "stale" || v === "stale_human" || v === "empty")
-        .length,
+      Object.values(fields).filter(
+        (v) => v === "stale" || v === "stale_human" || v === "empty" || v === "to_write",
+      ).length,
     0,
   );
 
@@ -96,6 +104,8 @@ function PagesEditor() {
         is_locked: s.is_locked,
         sort_order: s.sort_order,
         is_visible: s.is_visible,
+        locales: Array.isArray(s.locales) && s.locales.length > 0 ? s.locales : ["fr", "en"],
+
         title_fr: s.title_fr ?? "",
         title_en: s.title_en ?? "",
         body_fr: s.body_fr ?? "",
@@ -121,6 +131,10 @@ function PagesEditor() {
           id: d.id,
           sort_order: d.sort_order,
           is_visible: d.is_visible,
+          locales: (d.locales.filter((l) => l === "fr" || l === "en") as ("fr" | "en")[]).length
+            ? (d.locales.filter((l) => l === "fr" || l === "en") as ("fr" | "en")[])
+            : (["fr"] as ("fr" | "en")[]),
+
           title_fr: d.title_fr.trim() ? d.title_fr : null,
           title_en: d.title_en.trim() ? d.title_en : null,
           body_fr: d.body_fr.trim() ? d.body_fr : null,
@@ -192,18 +206,29 @@ function PagesEditor() {
 
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <p className="label text-secondary-text">
-          {toRetranslate > 0
-            ? `${toRetranslate} champ(s) anglais à produire ou à retraduire.`
-            : "Anglais à jour."}
+          {missing > 0
+            ? manual
+              ? `${missing} champ(s) anglais à rédiger.`
+              : `${missing} champ(s) anglais à produire ou à retraduire.`
+            : manual
+              ? "Anglais rédigé."
+              : "Anglais à jour."}
         </p>
-        <button
-          type="button"
-          onClick={() => translateMutation.mutate(false)}
-          className="label touch border-line border px-4"
-        >
-          Traduire toute la page
-        </button>
+        {manual ? (
+          <p className="label text-secondary-text">
+            Cette page s'écrit séparément dans chaque langue.
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => translateMutation.mutate(false)}
+            className="label touch border-line border px-4"
+          >
+            Traduire toute la page
+          </button>
+        )}
       </div>
+
 
       {message ? <p className="label mt-4">{message}</p> : null}
 
@@ -211,12 +236,43 @@ function PagesEditor() {
         {sections.map((s) => {
           const d = drafts[s.id];
           if (!d) return null;
+          const note = (s.data as { admin_note_fr?: unknown } | null)?.admin_note_fr;
+          const frOnly = d.locales.includes("fr") && !d.locales.includes("en");
+          const enOnly = d.locales.includes("en") && !d.locales.includes("fr");
           return (
             <section key={s.id} className="border-line mt-8 border-t pt-5 first:mt-0">
               <p className="label text-secondary-text">
                 {d.sort_order}. {d.kind}
                 {d.is_locked ? " · gabarit" : ""}
+                {frOnly ? " · français seulement" : ""}
+                {enOnly ? " · anglais seulement" : ""}
               </p>
+
+              {typeof note === "string" && note.trim() ? (
+                <p className="label text-secondary-text border-line mt-3 border-l-2 pl-3">{note}</p>
+              ) : null}
+
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                <span className="label text-secondary-text">Publiée en</span>
+                {(["fr", "en"] as const).map((l) => (
+                  <label key={l} className="label flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={d.locales.includes(l)}
+                      onChange={(e) =>
+                        set(s.id, {
+                          locales: e.target.checked
+                            ? Array.from(new Set([...d.locales, l]))
+                            : d.locales.filter((x) => x !== l),
+                        })
+                      }
+                    />
+                    {l === "fr" ? "français" : "anglais"}
+                  </label>
+                ))}
+              </div>
+
+
 
               <label className="label mt-4 block">
                 Titre (fr)

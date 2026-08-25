@@ -789,6 +789,7 @@ export type Database = {
           is_locked: boolean
           is_visible: boolean
           kind: Database["public"]["Enums"]["section_kind"]
+          locales: string[]
           page_id: string
           sort_order: number
           title_en: string | null
@@ -810,6 +811,7 @@ export type Database = {
           is_locked?: boolean
           is_visible?: boolean
           kind: Database["public"]["Enums"]["section_kind"]
+          locales?: string[]
           page_id: string
           sort_order?: number
           title_en?: string | null
@@ -831,6 +833,7 @@ export type Database = {
           is_locked?: boolean
           is_visible?: boolean
           kind?: Database["public"]["Enums"]["section_kind"]
+          locales?: string[]
           page_id?: string
           sort_order?: number
           title_en?: string | null
