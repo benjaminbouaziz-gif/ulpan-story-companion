@@ -66,8 +66,13 @@ const fr = {
   "excerpt.glossary": "Glossaire du passage",
   "excerpt.glossaryFull":
     "La liste complète du chapitre est dans le compagnon, avec sa version imprimable.",
+  "spread.caption": "A5 × 2 · proportions réelles · hébreu à gauche, soutien à droite",
+  "spread.watch": "Regardez la page de droite se vider, ligne après ligne.",
+  "spread.read": "Lire cette page en grand",
+  "spread.chapter": "Chapitre trois",
   "admin.excerpt": "Extrait démonstratif",
   "admin.forbidden": "Accès réservé.",
+
 } as const;
 
 export type DictKey = keyof typeof fr;
@@ -136,8 +141,13 @@ const en: Record<DictKey, string> = {
   "excerpt.glossary": "Glossary of this passage",
   "excerpt.glossaryFull":
     "The full chapter list is in the companion, with a printable version.",
+  "spread.caption": "A5 × 2 · real proportions · Hebrew on the left, support on the right",
+  "spread.watch": "Watch the right-hand page empty out, line after line.",
+  "spread.read": "Read this page at full size",
+  "spread.chapter": "Chapter three",
   "admin.excerpt": "Demonstration excerpt",
   "admin.forbidden": "Restricted access.",
+
 };
 
 export const dictionaries: Record<Lang, Record<DictKey, string>> = { fr, en };

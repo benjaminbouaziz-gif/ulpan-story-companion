@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Excerpt, GlossaryList } from "@/components/Excerpt";
+import { Spread } from "@/components/Spread";
+
 import { pickLang, useI18n } from "@/i18n/context";
 import { showcaseQuery } from "@/lib/queries";
 
@@ -41,7 +43,26 @@ function MethodPage() {
       <h1 className="text-[30px]">{t("nav.method")}</h1>
       <p className="body-text mt-6">{t("excerpt.before")}</p>
 
-      <div className="mt-10">
+      {data.paragraphs.length > 0 && data.book ? (
+        <section className="mt-10">
+          <Spread
+            paragraphs={data.paragraphs}
+            color={data.collection?.color_hex ?? null}
+            title={pickLang(lang, data.book.title_fr, data.book.title_en) ?? ""}
+            chapter={t("spread.chapter")}
+          />
+          <p className="label text-secondary-text mt-3">{t("spread.caption")}</p>
+          <p className="body-text mt-2">{t("spread.watch")}</p>
+          <a
+            href="#lecture"
+            className="label touch mt-4 inline-flex items-center border-b border-current"
+          >
+            {t("spread.read")}
+          </a>
+        </section>
+      ) : null}
+
+      <div id="lecture" className="border-line mt-14 border-t pt-10">
         <Excerpt paragraphs={data.paragraphs} color={data.collection?.color_hex ?? null} />
       </div>
 
@@ -49,6 +70,7 @@ function MethodPage() {
         <p className="body-text">{t("excerpt.after1")}</p>
         <p className="body-text">{t("excerpt.after2")}</p>
       </div>
+
 
       {data.glossary.length > 0 ? (
         <section className="border-line mt-14 border-t pt-8">
