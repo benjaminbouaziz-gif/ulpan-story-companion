@@ -1,8 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PageShell } from "@/components/SiteChrome";
-import { useI18n } from "@/i18n/context";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-/** L'administration est conçue pour ordinateur et arrive en phase 6. */
+/** L'administration est un simple conteneur : chaque outil est une route enfant. */
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
@@ -11,15 +9,5 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: AdminPage,
+  component: () => <Outlet />,
 });
-
-function AdminPage() {
-  const { t } = useI18n();
-  return (
-    <PageShell>
-      <h1 className="text-[30px]">Administration</h1>
-      <p className="body-text text-secondary-text mt-6">{t("soon")}</p>
-    </PageShell>
-  );
-}
