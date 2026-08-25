@@ -809,6 +809,41 @@ export type Database = {
           },
         ]
       }
+      reader_progress: {
+        Row: {
+          book_id: string
+          id: string
+          quiz_answered: number
+          quiz_correct: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          id?: string
+          quiz_answered?: number
+          quiz_correct?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          id?: string
+          quiz_answered?: number
+          quiz_correct?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spread_paragraphs: {
         Row: {
           book_id: string
