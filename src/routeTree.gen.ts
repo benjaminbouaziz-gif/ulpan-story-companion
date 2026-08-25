@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -18,6 +19,11 @@ import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MethodeRoute = MethodeRouteImport.update({
@@ -43,6 +49,7 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
@@ -66,12 +75,24 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/methode' | '/collections/$slug' | '/livres/$slug' | '/collections/'
+    | '/'
+    | '/mentions-legales'
+    | '/methode'
+    | '/collections/$slug'
+    | '/livres/$slug'
+    | '/collections/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/methode' | '/collections/$slug' | '/livres/$slug' | '/collections'
+  to:
+    | '/'
+    | '/mentions-legales'
+    | '/methode'
+    | '/collections/$slug'
+    | '/livres/$slug'
+    | '/collections'
   id:
     | '__root__'
     | '/'
+    | '/mentions-legales'
     | '/methode'
     | '/collections/$slug'
     | '/livres/$slug'
@@ -80,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
@@ -93,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/methode': {
@@ -128,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
