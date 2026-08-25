@@ -18,6 +18,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -70,6 +71,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminExtraitsRoute = AdminExtraitsRouteImport.update({
+  id: '/extraits',
+  path: '/extraits',
+  getParentRoute: () => AdminRoute,
+} as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
   path: '/b/$qr_code',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/extraits': typeof AdminExtraitsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/extraits': typeof AdminExtraitsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/extraits': typeof AdminExtraitsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/extraits'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/extraits'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/extraits'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -287,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/extraits': {
+      id: '/admin/extraits'
+      path: '/extraits'
+      fullPath: '/admin/extraits'
+      preLoaderRoute: typeof AdminExtraitsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/b/$qr_code': {
       id: '/b/$qr_code'
       path: '/b/$qr_code'
@@ -333,10 +352,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminExtraitsRoute: typeof AdminExtraitsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminExtraitsRoute: AdminExtraitsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
