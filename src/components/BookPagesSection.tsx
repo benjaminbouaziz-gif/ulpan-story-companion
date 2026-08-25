@@ -128,6 +128,8 @@ export function BookPagesSection({
   const [index, setIndex] = useState(0);
   const [grid, setGrid] = useState(false);
   const [reading, setReading] = useState(false);
+  const [zoom, setZoom] = useState(1);
+
 
   if (pages.length === 0) return null;
   const page = pages[Math.min(index, pages.length - 1)]!;
