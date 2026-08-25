@@ -18,6 +18,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminChiffresRouteImport } from './routes/admin.chiffres'
 import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
@@ -72,6 +73,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminChiffresRoute = AdminChiffresRouteImport.update({
+  id: '/chiffres',
+  path: '/chiffres',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExtraitsRoute = AdminExtraitsRouteImport.update({
   id: '/extraits',
   path: '/extraits',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/chiffres': typeof AdminChiffresRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
   '/b/$qr_code': typeof BQr_codeRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/chiffres': typeof AdminChiffresRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
   '/b/$qr_code': typeof BQr_codeRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
+  '/admin/chiffres': typeof AdminChiffresRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
   '/b/$qr_code': typeof BQr_codeRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/chiffres'
     | '/admin/extraits'
     | '/admin/pages'
     | '/b/$qr_code'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/chiffres'
     | '/admin/extraits'
     | '/admin/pages'
     | '/b/$qr_code'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/mentions-legales'
     | '/methode'
+    | '/admin/chiffres'
     | '/admin/extraits'
     | '/admin/pages'
     | '/b/$qr_code'
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/chiffres': {
+      id: '/admin/chiffres'
+      path: '/chiffres'
+      fullPath: '/admin/chiffres'
+      preLoaderRoute: typeof AdminChiffresRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/extraits': {
       id: '/admin/extraits'
       path: '/extraits'
@@ -371,12 +390,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminChiffresRoute: typeof AdminChiffresRoute
   AdminExtraitsRoute: typeof AdminExtraitsRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminChiffresRoute: AdminChiffresRoute,
   AdminExtraitsRoute: AdminExtraitsRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminIndexRoute: AdminIndexRoute,

@@ -31,6 +31,12 @@ function AdminHome() {
         >
           Pages éditoriales
         </Link>
+        <Link
+          to="/admin/chiffres"
+          className="label touch inline-flex items-center border-b border-current self-start"
+        >
+          Chiffres des livres
+        </Link>
       </div>
       <p className="body-text text-secondary-text mt-8">{t("soon")}</p>
 

@@ -31,11 +31,13 @@ export function resolveTokens(value: string, book: Book | null | undefined): str
       return "";
     }
     if (field === "spread_pages") {
-      if (!book.page_count) {
+      // Chiffre saisi dans l'admin ; le comptage n'est qu'une indication là-bas.
+      const saisi = book.spread_pages ?? null;
+      if (saisi === null || saisi === undefined) {
         failed = true;
         return "";
       }
-      return String(Math.ceil(book.page_count / 2));
+      return String(saisi);
     }
     const raw = (book as unknown as Record<string, unknown>)[field];
     if (raw === null || raw === undefined || raw === "") {
@@ -171,7 +173,7 @@ export function PageSections({
                   {resolved.map((f, i) => (
                     <div key={i}>
                       <dt
-                        className="tabular-nums"
+                        className="tabular-nums whitespace-nowrap"
                         style={{
                           fontFamily: "var(--font-latin)",
                           fontSize: "calc(34px * var(--text-scale))",
