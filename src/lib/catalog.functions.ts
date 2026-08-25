@@ -237,6 +237,8 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
       book: null as Book | null,
       collection: null as Collection | null,
       paragraphs: [] as SpreadParagraph[],
+      pages: [] as BookPage[],
+      words: [] as GlossaryWord[],
     };
   let collection: Collection | null = null;
   if (book.collection_id) {
@@ -247,14 +249,21 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
       .maybeSingle();
     collection = (c as Collection) ?? null;
   }
-  const { data: rows } = await supabase
-    .from("spread_paragraphs")
-    .select("*")
-    .eq("book_id", book.id)
-    .order("sort_order", { ascending: true });
+  const [{ data: rows }, pages, words] = await Promise.all([
+    supabase
+      .from("spread_paragraphs")
+      .select("*")
+      .eq("book_id", book.id)
+      .order("sort_order", { ascending: true }),
+    loadBookPages(supabase, book.id),
+    loadGlossaryWords(supabase, book.id),
+  ]);
   return {
     book: book as Book | null,
     collection,
     paragraphs: (rows ?? []).map(toSpreadParagraph),
+    pages,
+    words,
   };
+
 });
