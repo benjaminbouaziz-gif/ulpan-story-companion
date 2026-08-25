@@ -1,0 +1,755 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.15"
+  }
+  public: {
+    Tables: {
+      audio_tracks: {
+        Row: {
+          book_id: string
+          chapter_no: number | null
+          created_at: string
+          duration_s: number | null
+          id: string
+          label_en: string | null
+          label_fr: string | null
+          storage_path: string
+        }
+        Insert: {
+          book_id: string
+          chapter_no?: number | null
+          created_at?: string
+          duration_s?: number | null
+          id?: string
+          label_en?: string | null
+          label_fr?: string | null
+          storage_path: string
+        }
+        Update: {
+          book_id?: string
+          chapter_no?: number | null
+          created_at?: string
+          duration_s?: number | null
+          id?: string
+          label_en?: string | null
+          label_fr?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_tracks_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_access: {
+        Row: {
+          book_id: string
+          first_opened_at: string
+          id: string
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          first_opened_at?: string
+          id?: string
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          first_opened_at?: string
+          id?: string
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_access_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      books: {
+        Row: {
+          amazon_asin: string | null
+          amazon_url_com: string | null
+          amazon_url_fr: string | null
+          amazon_url_other: string | null
+          blurb_en: string | null
+          blurb_fr: string | null
+          chapters_count: number | null
+          collection_id: string | null
+          cover_url: string | null
+          created_at: string
+          excerpt_he: string | null
+          excerpt_translation_en: string | null
+          excerpt_translation_fr: string | null
+          expected_at: string | null
+          id: string
+          isbn: string | null
+          level_note_en: string | null
+          level_note_fr: string | null
+          page_count: number | null
+          price_eur: number | null
+          published_at: string | null
+          qr_code: string
+          qr_reserved_at: string | null
+          retired_at: string | null
+          sample_pdf_url: string | null
+          slug: string
+          spine_mm: number | null
+          status: Database["public"]["Enums"]["book_status"]
+          subtitle_en: string | null
+          subtitle_fr: string | null
+          title_en: string | null
+          title_fr: string
+          title_he: string | null
+          tome_no: number | null
+          updated_at: string
+          what_you_learn_en: Json
+          what_you_learn_fr: Json
+          words_unique: number | null
+        }
+        Insert: {
+          amazon_asin?: string | null
+          amazon_url_com?: string | null
+          amazon_url_fr?: string | null
+          amazon_url_other?: string | null
+          blurb_en?: string | null
+          blurb_fr?: string | null
+          chapters_count?: number | null
+          collection_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          excerpt_he?: string | null
+          excerpt_translation_en?: string | null
+          excerpt_translation_fr?: string | null
+          expected_at?: string | null
+          id?: string
+          isbn?: string | null
+          level_note_en?: string | null
+          level_note_fr?: string | null
+          page_count?: number | null
+          price_eur?: number | null
+          published_at?: string | null
+          qr_code: string
+          qr_reserved_at?: string | null
+          retired_at?: string | null
+          sample_pdf_url?: string | null
+          slug: string
+          spine_mm?: number | null
+          status?: Database["public"]["Enums"]["book_status"]
+          subtitle_en?: string | null
+          subtitle_fr?: string | null
+          title_en?: string | null
+          title_fr: string
+          title_he?: string | null
+          tome_no?: number | null
+          updated_at?: string
+          what_you_learn_en?: Json
+          what_you_learn_fr?: Json
+          words_unique?: number | null
+        }
+        Update: {
+          amazon_asin?: string | null
+          amazon_url_com?: string | null
+          amazon_url_fr?: string | null
+          amazon_url_other?: string | null
+          blurb_en?: string | null
+          blurb_fr?: string | null
+          chapters_count?: number | null
+          collection_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          excerpt_he?: string | null
+          excerpt_translation_en?: string | null
+          excerpt_translation_fr?: string | null
+          expected_at?: string | null
+          id?: string
+          isbn?: string | null
+          level_note_en?: string | null
+          level_note_fr?: string | null
+          page_count?: number | null
+          price_eur?: number | null
+          published_at?: string | null
+          qr_code?: string
+          qr_reserved_at?: string | null
+          retired_at?: string | null
+          sample_pdf_url?: string | null
+          slug?: string
+          spine_mm?: number | null
+          status?: Database["public"]["Enums"]["book_status"]
+          subtitle_en?: string | null
+          subtitle_fr?: string | null
+          title_en?: string | null
+          title_fr?: string
+          title_he?: string | null
+          tome_no?: number | null
+          updated_at?: string
+          what_you_learn_en?: Json
+          what_you_learn_fr?: Json
+          words_unique?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "books_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          color_hex: string
+          created_at: string
+          description_en: string | null
+          description_fr: string | null
+          for_whom_en: string | null
+          for_whom_fr: string | null
+          hero_image_url: string | null
+          id: string
+          is_active: boolean
+          name_en: string
+          name_fr: string
+          slug: string
+          sort_order: number
+          tagline_en: string | null
+          tagline_fr: string | null
+          updated_at: string
+        }
+        Insert: {
+          color_hex?: string
+          created_at?: string
+          description_en?: string | null
+          description_fr?: string | null
+          for_whom_en?: string | null
+          for_whom_fr?: string | null
+          hero_image_url?: string | null
+          id?: string
+          is_active?: boolean
+          name_en: string
+          name_fr: string
+          slug: string
+          sort_order?: number
+          tagline_en?: string | null
+          tagline_fr?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color_hex?: string
+          created_at?: string
+          description_en?: string | null
+          description_fr?: string | null
+          for_whom_en?: string | null
+          for_whom_fr?: string | null
+          hero_image_url?: string | null
+          id?: string
+          is_active?: boolean
+          name_en?: string
+          name_fr?: string
+          slug?: string
+          sort_order?: number
+          tagline_en?: string | null
+          tagline_fr?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity: string
+          entity_id: string
+          id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity: string
+          entity_id: string
+          id?: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity?: string
+          entity_id?: string
+          id?: string
+          snapshot?: Json
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          meta: Json
+          qr_code: string | null
+          user_id: string | null
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          meta?: Json
+          qr_code?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json
+          qr_code?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      glossary_entries: {
+        Row: {
+          book_id: string
+          chapter_no: number | null
+          created_at: string
+          form_he: string | null
+          id: string
+          lemma_he: string
+          note_en: string | null
+          note_fr: string | null
+          sense_en: string | null
+          sense_fr: string | null
+          sort_order: number
+          translit: string | null
+        }
+        Insert: {
+          book_id: string
+          chapter_no?: number | null
+          created_at?: string
+          form_he?: string | null
+          id?: string
+          lemma_he: string
+          note_en?: string | null
+          note_fr?: string | null
+          sense_en?: string | null
+          sense_fr?: string | null
+          sort_order?: number
+          translit?: string | null
+        }
+        Update: {
+          book_id?: string
+          chapter_no?: number | null
+          created_at?: string
+          form_he?: string | null
+          id?: string
+          lemma_he?: string
+          note_en?: string | null
+          note_fr?: string | null
+          sense_en?: string | null
+          sense_fr?: string | null
+          sort_order?: number
+          translit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glossary_entries_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_sections: {
+        Row: {
+          body_en: string | null
+          body_fr: string | null
+          created_at: string
+          data: Json
+          id: string
+          is_visible: boolean
+          kind: Database["public"]["Enums"]["section_kind"]
+          page_id: string
+          sort_order: number
+          title_en: string | null
+          title_fr: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_en?: string | null
+          body_fr?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          is_visible?: boolean
+          kind: Database["public"]["Enums"]["section_kind"]
+          page_id: string
+          sort_order?: number
+          title_en?: string | null
+          title_fr?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_en?: string | null
+          body_fr?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          is_visible?: boolean
+          kind?: Database["public"]["Enums"]["section_kind"]
+          page_id?: string
+          sort_order?: number
+          title_en?: string | null
+          title_fr?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_sections_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          created_at: string
+          id: string
+          is_system: boolean
+          slug: string
+          status: Database["public"]["Enums"]["page_status"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          slug: string
+          status?: Database["public"]["Enums"]["page_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          slug?: string
+          status?: Database["public"]["Enums"]["page_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          consent_at: string | null
+          consent_source: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          lang: string
+          text_size: string
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consent_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          lang?: string
+          text_size?: string
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consent_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          lang?: string
+          text_size?: string
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          answer: Json
+          book_id: string
+          chapter_no: number | null
+          created_at: string
+          explain_en: string | null
+          explain_fr: string | null
+          id: string
+          kind: Database["public"]["Enums"]["quiz_kind"]
+          options: Json
+          prompt_en: string | null
+          prompt_fr: string | null
+          prompt_he: string | null
+          sort_order: number
+        }
+        Insert: {
+          answer?: Json
+          book_id: string
+          chapter_no?: number | null
+          created_at?: string
+          explain_en?: string | null
+          explain_fr?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["quiz_kind"]
+          options?: Json
+          prompt_en?: string | null
+          prompt_fr?: string | null
+          prompt_he?: string | null
+          sort_order?: number
+        }
+        Update: {
+          answer?: Json
+          book_id?: string
+          chapter_no?: number | null
+          created_at?: string
+          explain_en?: string | null
+          explain_fr?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["quiz_kind"]
+          options?: Json
+          prompt_en?: string | null
+          prompt_fr?: string | null
+          prompt_he?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      book_status:
+        | "idea"
+        | "writing"
+        | "vocalizing"
+        | "proofreading"
+        | "layout"
+        | "bat_ok"
+        | "printing"
+        | "published"
+        | "retired"
+      page_status: "draft" | "published"
+      quiz_kind: "qcm" | "trou" | "ordre" | "ecoute"
+      section_kind:
+        | "heading"
+        | "richtext"
+        | "quote"
+        | "steps"
+        | "compare"
+        | "hebrew_sample"
+        | "faq"
+        | "cta"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      book_status: [
+        "idea",
+        "writing",
+        "vocalizing",
+        "proofreading",
+        "layout",
+        "bat_ok",
+        "printing",
+        "published",
+        "retired",
+      ],
+      page_status: ["draft", "published"],
+      quiz_kind: ["qcm", "trou", "ordre", "ecoute"],
+      section_kind: [
+        "heading",
+        "richtext",
+        "quote",
+        "steps",
+        "compare",
+        "hebrew_sample",
+        "faq",
+        "cta",
+      ],
+    },
+  },
+} as const

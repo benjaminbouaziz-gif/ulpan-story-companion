@@ -10,33 +10,206 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivationRouteImport } from './routes/activation'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
+import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
+import { Route as MethodeRouteImport } from './routes/methode'
+import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
+import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
+import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
+import { Route as CompagnonIndexRouteImport } from './routes/compagnon.index'
+import { Route as CompagnonBook_slugRouteImport } from './routes/compagnon.$book_slug'
+import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivationRoute = ActivationRouteImport.update({
+  id: '/activation',
+  path: '/activation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnexionRoute = ConnexionRouteImport.update({
+  id: '/connexion',
+  path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MethodeRoute = MethodeRouteImport.update({
+  id: '/methode',
+  path: '/methode',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BQr_codeRoute = BQr_codeRouteImport.update({
+  id: '/b/$qr_code',
+  path: '/b/$qr_code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
+  id: '/collections/',
+  path: '/collections/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
+  id: '/collections/$slug',
+  path: '/collections/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompagnonIndexRoute = CompagnonIndexRouteImport.update({
+  id: '/compagnon/',
+  path: '/compagnon/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompagnonBook_slugRoute = CompagnonBook_slugRouteImport.update({
+  id: '/compagnon/$book_slug',
+  path: '/compagnon/$book_slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LivresSlugRoute = LivresSlugRouteImport.update({
+  id: '/livres/$slug',
+  path: '/livres/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activation': typeof ActivationRoute
+  '/admin': typeof AdminRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/connexion': typeof ConnexionRoute
+  '/contact': typeof ContactRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
+  '/methode': typeof MethodeRoute
+  '/b/$qr_code': typeof BQr_codeRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
+  '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
+  '/livres/$slug': typeof LivresSlugRoute
+  '/collections/': typeof CollectionsIndexRoute
+  '/compagnon/': typeof CompagnonIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activation': typeof ActivationRoute
+  '/admin': typeof AdminRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/connexion': typeof ConnexionRoute
+  '/contact': typeof ContactRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
+  '/methode': typeof MethodeRoute
+  '/b/$qr_code': typeof BQr_codeRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
+  '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
+  '/livres/$slug': typeof LivresSlugRoute
+  '/collections': typeof CollectionsIndexRoute
+  '/compagnon': typeof CompagnonIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activation': typeof ActivationRoute
+  '/admin': typeof AdminRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/connexion': typeof ConnexionRoute
+  '/contact': typeof ContactRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
+  '/methode': typeof MethodeRoute
+  '/b/$qr_code': typeof BQr_codeRoute
+  '/collections/$slug': typeof CollectionsSlugRoute
+  '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
+  '/livres/$slug': typeof LivresSlugRoute
+  '/collections/': typeof CollectionsIndexRoute
+  '/compagnon/': typeof CompagnonIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/activation'
+    | '/admin'
+    | '/confidentialite'
+    | '/connexion'
+    | '/contact'
+    | '/mentions-legales'
+    | '/methode'
+    | '/b/$qr_code'
+    | '/collections/$slug'
+    | '/compagnon/$book_slug'
+    | '/livres/$slug'
+    | '/collections/'
+    | '/compagnon/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/activation'
+    | '/admin'
+    | '/confidentialite'
+    | '/connexion'
+    | '/contact'
+    | '/mentions-legales'
+    | '/methode'
+    | '/b/$qr_code'
+    | '/collections/$slug'
+    | '/compagnon/$book_slug'
+    | '/livres/$slug'
+    | '/collections'
+    | '/compagnon'
+  id:
+    | '__root__'
+    | '/'
+    | '/activation'
+    | '/admin'
+    | '/confidentialite'
+    | '/connexion'
+    | '/contact'
+    | '/mentions-legales'
+    | '/methode'
+    | '/b/$qr_code'
+    | '/collections/$slug'
+    | '/compagnon/$book_slug'
+    | '/livres/$slug'
+    | '/collections/'
+    | '/compagnon/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivationRoute: typeof ActivationRoute
+  AdminRoute: typeof AdminRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
+  ConnexionRoute: typeof ConnexionRoute
+  ContactRoute: typeof ContactRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
+  MethodeRoute: typeof MethodeRoute
+  BQr_codeRoute: typeof BQr_codeRoute
+  CollectionsSlugRoute: typeof CollectionsSlugRoute
+  CompagnonBook_slugRoute: typeof CompagnonBook_slugRoute
+  LivresSlugRoute: typeof LivresSlugRoute
+  CollectionsIndexRoute: typeof CollectionsIndexRoute
+  CompagnonIndexRoute: typeof CompagnonIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +221,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activation': {
+      id: '/activation'
+      path: '/activation'
+      fullPath: '/activation'
+      preLoaderRoute: typeof ActivationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connexion': {
+      id: '/connexion'
+      path: '/connexion'
+      fullPath: '/connexion'
+      preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/methode': {
+      id: '/methode'
+      path: '/methode'
+      fullPath: '/methode'
+      preLoaderRoute: typeof MethodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/b/$qr_code': {
+      id: '/b/$qr_code'
+      path: '/b/$qr_code'
+      fullPath: '/b/$qr_code'
+      preLoaderRoute: typeof BQr_codeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/': {
+      id: '/collections/'
+      path: '/collections'
+      fullPath: '/collections/'
+      preLoaderRoute: typeof CollectionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/$slug': {
+      id: '/collections/$slug'
+      path: '/collections/$slug'
+      fullPath: '/collections/$slug'
+      preLoaderRoute: typeof CollectionsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compagnon/': {
+      id: '/compagnon/'
+      path: '/compagnon'
+      fullPath: '/compagnon/'
+      preLoaderRoute: typeof CompagnonIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compagnon/$book_slug': {
+      id: '/compagnon/$book_slug'
+      path: '/compagnon/$book_slug'
+      fullPath: '/compagnon/$book_slug'
+      preLoaderRoute: typeof CompagnonBook_slugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/livres/$slug': {
+      id: '/livres/$slug'
+      path: '/livres/$slug'
+      fullPath: '/livres/$slug'
+      preLoaderRoute: typeof LivresSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivationRoute: ActivationRoute,
+  AdminRoute: AdminRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
+  ConnexionRoute: ConnexionRoute,
+  ContactRoute: ContactRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
+  MethodeRoute: MethodeRoute,
+  BQr_codeRoute: BQr_codeRoute,
+  CollectionsSlugRoute: CollectionsSlugRoute,
+  CompagnonBook_slugRoute: CompagnonBook_slugRoute,
+  LivresSlugRoute: LivresSlugRoute,
+  CollectionsIndexRoute: CollectionsIndexRoute,
+  CompagnonIndexRoute: CompagnonIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
