@@ -57,7 +57,12 @@ export function QuizRound({
         {index + 1} / {list.length}
       </p>
       {prompt ? <p className="body-text mt-2">{prompt}</p> : null}
-      {q.prompt_he ? <HebrewText text={q.prompt_he} className="hebrew-lg mt-3" /> : null}
+      {q.prompt_he ? (
+        <HebrewText size="lg" className="mt-3">
+          {q.prompt_he}
+        </HebrewText>
+      ) : null}
+
 
       <ul className="mt-5 space-y-2">
         {q.options.map((option, i) => {
