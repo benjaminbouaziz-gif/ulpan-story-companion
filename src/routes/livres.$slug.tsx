@@ -62,11 +62,20 @@ function BookPage() {
         </Link>
       ) : null}
 
+      {book.cover_url ? (
+        <img
+          src={book.cover_url}
+          alt={pickLang(lang, book.title_fr, book.title_en) ?? ""}
+          className="border-line mt-6 w-56 max-w-full border"
+        />
+      ) : null}
+
       <p className="label text-secondary-text mt-4">
         {t("books.volume")} {book.tome_no}
       </p>
       <h1 className="mt-1 text-[30px]">{pickLang(lang, book.title_fr, book.title_en)}</h1>
       {book.title_he ? <HebrewText className="mt-3" size="lg">{book.title_he}</HebrewText> : null}
+
 
       {collection ? (
         <div className="mt-5">
