@@ -114,23 +114,81 @@ export const getBookBySlug = createServerFn({ method: "GET" })
     };
   });
 
+export type SpreadBundle = {
+  book: Book;
+  collection: Collection | null;
+  paragraphs: SpreadParagraph[];
+};
+
 export const getPageBySlug = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
   .handler(async ({ data }) => {
     const supabase = publicClient();
+    const empty = {
+      page: null as Page | null,
+      sections: [] as PageSection[],
+      books: {} as Record<string, Book>,
+      spreads: {} as Record<string, SpreadBundle>,
+    };
     const { data: page } = await supabase
       .from("pages")
       .select("*")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!page) return { page: null as Page | null, sections: [] as PageSection[] };
-    const { data: sections } = await supabase
+    if (!page) return empty;
+    const { data: sectionRows } = await supabase
       .from("page_sections")
       .select("*")
       .eq("page_id", page.id)
+      .eq("is_visible", true)
       .order("sort_order", { ascending: true });
-    return { page: page as Page | null, sections: (sections ?? []) as PageSection[] };
+    const sections = (sectionRows ?? []) as PageSection[];
+
+    // Les sections qui parlent d'un livre : on charge ce livre une seule fois.
+    const bookIds = Array.from(
+      new Set(
+        sections
+          .map((s) => (s.data as { book_id?: string } | null)?.book_id)
+          .filter((v): v is string => typeof v === "string" && v.length > 0),
+      ),
+    );
+    const books: Record<string, Book> = {};
+    const spreads: Record<string, SpreadBundle> = {};
+    if (bookIds.length > 0) {
+      const { data: bookRows } = await supabase.from("books").select("*").in("id", bookIds);
+      for (const b of (bookRows ?? []) as Book[]) books[b.id] = b;
+
+      const spreadIds = sections
+        .filter((s) => s.kind === "book_spread")
+        .map((s) => (s.data as { book_id?: string } | null)?.book_id)
+        .filter((v): v is string => typeof v === "string" && !!books[v]);
+      for (const id of Array.from(new Set(spreadIds))) {
+        const book = books[id]!;
+        let collection: Collection | null = null;
+        if (book.collection_id) {
+          const { data: c } = await supabase
+            .from("collections")
+            .select("*")
+            .eq("id", book.collection_id)
+            .maybeSingle();
+          collection = (c as Collection) ?? null;
+        }
+        const { data: rows } = await supabase
+          .from("spread_paragraphs")
+          .select("*")
+          .eq("book_id", id)
+          .order("sort_order", { ascending: true });
+        spreads[id] = {
+          book,
+          collection,
+          paragraphs: (rows ?? []).map(toSpreadParagraph),
+        };
+      }
+    }
+
+    return { page: page as Page | null, sections, books, spreads };
   });
+
 
 /** La double page de référence : celle du premier tome publié. */
 export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async () => {
