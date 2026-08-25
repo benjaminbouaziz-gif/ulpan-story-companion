@@ -73,7 +73,10 @@ function CompanionBook() {
 
   return (
     <PageShell>
-      <p className="label text-secondary-text">{data.collection?.title_fr ?? ""}</p>
+      <p className="label text-secondary-text">
+        {(lang === "en" ? data.collection?.name_en : data.collection?.name_fr) ?? ""}
+      </p>
+
       <h1 className="mt-1 text-[30px]" style={accent ? { color: accent } : undefined}>
         {lang === "en" ? book.title_en || book.title_fr : book.title_fr}
       </h1>
