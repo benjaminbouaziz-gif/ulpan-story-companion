@@ -133,6 +133,7 @@ export function PageSections({
           const bundle = bookId ? spreads[bookId] : undefined;
           if (!bundle) return null;
           const b = bundle.book;
+          const bookTitle = pickLang(lang, b.title_fr, b.title_en) ?? "";
           return (
             <Block key={s.id} rule={separator} first={si === 0}>
               {title ? (
@@ -142,22 +143,33 @@ export function PageSections({
                   </p>
                 </Column>
               ) : null}
-              <SpreadSection
-                paragraphs={bundle.paragraphs}
-                color={bundle.collection?.color_hex ?? null}
-                runningHead={
-                  pickLang(lang, b.spread_running_head_fr, b.spread_running_head_en) ??
-                  pickLang(lang, b.title_fr, b.title_en) ??
-                  ""
-                }
-                chapter={pickLang(lang, b.spread_chapter_fr, b.spread_chapter_en) ?? ""}
-                folio={b.spread_folio_left ?? 42}
-                claim={null}
-                note={body}
-              />
+              {bundle.pages.length > 0 ? (
+                <BookPagesSection
+                  pages={bundle.pages}
+                  words={bundle.words}
+                  color={bundle.collection?.color_hex ?? null}
+                  bookTitle={bookTitle}
+                  claim={null}
+                  note={body}
+                />
+              ) : (
+                <SpreadSection
+                  paragraphs={bundle.paragraphs}
+                  color={bundle.collection?.color_hex ?? null}
+                  runningHead={
+                    pickLang(lang, b.spread_running_head_fr, b.spread_running_head_en) ??
+                    bookTitle
+                  }
+                  chapter={pickLang(lang, b.spread_chapter_fr, b.spread_chapter_en) ?? ""}
+                  folio={b.spread_folio_left ?? 42}
+                  claim={null}
+                  note={body}
+                />
+              )}
             </Block>
           );
         }
+
 
         if (s.kind === "facts") {
           const facts = Array.isArray(d["facts"]) ? (d["facts"] as Json[]) : [];
