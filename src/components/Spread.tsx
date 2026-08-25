@@ -1,157 +1,286 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/context";
-import { paragraphSupport, stageLabel, type ExcerptParagraph } from "@/lib/excerpt";
+import {
+  MM,
+  baselineOffsetMm,
+  parseCloze,
+  supportText,
+  type SpreadParagraph,
+} from "@/lib/spread";
 
 /**
- * La double page du livre, à ses proportions réelles (A5 × 2).
- * Hébreu à gauche, soutien à droite, sur la même trame : le paragraphe n
- * occupe la ligne n des deux côtés. Le soutien décroît jusqu'au blanc.
- * Aucune mécanique : c'est une page imprimée, réduite pour tenir à l'écran.
+ * La double page du livre, reproduite au millimètre : A5 × 2, marges réelles,
+ * typographies réelles. Les deux colonnes sont des grilles au même pas de
+ * 24 mm : le paragraphe n de gauche occupe la bande n de droite par
+ * construction. Aucune mécanique d'interface : c'est du papier.
  */
 
-const PAGE_W = 420; // 148 mm
-const PAGE_H = 596; // 210 mm
-const SPREAD_W = PAGE_W * 2;
-const ROW_H = 57;
+const SPREAD_MM = MM.pageW * 2;
+
+function SupportBlock({
+  paragraph,
+  mm,
+}: {
+  paragraph: SpreadParagraph;
+  mm: (v: number) => string;
+}) {
+  const { lang } = useI18n();
+  const text = supportText(paragraph, lang);
+  if (!text) return null;
+
+  if (paragraph.support_kind === "nikud") {
+    return (
+      <p
+        dir="rtl"
+        lang="he"
+        className="text-right"
+        style={{
+          fontFamily: "var(--font-hebrew)",
+          fontSize: mm(MM.supportHeSize),
+          lineHeight: MM.supportHeLine,
+          letterSpacing: "normal",
+          textTransform: "none",
+          margin: 0,
+        }}
+      >
+        {text}
+      </p>
+    );
+  }
+
+  return (
+    <p
+      className="text-secondary-text"
+      style={{
+        fontFamily: "var(--font-latin)",
+        fontSize: mm(MM.supportSize),
+        lineHeight: MM.supportLine,
+        margin: 0,
+      }}
+    >
+      {paragraph.support_kind === "cloze"
+        ? parseCloze(text).map((piece, i) =>
+            piece.cloze ? (
+              <em key={i} style={{ fontStyle: "italic" }}>
+                {piece.text}
+              </em>
+            ) : (
+              <span key={i}>{piece.text}</span>
+            ),
+          )
+        : text}
+    </p>
+  );
+}
 
 export function Spread({
   paragraphs,
   color = null,
-  title,
+  runningHead,
   chapter,
   folio = 42,
-  showStages = true,
+  showGrid = false,
+  maxPxPerMm = 3.78,
 }: {
-  paragraphs: ExcerptParagraph[];
+  paragraphs: SpreadParagraph[];
   color?: string | null;
-  title: string;
+  runningHead: string;
   chapter: string;
   folio?: number;
-  showStages?: boolean;
+  showGrid?: boolean;
+  maxPxPerMm?: number;
 }) {
-  const { lang } = useI18n();
   const holder = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [ppm, setPpm] = useState(maxPxPerMm);
 
   useEffect(() => {
     const el = holder.current;
     if (!el) return;
-    const measure = () => setScale(Math.min(1, el.clientWidth / SPREAD_W));
+    const measure = () => setPpm(Math.min(maxPxPerMm, el.clientWidth / SPREAD_MM));
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [maxPxPerMm]);
 
   if (paragraphs.length === 0) return null;
+
+  const mm = (v: number) => `${v * ppm}px`;
   const rows = paragraphs.length;
+  const bands = Array.from({ length: rows }, (_, i) => i);
+  const gridTop = MM.marginTop + MM.runheadSize * 1.2 + MM.runheadGap;
+
+  const gridOverlay = showGrid ? (
+    <div className="pointer-events-none absolute inset-0">
+      {bands.map((i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: mm(gridTop + i * MM.band),
+            height: 1,
+            background: "rgba(22,64,122,.35)",
+          }}
+        />
+      ))}
+    </div>
+  ) : null;
 
   return (
-    <div ref={holder} className="w-full overflow-hidden">
+    <div ref={holder} className="w-full">
       <div
-        style={{ height: PAGE_H * scale }}
-        aria-label={`${title} — ${chapter}`}
-        className="relative"
+        className="relative flex"
+        style={{
+          width: mm(SPREAD_MM),
+          height: mm(MM.pageH),
+          background: "#F3F1EA",
+          color: "#15171A",
+          boxShadow: "0 18px 36px -26px rgba(0,0,0,.5)",
+        }}
       >
+        {/* Page de gauche : l'hébreu */}
         <div
-          className="border-line absolute top-0 left-0 flex border"
+          className="relative"
           style={{
-            width: SPREAD_W,
-            height: PAGE_H,
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-            boxShadow: "0 18px 36px -26px rgba(0,0,0,.55)",
+            width: mm(MM.pageW),
+            height: mm(MM.pageH),
+            paddingTop: mm(MM.marginTop),
+            paddingLeft: mm(MM.marginSide),
+            paddingRight: mm(MM.marginSide),
+            paddingBottom: mm(MM.marginBottom),
           }}
         >
-          {/* Page de gauche : l'hébreu */}
-          <div
-            className="border-line relative flex flex-col border-r"
-            style={{ width: PAGE_W, height: PAGE_H, padding: "52px 46px 40px" }}
+          <p
+            className="text-right"
+            style={{
+              fontFamily: "var(--font-ui)",
+              fontSize: mm(MM.runheadSize),
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "#6C6C66",
+              margin: 0,
+            }}
           >
-            <p className="label text-secondary-text text-right" style={{ fontSize: 7 }}>
-              {title}
-            </p>
-            <div
-              className="mt-7 grid"
-              style={{ gridTemplateRows: `repeat(${rows}, ${ROW_H}px)` }}
-            >
-              {paragraphs.map((p) => (
-                <p
-                  key={p.id}
-                  dir="rtl"
-                  lang="he"
-                  className="text-right"
+            {runningHead}
+          </p>
+          <div
+            className="grid"
+            style={{
+              marginTop: mm(MM.runheadGap),
+              gridTemplateRows: `repeat(${rows}, ${mm(MM.band)})`,
+            }}
+          >
+            {paragraphs.map((p) => (
+              <p
+                key={p.id}
+                dir="rtl"
+                lang="he"
+                className="text-right"
+                style={{
+                  fontFamily: "var(--font-hebrew)",
+                  fontSize: mm(MM.hebrewSize),
+                  lineHeight: MM.hebrewLine,
+                  letterSpacing: "normal",
+                  textTransform: "none",
+                  fontStretch: "normal",
+                  margin: 0,
+                }}
+              >
+                {p.he}
+              </p>
+            ))}
+          </div>
+          <span
+            style={{
+              position: "absolute",
+              bottom: mm(MM.folioBottom),
+              left: mm(MM.marginSide),
+              fontFamily: "var(--font-latin)",
+              fontSize: mm(MM.folioSize),
+              color: "#6C6C66",
+            }}
+          >
+            {folio}
+          </span>
+          {gridOverlay}
+        </div>
+
+        {/* Filet de pliure */}
+        <div
+          style={{
+            width: Math.max(1, 0.3 * ppm),
+            height: "100%",
+            background: "rgba(21,23,26,.10)",
+          }}
+        />
+
+        {/* Page de droite : le soutien */}
+        <div
+          className="relative"
+          style={{
+            width: mm(MM.pageW),
+            height: mm(MM.pageH),
+            paddingTop: mm(MM.marginTop),
+            paddingLeft: mm(MM.marginSide),
+            paddingRight: mm(MM.marginSide),
+            paddingBottom: mm(MM.marginBottom),
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-ui)",
+              fontSize: mm(MM.runheadSize),
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "#6C6C66",
+              margin: 0,
+            }}
+          >
+            {chapter}
+          </p>
+          <div
+            className="grid"
+            style={{
+              marginTop: mm(MM.runheadGap),
+              gridTemplateRows: `repeat(${rows}, ${mm(MM.band)})`,
+            }}
+          >
+            {paragraphs.map((p, i) => (
+              <div key={p.id} style={{ paddingTop: mm(baselineOffsetMm(p.support_kind)) }}>
+                <SupportBlock paragraph={p} mm={mm} />
+                <span
+                  aria-hidden
                   style={{
-                    fontFamily: "var(--font-hebrew)",
-                    fontSize: 15,
-                    lineHeight: 1.95,
-                    margin: 0,
+                    position: "absolute",
+                    right: mm(MM.stageInset),
+                    top: mm(gridTop + i * MM.band),
+                    width: mm(MM.stageWidth),
+                    textAlign: "center",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: mm(MM.stageSize),
+                    color: color ?? "#6C6C66",
                   }}
                 >
-                  {p.he}
-                </p>
-              ))}
-            </div>
-            <span
-              className="text-secondary-text absolute"
-              style={{ bottom: 26, left: 46, fontSize: 9 }}
-            >
-              {folio}
-            </span>
+                  {p.stage_no}
+                </span>
+              </div>
+            ))}
           </div>
-
-          {/* Page de droite : le soutien, qui se vide */}
-          <div
-            className="relative flex flex-col"
-            style={{ width: PAGE_W, height: PAGE_H, padding: "52px 46px 40px" }}
+          <span
+            style={{
+              position: "absolute",
+              bottom: mm(MM.folioBottom),
+              right: mm(MM.marginSide),
+              fontFamily: "var(--font-latin)",
+              fontSize: mm(MM.folioSize),
+              color: "#6C6C66",
+            }}
           >
-            <p className="label text-secondary-text" style={{ fontSize: 7 }}>
-              {chapter}
-            </p>
-            <div
-              className="mt-7 grid"
-              style={{ gridTemplateRows: `repeat(${rows}, ${ROW_H}px)`, paddingTop: 10 }}
-            >
-              {paragraphs.map((p, i) => {
-                const support = paragraphSupport(p, lang);
-                const label = stageLabel(p, lang);
-                return (
-                  <div key={p.id} className="relative">
-                    {showStages ? (
-                      <span
-                        className="absolute"
-                        style={{
-                          right: -30,
-                          top: 2,
-                          fontFamily: "var(--font-ui)",
-                          fontSize: 7,
-                          letterSpacing: "0.16em",
-                          color: color ?? "var(--surface-muted)",
-                        }}
-                        title={label ?? undefined}
-                      >
-                        {i + 1}
-                      </span>
-                    ) : null}
-                    {support ? (
-                      <p
-                        className="text-secondary-text"
-                        style={{ fontSize: 10, lineHeight: 1.6, margin: 0 }}
-                      >
-                        {support}
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-            <span
-              className="text-secondary-text absolute"
-              style={{ bottom: 26, right: 46, fontSize: 9 }}
-            >
-              {folio + 1}
-            </span>
-          </div>
+            {folio + 1}
+          </span>
+          {gridOverlay}
         </div>
       </div>
     </div>
