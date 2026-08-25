@@ -128,7 +128,8 @@ export function BookPagesSection({
   const [index, setIndex] = useState(0);
   const [grid, setGrid] = useState(false);
   const [reading, setReading] = useState(false);
-  const [zoom, setZoom] = useState(1);
+  // Les caractères du livre se lisent à trois fois la taille papier par défaut.
+  const [zoom, setZoom] = useState(3);
 
 
   if (pages.length === 0) return null;
