@@ -169,7 +169,14 @@ export function BookPagesSection({
 
       <div className="mt-6 overflow-x-auto">
         <div style={{ width: `${zoom * 100}%` }}>
-          <BookSpread page={page} color={color} bookTitle={bookTitle} showGrid={grid} />
+          <BookSpread
+            page={page}
+            color={color}
+            bookTitle={bookTitle}
+            showGrid={grid}
+            maxPxPerMm={3.78 * zoom}
+          />
+
         </div>
       </div>
 
