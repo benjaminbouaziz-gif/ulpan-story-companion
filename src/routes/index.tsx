@@ -3,9 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { Excerpt } from "@/components/Excerpt";
 import { useI18n, pickLang } from "@/i18n/context";
-import { collectionsQuery, publishedBooksQuery, showcaseQuery } from "@/lib/queries";
+import { collectionsQuery, publishedBooksQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,7 +26,6 @@ export const Route = createFileRoute("/")({
     await Promise.all([
       context.queryClient.ensureQueryData(collectionsQuery),
       context.queryClient.ensureQueryData(publishedBooksQuery),
-      context.queryClient.ensureQueryData(showcaseQuery),
     ]);
   },
   component: Home,
@@ -37,7 +35,6 @@ function Home() {
   const { t, lang } = useI18n();
   const { data: collectionsData } = useSuspenseQuery(collectionsQuery);
   const { data: booksData } = useSuspenseQuery(publishedBooksQuery);
-  const { data: showcase } = useSuspenseQuery(showcaseQuery);
   const collections = collectionsData.collections;
   const books = booksData.books;
 
@@ -49,13 +46,7 @@ function Home() {
 
       <section className="border-line mt-12 border-t pt-8">
         <h2 className="text-[24px]">{t("home.method.title")}</h2>
-        <div className="mt-6">
-          <Excerpt
-            paragraphs={showcase.paragraphs.slice(0, 1)}
-            color={showcase.collection?.color_hex ?? null}
-          />
-        </div>
-        <Link to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
+        <Link className="mt-4" to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
           {t("home.method.link")}
         </Link>
       </section>
