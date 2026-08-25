@@ -262,9 +262,9 @@ export function BookSpread({
     <div
       ref={gridRef}
       style={{
-        position: "absolute",
-        top: mm(gridTop),
-        left: mm(MM.marginSide),
+        marginTop: mm(gridTop),
+        marginLeft: mm(MM.marginSide),
+        marginBottom: mm(MM.marginBottom + MM.folioSize * 2),
         width: mm(SPREAD_MM - MM.marginSide * 2),
         display: "grid",
         gridTemplateColumns: `${mm(CONTENT_MM)} ${mm(MM.marginSide * 2)} ${mm(CONTENT_MM)}`,
