@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/context";
-import { launchPlanRobot, planRobotState, unblockPlanStep } from "@/lib/atelier-robot.functions";
+import { cancelPlanRun, launchPlanRobot, planRobotState } from "@/lib/atelier-robot.functions";
 
 /**
  * LE ROBOT DE L'ÉTAPE « PLAN DE CHAPITRES ».
@@ -25,7 +26,7 @@ export function PlanRobotPanel({
   const { t } = useI18n();
   const fetchState = useServerFn(planRobotState);
   const launch = useServerFn(launchPlanRobot);
-  const unblock = useServerFn(unblockPlanStep);
+  const cancel = useServerFn(cancelPlanRun);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -62,11 +63,11 @@ export function PlanRobotPanel({
     },
   });
 
-  const free = useMutation({
-    mutationFn: () => unblock({ data: { bookStepId } }),
+  const stop = useMutation({
+    mutationFn: () => cancel({ data: { bookStepId } }),
     onSuccess: async () => {
       setError(null);
-      setNotice(t("atelier.robot.unblocked"));
+      setNotice(t("atelier.robot.stopped"));
       await state.refetch();
       onDone();
     },
@@ -161,21 +162,23 @@ export function PlanRobotPanel({
       {error ? <p className="mt-2">{error}</p> : null}
 
       <div className="mt-3 flex flex-wrap gap-3">
-        <button
+        <Button
           type="button"
-          className="border-line border px-2 py-0.5 disabled:opacity-40"
+          variant="outline"
+          size="sm"
           disabled={blocked}
           onClick={() => run.mutate(relaunch ? "avec_precedent" : null)}
         >
           {relaunch ? t("atelier.robot.relaunch") : t("atelier.robot.launch")}
-        </button>
+        </Button>
 
         {/* Repartir de zéro : le prompt actif, les données du livre et mes
             décisions tranchées — rien du livrable précédent. */}
         {s.hasPrevious ? (
-          <button
+          <Button
             type="button"
-            className="border-line border px-2 py-0.5 disabled:opacity-40"
+            variant="outline"
+            size="sm"
             disabled={blocked}
             onClick={() => {
               const question = t("atelier.robot.freshConfirm").replace(
@@ -186,20 +189,22 @@ export function PlanRobotPanel({
             }}
           >
             {t("atelier.robot.fresh")}
-          </button>
+          </Button>
         ) : null}
 
-        {s.runningStale ? (
-          <button
+        {running ? (
+          <Button
             type="button"
-            className="border-line border px-2 py-0.5"
+            variant="destructive"
+            size="sm"
+            disabled={stop.isPending}
             onClick={() => {
-              const question = `${t("atelier.robot.unblockConfirm")} ${s.promptName ?? ""} — ${s.runningModel ?? ""}`;
-              if (window.confirm(question)) free.mutate();
+              const question = `${t("atelier.robot.stopConfirm")} ${s.promptName ?? ""} — ${s.runningModel ?? ""}`;
+              if (window.confirm(question)) stop.mutate();
             }}
           >
-            {t("atelier.robot.unblock")}
-          </button>
+            {stop.isPending ? t("atelier.robot.stopping") : t("atelier.robot.stop")}
+          </Button>
         ) : null}
       </div>
     </div>

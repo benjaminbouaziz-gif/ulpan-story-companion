@@ -31,6 +31,28 @@ export type AppelResultat = {
 
 /** Assez haut pour laisser passer un document entier (plan complet, annexes). */
 const MAX_TOKENS = 32000;
+const MODEL_TOTAL_TIMEOUT_MS = 12 * 60 * 1000;
+const MODEL_IDLE_TIMEOUT_MS = 90 * 1000;
+
+function timeoutMessage(model: string, kind: "total" | "idle"): string {
+  return kind === "idle"
+    ? `Appel interrompu : aucune donnée reçue du modèle ${model} pendant ${MODEL_IDLE_TIMEOUT_MS / 1000} s.`
+    : `Appel interrompu : délai maximal de ${MODEL_TOTAL_TIMEOUT_MS / 60000} min dépassé pour ${model}.`;
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export function fournisseurDuModele(model: string): Fournisseur | null {
   const m = model.trim().toLowerCase();
@@ -118,6 +140,8 @@ async function appelAnthropic(
   if (!key) throw new Error("La clé ANTHROPIC_API_KEY n'est pas configurée.");
   const url = "https://api.anthropic.com/v1/messages";
   const t0 = Date.now();
+  const controller = new AbortController();
+  const totalTimer = setTimeout(() => controller.abort(timeoutMessage(model, "total")), MODEL_TOTAL_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(url, {
@@ -128,6 +152,7 @@ async function appelAnthropic(
         "anthropic-version": "2023-06-01",
         accept: "text/event-stream",
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model,
         max_tokens: MAX_TOKENS,
@@ -140,13 +165,19 @@ async function appelAnthropic(
       }),
     });
   } catch (e) {
+    clearTimeout(totalTimer);
     throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
   }
-  if (!res.ok)
+  if (!res.ok) {
+    clearTimeout(totalTimer);
     throw new Error(
       texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
     );
-  if (!res.body) throw new Error(`Réponse sans corps du fournisseur — HTTP ${res.status}.`);
+  }
+  if (!res.body) {
+    clearTimeout(totalTimer);
+    throw new Error(`Réponse sans corps du fournisseur — HTTP ${res.status}.`);
+  }
 
   let texte = "";
   let modelUsed = model;
@@ -158,7 +189,11 @@ async function appelAnthropic(
   const decoder = new TextDecoder();
   try {
     for (;;) {
-      const { done, value } = await reader.read();
+      const { done, value } = await withTimeout(
+        reader.read(),
+        MODEL_IDLE_TIMEOUT_MS,
+        timeoutMessage(model, "idle"),
+      );
       if (done) break;
       reste += decoder.decode(value, { stream: true });
       const lignes = reste.split("\n");
@@ -189,8 +224,13 @@ async function appelAnthropic(
       }
     }
   } catch (e) {
+    controller.abort();
     if (e instanceof Error && e.message.startsWith("Erreur en cours")) throw e;
+    if (e instanceof Error && e.message.startsWith("Appel interrompu")) throw e;
     throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
+  } finally {
+    clearTimeout(totalTimer);
+    reader.releaseLock();
   }
 
   return {
@@ -214,11 +254,13 @@ async function appelGoogle(
   if (!key) throw new Error("La clé GEMINI_API_KEY n'est pas configurée.");
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const t0 = Date.now();
+  const signal = AbortSignal.timeout(MODEL_TOTAL_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": key },
+      signal,
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: "user", parts: [{ text: user }] }],
@@ -234,7 +276,7 @@ async function appelGoogle(
       texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
     );
 
-  const json = (await res.json()) as {
+  const json = (await withTimeout(res.json(), MODEL_TOTAL_TIMEOUT_MS, timeoutMessage(model, "total"))) as {
     modelVersion?: string;
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
     candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[];
@@ -258,6 +300,7 @@ async function appelLovable(model: string, system: string, user: string): Promis
   if (!key) throw new Error("La clé LOVABLE_API_KEY n'est pas configurée.");
   const url = "https://ai.gateway.lovable.dev/v1/chat/completions";
   const t0 = Date.now();
+  const signal = AbortSignal.timeout(MODEL_TOTAL_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(url, {
@@ -267,6 +310,7 @@ async function appelLovable(model: string, system: string, user: string): Promis
         "Lovable-API-Key": key,
         "X-Lovable-AIG-SDK": "fetch",
       },
+      signal,
       body: JSON.stringify({
         model,
         max_tokens: MAX_TOKENS,
@@ -284,7 +328,7 @@ async function appelLovable(model: string, system: string, user: string): Promis
       texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
     );
 
-  const json = (await res.json()) as {
+  const json = (await withTimeout(res.json(), MODEL_TOTAL_TIMEOUT_MS, timeoutMessage(model, "total"))) as {
     model?: string;
     usage?: { prompt_tokens?: number; completion_tokens?: number };
     choices?: { finish_reason?: string; message?: { content?: string } }[];
