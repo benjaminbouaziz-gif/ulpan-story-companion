@@ -6,6 +6,7 @@ import { getAdminClient } from "./supabase-admin.server";
 import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
 import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
 import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
+import { texteErreurBase, violeIndex } from "./db-error";
 import {
   appelerModele,
   cleConfiguree,
@@ -22,10 +23,11 @@ import {
  * seuls comptent l'artefact déposé et la ligne d'agent_runs.
  *
  * GARDE-FOUS :
- *  - un seul lancement à la fois par étape : garanti en base par un index
- *    unique partiel sur agent_runs (book_step_id) où status = 'en_cours', et
- *    par l'unicité de la clé d'idempotence — un double clic échoue à l'insert,
- *    jamais après l'appel ;
+ *  - un seul lancement à la fois par étape : garanti en base par l'index unique
+ *    partiel sur agent_runs (book_step_id) où status = 'en_cours' — un double
+ *    clic échoue à l'insert, jamais après l'appel ;
+ *  - la clé d'idempotence identifie LA TENTATIVE (étape + horodatage), jamais
+ *    le résultat : un échec ne verrouille plus l'étape pour toujours ;
  *  - un plafond de lancements par jour (PLAFOND_PAR_JOUR) ;
  *  - aucun artefact n'est créé quand l'appel échoue.
  */
@@ -379,8 +381,10 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
     }
 
     // 1) La ligne de lancement d'abord : c'est elle qui interdit le second clic.
-    const idempotencyKey = `plan:${step.id}:v${artifactVersion}${data.withReason ? ":revision" : ""}`;
+    //    La clé nomme LA TENTATIVE — étape + horodatage — et non la version
+    //    d'artefact à venir : un échec ne consomme plus la clé d'après.
     const startedAt = Date.now();
+    const idempotencyKey = `plan:${step.id}:${new Date(startedAt).toISOString()}${data.withReason ? ":revision" : ""}`;
     const { data: run, error: runErr } = await admin
       .from("agent_runs")
       .insert({
@@ -401,7 +405,12 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (runErr || !run) {
-      throw new Error("Un lancement est déjà en cours sur cette étape.");
+      // « Déjà en cours » ne se dit que si c'est VRAIMENT le cas : l'index
+      //  partiel sur (book_step_id) où status = 'en_cours' l'a refusé. Sinon,
+      //  l'erreur de la base remonte telle quelle.
+      if (violeIndex(runErr, "agent_runs_un_seul_en_cours_par_etape"))
+        throw new Error("Un lancement est déjà en cours sur cette étape.");
+      throw new Error(texteErreurBase("Le lancement n'a pas pu être enregistré", runErr));
     }
 
     await admin
@@ -504,7 +513,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       prompt_version_id: version.id,
       created_by: editor.userId,
     });
-    if (artErr) throw new Error("Dépôt du plan refusé.");
+    if (artErr) throw new Error(texteErreurBase("Dépôt du plan refusé", artErr));
 
     /**
      * BRIQUE 7 — JUSTE APRÈS le dépôt : les « Points à trancher » deviennent des
