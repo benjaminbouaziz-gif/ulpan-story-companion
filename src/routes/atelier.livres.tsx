@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
 import { Room } from "@/components/AtelierRoom";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
@@ -16,6 +15,9 @@ export const Route = createFileRoute("/atelier/livres")({
   head: () => ({
     meta: [{ title: "Livres — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    livre: typeof search.livre === "string" ? search.livre : undefined,
+  }),
   component: BooksRoom,
 });
 
@@ -25,7 +27,7 @@ function BooksRoom() {
   const { t, lang } = useI18n();
   const list = useServerFn(atelierBooks);
   const chain = useServerFn(atelierBookChain);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const openId = Route.useSearch().livre ?? null;
 
   const books = useQuery({ queryKey: ["atelier", "books"], queryFn: () => list() });
   const steps = useQuery({
@@ -67,13 +69,13 @@ function BooksRoom() {
                   {b.stepsTotal === 0 ? t("atelier.books.noChain") : `${b.stepsValidated} / ${b.stepsTotal}`}
                 </td>
                 <td className={cell}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(openId === b.id ? null : b.id)}
+                  <Link
+                    to="/atelier/livres"
+                    search={openId === b.id ? {} : { livre: b.id }}
                     className="border-b border-current"
                   >
                     {openId === b.id ? t("atelier.books.close") : t("atelier.books.chain")}
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}
