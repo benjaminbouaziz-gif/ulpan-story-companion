@@ -68,15 +68,46 @@ export function rechercheEnLignePossible(model: string): boolean {
   return f === "anthropic" || f === "google";
 }
 
-function texteErreur(status: number, body: string): string {
-  const court = body.slice(0, 400);
-  if (status === 401 || status === 403) return "Clé d'API refusée par le fournisseur.";
-  if (status === 429) return "Fournisseur saturé (trop de demandes) : réessayer plus tard.";
-  if (status === 402) return "Crédits épuisés chez le fournisseur.";
-  if (status >= 500) return `Panne passagère du fournisseur (${status}).`;
-  return `Appel refusé (${status}) : ${court}`;
+/**
+ * Le message d'erreur ne masque plus rien : on distingue le REFUS de la PANNE,
+ * et on inscrit toujours le code HTTP, la durée écoulée et le début du corps
+ * renvoyé par le fournisseur (2000 caractères). Jamais la clé.
+ */
+function texteErreur(
+  status: number,
+  body: string,
+  contexte: { url: string; model: string; elapsedMs: number },
+): string {
+  const brut = body.replace(/\s+/g, " ").slice(0, 2000);
+  const queue = `HTTP ${status} · ${contexte.model} · ${contexte.url} · ${contexte.elapsedMs} ms · réponse : ${brut || "(corps vide)"}`;
+  let cause: string;
+  if (status === 401 || status === 403) cause = "Clé d'API refusée par le fournisseur";
+  else if (status === 404) cause = "Modèle inconnu du fournisseur";
+  else if (status === 400 || status === 422) cause = "Requête refusée par le fournisseur";
+  else if (status === 402) cause = "Crédits épuisés chez le fournisseur";
+  else if (status === 429) cause = "Fournisseur saturé (trop de demandes)";
+  else if (status === 413) cause = "Requête trop grosse pour le fournisseur";
+  else if (status === 504 || status === 524 || status === 522)
+    cause = "Appel coupé par le fournisseur avant la fin de la réponse (délai dépassé côté fournisseur)";
+  else if (status >= 500) cause = "Panne passagère du fournisseur";
+  else cause = "Appel refusé";
+  return `${cause} — ${queue}`;
 }
 
+/** Erreur réseau (rien n'est sorti, ou la connexion est tombée). */
+function texteErreurReseau(
+  e: unknown,
+  contexte: { url: string; model: string; elapsedMs: number },
+): string {
+  const m = e instanceof Error ? e.message : String(e);
+  return `Appel non abouti (réseau) — ${contexte.model} · ${contexte.url} · ${contexte.elapsedMs} ms · ${m.slice(0, 2000)}`;
+}
+
+/**
+ * Anthropic EN FLUX. Un appel long non streamé est coupé par la façade du
+ * fournisseur (524) au bout de ~2 min : le flux tient la connexion ouverte et
+ * laisse passer les plans entiers.
+ */
 async function appelAnthropic(
   model: string,
   webSearch: boolean,
@@ -85,43 +116,93 @@ async function appelAnthropic(
 ): Promise<AppelResultat> {
   const key = process.env["ANTHROPIC_API_KEY"];
   if (!key) throw new Error("La clé ANTHROPIC_API_KEY n'est pas configurée.");
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: MAX_TOKENS,
-      system,
-      messages: [{ role: "user", content: user }],
-      ...(webSearch
-        ? { tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }] }
-        : {}),
-    }),
-  });
-  if (!res.ok) throw new Error(texteErreur(res.status, await res.text()));
-  const json = (await res.json()) as {
-    model?: string;
-    stop_reason?: string;
-    usage?: { input_tokens?: number; output_tokens?: number };
-    content?: { type: string; text?: string }[];
-  };
-  const text = (json.content ?? [])
-    .filter((b) => b.type === "text" && typeof b.text === "string")
-    .map((b) => b.text as string)
-    .join("\n");
+  const url = "https://api.anthropic.com/v1/messages";
+  const t0 = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        accept: "text/event-stream",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: MAX_TOKENS,
+        stream: true,
+        system,
+        messages: [{ role: "user", content: user }],
+        ...(webSearch
+          ? { tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }] }
+          : {}),
+      }),
+    });
+  } catch (e) {
+    throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
+  }
+  if (!res.ok)
+    throw new Error(
+      texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
+    );
+  if (!res.body) throw new Error(`Réponse sans corps du fournisseur — HTTP ${res.status}.`);
+
+  let texte = "";
+  let modelUsed = model;
+  let inputTokens: number | null = null;
+  let outputTokens: number | null = null;
+  let stopReason: string | null = null;
+  let reste = "";
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      reste += decoder.decode(value, { stream: true });
+      const lignes = reste.split("\n");
+      reste = lignes.pop() ?? "";
+      for (const ligne of lignes) {
+        if (!ligne.startsWith("data:")) continue;
+        const brut = ligne.slice(5).trim();
+        if (!brut || brut === "[DONE]") continue;
+        let ev: any;
+        try {
+          ev = JSON.parse(brut);
+        } catch {
+          continue;
+        }
+        if (ev.type === "message_start") {
+          modelUsed = ev.message?.model ?? model;
+          inputTokens = ev.message?.usage?.input_tokens ?? inputTokens;
+        } else if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") {
+          texte += ev.delta.text ?? "";
+        } else if (ev.type === "message_delta") {
+          stopReason = ev.delta?.stop_reason ?? stopReason;
+          outputTokens = ev.usage?.output_tokens ?? outputTokens;
+        } else if (ev.type === "error") {
+          throw new Error(
+            `Erreur en cours de réponse du fournisseur — ${model} · ${Date.now() - t0} ms · ${JSON.stringify(ev.error).slice(0, 2000)}`,
+          );
+        }
+      }
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("Erreur en cours")) throw e;
+    throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
+  }
+
   return {
-    text,
-    modelUsed: json.model ?? model,
+    text: texte,
+    modelUsed,
     costUsd: null,
-    outputTokens: json.usage?.output_tokens ?? null,
-    inputTokens: json.usage?.input_tokens ?? null,
-    truncated: json.stop_reason === "max_tokens",
+    outputTokens,
+    inputTokens,
+    truncated: stopReason === "max_tokens",
   };
 }
+
 
 async function appelGoogle(
   model: string,
