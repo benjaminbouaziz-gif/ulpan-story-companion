@@ -255,7 +255,8 @@ function PromptDossier({ promptId }: { promptId: string }) {
     onSuccess: async () => {
       setEditing(false);
       setNote("");
-      setError(null);
+              setError(null);
+      setMissing({});
       await refresh();
     },
     onError: (e: Error) => setError(e.message),
