@@ -96,6 +96,7 @@ function BooksRoom() {
                 <tr>
                   <th className={cell}>{t("atelier.books.col.rank")}</th>
                   <th className={cell}>{t("atelier.books.col.label")}</th>
+                  <th className={cell}>{t("atelier.books.col.lang")}</th>
                   <th className={cell}>{t("atelier.books.col.species")}</th>
                   <th className={cell}>{t("atelier.books.col.status")}</th>
                   <th className={cell}>{t("atelier.books.col.awaiting")}</th>
@@ -106,8 +107,12 @@ function BooksRoom() {
                   <tr key={s.id}>
                     <td className={cell}>{s.rank}</td>
                     <td className={cell}>{lang === "en" ? s.labelEn : s.labelFr}</td>
+                    <td className={cell}>{t(`atelier.lang.${s.lang}` as DictKey)}</td>
                     <td className={cell}>{t(`atelier.species.${s.species}` as DictKey)}</td>
-                    <td className={cell}>{t(`atelier.status.${s.status}` as DictKey)}</td>
+                    <td className={cell}>
+                      {t(`atelier.status.${s.status}` as DictKey)}
+                      {s.note ? <span className="block opacity-70">{s.note}</span> : null}
+                    </td>
                     <td className={cell}>
                       {s.awaiting ? t(`atelier.awaiting.${s.awaiting}` as DictKey) : t("atelier.none")}
                     </td>
