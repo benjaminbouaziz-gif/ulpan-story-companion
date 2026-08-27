@@ -2,14 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Room } from "@/components/AtelierRoom";
+import { StepDossier } from "@/components/AtelierStepDossier";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { atelierBookChain, atelierBooks } from "@/lib/atelier-books.functions";
 
 /**
- * La salle des livres — LECTURE SEULE.
- * Aucun bouton d'écriture, aucun champ modifiable : les actions arrivent à la
- * brique 3. Tous les chiffres affichés sont lus en base à l'affichage.
+ * La salle des livres. La liste et la chaîne restent lues en base à
+ * l'affichage ; chaque étape ouvre son dossier (livrables déposés, liens
+ * signés 15 min, porte de validation). Aucune donnée n'est écrite en dur.
  */
 export const Route = createFileRoute("/atelier/livres")({
   head: () => ({
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/atelier/livres")({
   }),
   validateSearch: (search: Record<string, unknown>) => ({
     livre: typeof search['livre'] === "string" ? (search['livre'] as string) : undefined,
+    etape: typeof search['etape'] === "string" ? (search['etape'] as string) : undefined,
   }),
   component: BooksRoom,
 });
@@ -27,7 +29,9 @@ function BooksRoom() {
   const { t, lang } = useI18n();
   const list = useServerFn(atelierBooks);
   const chain = useServerFn(atelierBookChain);
-  const openId = Route.useSearch().livre ?? null;
+  const search = Route.useSearch();
+  const openId = search.livre ?? null;
+  const openStep = search.etape ?? null;
 
   const books = useQuery({ queryKey: ["atelier", "books"], queryFn: () => list() });
   const steps = useQuery({
@@ -40,9 +44,7 @@ function BooksRoom() {
 
   return (
     <Room titleKey="atelier.room.books" descKey="atelier.room.books.desc">
-      <p className="text-[13px]">{t("atelier.readOnly")}</p>
-
-      {books.isLoading ? (
+          {books.isLoading ? (
         <p className="mt-4 text-[13px]">…</p>
       ) : rows.length === 0 ? (
         <p className="mt-4">{t("atelier.none")}</p>
@@ -100,10 +102,11 @@ function BooksRoom() {
                   <th className={cell}>{t("atelier.books.col.species")}</th>
                   <th className={cell}>{t("atelier.books.col.status")}</th>
                   <th className={cell}>{t("atelier.books.col.awaiting")}</th>
+                  <th className={cell}>{t("atelier.step.artifacts")}</th>
                 </tr>
               </thead>
               <tbody>
-                {(steps.data ?? []).map((s) => (
+                {(steps.data ?? []).flatMap((s) => [
                   <tr key={s.id}>
                     <td className={cell}>{s.rank}</td>
                     <td className={cell}>{lang === "en" ? s.labelEn : s.labelFr}</td>
@@ -116,8 +119,24 @@ function BooksRoom() {
                     <td className={cell}>
                       {s.awaiting ? t(`atelier.awaiting.${s.awaiting}` as DictKey) : t("atelier.none")}
                     </td>
-                  </tr>
-                ))}
+                    <td className={cell}>
+                      <Link
+                        to="/atelier/livres"
+                        search={{ livre: openId, etape: openStep === s.id ? undefined : s.id }}
+                        className="border-b border-current"
+                      >
+                        {openStep === s.id ? t("atelier.step.close") : t("atelier.step.open")}
+                      </Link>
+                    </td>
+                  </tr>,
+                  openStep === s.id ? (
+                    <tr key={`${s.id}-dossier`}>
+                      <td className={cell} colSpan={7}>
+                        <StepDossier bookStepId={s.id} status={s.status} />
+                      </td>
+                    </tr>
+                  ) : null,
+                ])}
               </tbody>
             </table>
           )}
