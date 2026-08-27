@@ -86,7 +86,7 @@ function PromptsRoom() {
       await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
       setOpenId(res.promptId);
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => setError(e.message || "L’enregistrement du prompt a échoué."),
   });
 
   return (
@@ -187,7 +187,6 @@ function PromptsRoom() {
                 <button
                   type="button"
                   className={button}
-                  disabled={createMut.isPending}
                   onClick={() => {
                     const m = {
                       step: !newStep,
@@ -197,6 +196,7 @@ function PromptsRoom() {
                     setMissing(m);
                     setError(null);
                     if (m.step || m.name || m.content) return;
+                     if (createMut.isPending) return;
                     createMut.mutate();
                   }}
                 >
@@ -263,7 +263,7 @@ function PromptDossier({ promptId }: { promptId: string }) {
       setMissing({});
       await refresh();
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => setError(e.message || "La publication de la version a échoué."),
   });
 
   const activateMut = useMutation({
@@ -334,12 +334,12 @@ function PromptDossier({ promptId }: { promptId: string }) {
               <button
                 type="button"
                 className={button}
-                disabled={publishMut.isPending}
                 onClick={() => {
                   const m = { content: !content.trim(), note: !note.trim() };
                   setMissing(m);
                   setError(null);
                   if (m.content || m.note) return;
+                   if (publishMut.isPending) return;
                   publishMut.mutate();
                 }}
               >

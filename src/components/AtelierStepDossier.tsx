@@ -52,6 +52,8 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [showOld, setShowOld] = useState(false);
+  const [commentMissing, setCommentMissing] = useState(false);
+  const [fileMissing, setFileMissing] = useState(false);
 
   const dossier = useQuery({
     queryKey: ["atelier", "dossier", bookStepId],
@@ -85,6 +87,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
     },
     onSuccess: () => {
       setFile(null);
+      setFileMissing(false);
       setMessage(null);
       invalidate();
     },
@@ -103,6 +106,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
       }),
     onSuccess: () => {
       setComment("");
+      setCommentMissing(false);
       setMessage(t("atelier.step.reviewDone"));
       invalidate();
     },
@@ -209,8 +213,12 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
             rows={2}
             placeholder={t("atelier.step.reason")}
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={(e) => {
+              setComment(e.target.value);
+              if (e.target.value.trim()) setCommentMissing(false);
+            }}
           />
+          {commentMissing ? <p className="mt-1">{t("atelier.step.reasonRequired")}</p> : null}
           <div className="mt-2 flex gap-3">
             <button
               type="button"
@@ -226,15 +234,17 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
             <button
               type="button"
               className="border-line border px-2 py-0.5"
-              disabled={decide.isPending || comment.trim().length === 0}
-              onClick={() => decide.mutate("revision_demandee")}
+              disabled={decide.isPending}
+              onClick={() => {
+                const missing = comment.trim().length === 0;
+                setCommentMissing(missing);
+                if (missing || decide.isPending) return;
+                decide.mutate("revision_demandee");
+              }}
             >
               {t("atelier.step.reject")}
             </button>
           </div>
-          {comment.trim().length === 0 ? (
-            <p className="mt-1 opacity-70">{t("atelier.step.reasonRequired")}</p>
-          ) : null}
         </div>
       )}
 
@@ -258,12 +268,27 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
                 ))}
               </select>
             </label>
-            <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <div>
+              <input
+                type="file"
+                onChange={(e) => {
+                  const selected = e.target.files?.[0] ?? null;
+                  setFile(selected);
+                  if (selected) setFileMissing(false);
+                }}
+              />
+              {fileMissing ? <p className="mt-1">{t("atelier.step.file")}</p> : null}
+            </div>
             <button
               type="button"
               className="border-line border px-2 py-0.5"
-              disabled={!file || deposit.isPending}
-              onClick={() => deposit.mutate()}
+              disabled={deposit.isPending}
+              onClick={() => {
+                const missing = !file;
+                setFileMissing(missing);
+                if (missing || deposit.isPending) return;
+                deposit.mutate();
+              }}
             >
               {deposit.isPending ? t("atelier.step.sending") : t("atelier.step.send")}
             </button>
