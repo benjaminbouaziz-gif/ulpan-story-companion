@@ -22,28 +22,36 @@ function RunsTable() {
     <table className="w-full text-left">
       <thead>
         <tr className="border-line border-b">
-          <th className="py-1 pr-3 font-normal opacity-70">Date</th>
+          <th className="py-1 pr-3 font-normal opacity-70">Date et heure</th>
           <th className="py-1 pr-3 font-normal opacity-70">Livre</th>
+          <th className="py-1 pr-3 font-normal opacity-70">Étape</th>
           <th className="py-1 pr-3 font-normal opacity-70">Robot</th>
           <th className="py-1 pr-3 font-normal opacity-70">Modèle</th>
           <th className="py-1 pr-3 font-normal opacity-70">Mode</th>
           <th className="py-1 pr-3 font-normal opacity-70">Statut</th>
           <th className="py-1 pr-3 font-normal opacity-70">Durée</th>
           <th className="py-1 pr-3 font-normal opacity-70">Jetons produits</th>
+          <th className="py-1 pr-3 font-normal opacity-70">Coût</th>
         </tr>
       </thead>
       <tbody>
         {lignes.map((r) => (
           <tr key={r.id} className="border-line border-b align-top">
-            <td className="py-1 pr-3">{new Date(r.createdAt).toLocaleString("fr-FR")}</td>
+            <td className="py-1 pr-3 whitespace-nowrap">
+              {new Date(r.createdAt).toLocaleString("fr-FR", {
+                dateStyle: "short",
+                timeStyle: "medium",
+              })}
+            </td>
             <td className="py-1 pr-3">{r.bookTitle ?? "—"}</td>
+            <td className="py-1 pr-3">{r.stepLabel ?? "—"}</td>
             <td className="py-1 pr-3">{r.robot ?? "—"}</td>
             <td className="py-1 pr-3">{r.model ?? "—"}</td>
             <td className="py-1 pr-3">
               {r.mode === "avec_precedent"
-                ? "avec le livrable précédent"
+                ? "avec mon motif"
                 : r.mode === "sans_precedent"
-                  ? "reparti de zéro"
+                  ? "sans précédent"
                   : r.mode === "initial"
                     ? "premier lancement"
                     : "—"}
@@ -60,6 +68,9 @@ function RunsTable() {
             </td>
             <td className="py-1 pr-3">
               {r.outputTokens !== null ? r.outputTokens.toLocaleString("fr-FR") : "—"}
+            </td>
+            <td className="py-1 pr-3">
+              {r.costUsd !== null ? `${r.costUsd.toFixed(4)} $` : "inconnu"}
             </td>
           </tr>
         ))}

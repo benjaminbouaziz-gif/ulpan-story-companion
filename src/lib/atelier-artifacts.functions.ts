@@ -308,7 +308,9 @@ export const reviewStep = createServerFn({ method: "POST" })
         ? { status: "valide", awaiting: null, closed_at: now, updated_at: now }
         : {
             status: "en_revision",
-            awaiting: step.species === "humaine" ? "ben" : "robot",
+            // L'attente reste sur Ben : c'est lui qui relance. Elle ne passe à
+            // 'robot' qu'au démarrage effectif d'un lancement.
+            awaiting: "ben",
             closed_at: null,
             updated_at: now,
           };

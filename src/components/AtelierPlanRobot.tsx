@@ -114,6 +114,11 @@ export function PlanRobotPanel({
         </p>
       ) : null}
 
+      {/* En révision et pas encore relancé : dire clairement que la balle est dans mon camp. */}
+      {s.inRevision && !running ? (
+        <p className="mt-2">{t("atelier.robot.waitingOnMe")}</p>
+      ) : null}
+
       {/* Pendant le lancement : dire qu'il tourne, depuis quand, avec quoi. */}
       {running ? (
         <div className="mt-2">
