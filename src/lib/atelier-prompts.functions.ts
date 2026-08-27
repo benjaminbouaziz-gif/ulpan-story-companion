@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
+import { texteErreurBase } from "./db-error";
 
 /**
  * BRIQUE 4 — LA BIBLIOTHÈQUE DE PROMPTS.
@@ -283,7 +284,10 @@ export const createPrompt = createServerFn({ method: "POST" })
       reason: "création",
       created_by: editor.userId,
     });
-    if (activationError) throw new Error("Le prompt a été créé, mais son activation n’a pas pu être enregistrée.");
+    if (activationError)
+      throw new Error(
+        texteErreurBase("Le prompt a été créé, mais son activation n’a pas pu être enregistrée", activationError),
+      );
 
     return { promptId: prompt.id };
   });
@@ -341,7 +345,10 @@ export const publishPromptVersion = createServerFn({ method: "POST" })
       reason: "publication",
       created_by: editor.userId,
     });
-    if (activationError) throw new Error("La version a été créée, mais son activation n’a pas pu être enregistrée.");
+    if (activationError)
+      throw new Error(
+        texteErreurBase("La version a été créée, mais son activation n’a pas pu être enregistrée", activationError),
+      );
 
     return { version };
   });

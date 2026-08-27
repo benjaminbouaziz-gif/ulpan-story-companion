@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { questionKey } from "./decisions.server";
+import { texteErreurBase } from "./db-error";
 
 /**
  * BRIQUE 7 — LES PORTES DU REGISTRE DES DÉCISIONS.
