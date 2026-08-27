@@ -1,10 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Room } from "@/components/AtelierRoom";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { atelierBookChain, atelierBooks } from "@/lib/atelier-books.functions";
+import { BookFiche, NewBookForm } from "@/components/AtelierBookFiche";
 
 /**
  * La salle des livres. La liste et la chaîne restent lues en base à
@@ -29,7 +31,9 @@ function BooksRoom() {
   const list = useServerFn(atelierBooks);
   const chain = useServerFn(atelierBookChain);
   const search = Route.useSearch();
+  const navigate = useNavigate();
   const openId = search.livre ?? null;
+  const [creating, setCreating] = useState(false);
 
   const books = useQuery({ queryKey: ["atelier", "books"], queryFn: () => list() });
   const steps = useQuery({
@@ -42,6 +46,24 @@ function BooksRoom() {
 
   return (
     <Room titleKey="atelier.room.books" descKey="atelier.room.books.desc">
+      <div className="mt-4">
+        <button
+          type="button"
+          className="border-line border px-2 py-0.5 text-[13px]"
+          onClick={() => setCreating((v) => !v)}
+        >
+          {creating ? t("atelier.books.closeNewBook") : t("atelier.books.newBook")}
+        </button>
+      </div>
+      {creating ? (
+        <NewBookForm
+          onCreated={(bookId) => {
+            setCreating(false);
+            void navigate({ to: "/atelier/livres", search: { livre: bookId, etape: undefined } });
+          }}
+        />
+      ) : null}
+
           {books.isLoading ? (
         <p className="mt-4 text-[13px]">…</p>
       ) : rows.length === 0 ? (
@@ -89,7 +111,9 @@ function BooksRoom() {
 
       {openId ? (
         <div className="mt-8">
-          <h2 className="font-latin text-[16px]">{t("atelier.books.chain")}</h2>
+          {/* La fiche d'abord : c'est elle qui porte la matière du livre. */}
+          <BookFiche bookId={openId} />
+          <h2 className="font-latin mt-8 text-[16px]">{t("atelier.books.chain")}</h2>
           {steps.isLoading ? (
             <p className="mt-2 text-[13px]">…</p>
           ) : (steps.data ?? []).length === 0 ? (
