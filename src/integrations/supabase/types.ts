@@ -95,6 +95,7 @@ export type Database = {
           input_chars: number
           kind: string
           model: string | null
+          model_used: string | null
           ok: boolean
           output_chars: number
           robot_name: string | null
@@ -118,6 +119,7 @@ export type Database = {
           input_chars?: number
           kind: string
           model?: string | null
+          model_used?: string | null
           ok?: boolean
           output_chars?: number
           robot_name?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           input_chars?: number
           kind?: string
           model?: string | null
+          model_used?: string | null
           ok?: boolean
           output_chars?: number
           robot_name?: string | null
@@ -1213,8 +1216,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          model: string | null
           prompt_id: string
           version: number
+          web_search: boolean
         }
         Insert: {
           change_note?: string | null
@@ -1222,8 +1227,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          model?: string | null
           prompt_id: string
           version: number
+          web_search?: boolean
         }
         Update: {
           change_note?: string | null
@@ -1231,8 +1238,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          model?: string | null
           prompt_id?: string
           version?: number
+          web_search?: boolean
         }
         Relationships: [
           {
