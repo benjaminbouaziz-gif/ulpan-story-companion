@@ -93,13 +93,16 @@ export type Database = {
           id: string
           idempotency_key: string | null
           input_chars: number
+          input_tokens: number | null
           kind: string
           model: string | null
           model_used: string | null
           ok: boolean
           output_chars: number
+          output_tokens: number | null
           robot_name: string | null
           status: string | null
+          truncated: boolean
         }
         Insert: {
           batch_current?: number | null
@@ -117,13 +120,16 @@ export type Database = {
           id?: string
           idempotency_key?: string | null
           input_chars?: number
+          input_tokens?: number | null
           kind: string
           model?: string | null
           model_used?: string | null
           ok?: boolean
           output_chars?: number
+          output_tokens?: number | null
           robot_name?: string | null
           status?: string | null
+          truncated?: boolean
         }
         Update: {
           batch_current?: number | null
@@ -141,13 +147,16 @@ export type Database = {
           id?: string
           idempotency_key?: string | null
           input_chars?: number
+          input_tokens?: number | null
           kind?: string
           model?: string | null
           model_used?: string | null
           ok?: boolean
           output_chars?: number
+          output_tokens?: number | null
           robot_name?: string | null
           status?: string | null
+          truncated?: boolean
         }
         Relationships: [
           {
