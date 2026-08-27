@@ -1152,6 +1152,51 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_activations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          prompt_id: string
+          prompt_version_id: string
+          reason: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          prompt_id: string
+          prompt_version_id: string
+          reason?: string | null
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          prompt_id?: string
+          prompt_version_id?: string
+          reason?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_activations_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_activations_prompt_version_id_fkey"
+            columns: ["prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prompt_versions: {
         Row: {
           change_note: string | null
@@ -1192,6 +1237,7 @@ export type Database = {
       }
       prompts: {
         Row: {
+          active_version_id: string | null
           code: string
           collection_id: string | null
           created_at: string
@@ -1203,6 +1249,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active_version_id?: string | null
           code: string
           collection_id?: string | null
           created_at?: string
@@ -1214,6 +1261,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active_version_id?: string | null
           code?: string
           collection_id?: string | null
           created_at?: string
@@ -1225,6 +1273,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "prompts_active_version_id_fkey"
+            columns: ["active_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prompts_collection_id_fkey"
             columns: ["collection_id"]
