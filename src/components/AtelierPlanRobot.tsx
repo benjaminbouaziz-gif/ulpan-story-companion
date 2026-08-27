@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useI18n } from "@/i18n/context";
@@ -65,6 +65,13 @@ export function PlanRobotPanel({
     },
     onError: (e: Error) => setError(e.message),
   });
+
+  // Dès que le lancement cesse, le dossier se rafraîchit sans rechargement.
+  const wasRunning = useRef(false);
+  useEffect(() => {
+    if (wasRunning.current && !running) onDone();
+    wasRunning.current = running;
+  }, [running, onDone]);
 
   if (!s || !s.isPlanStep) return null;
 
