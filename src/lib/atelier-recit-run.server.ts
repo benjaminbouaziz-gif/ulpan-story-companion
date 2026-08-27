@@ -269,7 +269,32 @@ export async function etatRecit(editor: EditorContext, bookStepId: string): Prom
   const ecritsNos = new Set(prepare.ecrits.map((e) => e.chapterNo));
   const next = prepare.plan.chapitres.find((c) => !ecritsNos.has(c.chapterNo))?.chapterNo ?? null;
 
+  // Les lancements de cette étape : l'attente ne désigne un robot que s'il
+  // travaille vraiment, et le lot en cours se lit sur la ligne elle-même.
+  const { data: runs } = await admin
+    .from("agent_runs")
+    .select("status, model, model_used, duration_ms, error_summary, created_at, batch_current")
+    .eq("book_step_id", prepare.step.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const enCours = (runs ?? []).find((r) => r.status === "en_cours") ?? null;
+  const dernier = (runs ?? [])[0] ?? null;
+
   return {
+    running: enCours !== null,
+    runningSince: enCours?.created_at ?? null,
+    runningChapter: enCours?.batch_current ?? null,
+    runningModel: enCours?.model_used ?? enCours?.model ?? null,
+    lastRun: dernier
+      ? {
+          status: dernier.status ?? null,
+          modelUsed: dernier.model_used ?? null,
+          durationMs: dernier.duration_ms ?? null,
+          errorSummary: dernier.error_summary ?? null,
+          batchCurrent: dernier.batch_current ?? null,
+          createdAt: dernier.created_at,
+        }
+      : null,
     stepCode: prepare.step.step_code,
     isRedactionStep: prepare.step.step_code === REDACTION_STEP_CODE,
     bookId: prepare.step.book_id,
