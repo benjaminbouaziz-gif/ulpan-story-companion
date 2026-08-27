@@ -31,14 +31,31 @@ export type ReviewRow = {
   artifactId: string | null;
 };
 
+/** La ligne de situation qui ouvre le dossier : rien d'inventé, tout est lu. */
+export type StepSituation = {
+  stepId: string;
+  bookId: string;
+  bookTitle: string;
+  rank: number;
+  labelFr: string;
+  status: string;
+  awaiting: string | null;
+  species: string;
+  note: string | null;
+};
+
 export const stepDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ bookStepId: z.string().uuid() }).parse(data))
-  .handler(async ({ context, data }): Promise<{ artifacts: ArtifactRow[]; reviews: ReviewRow[] }> => {
+  .handler(async ({ context, data }): Promise<{
+    situation: StepSituation | null;
+    artifacts: ArtifactRow[];
+    reviews: ReviewRow[];
+  }> => {
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
-    const [arts, revs] = await Promise.all([
+    const [arts, revs, step] = await Promise.all([
       admin
         .from("artifacts")
         .select("id, type, version, storage_path, size_bytes, checksum, origin, created_at")
@@ -49,9 +66,35 @@ export const stepDossier = createServerFn({ method: "GET" })
         .select("id, decision, comment, created_at, artifact_id")
         .eq("book_step_id", data.bookStepId)
         .order("created_at", { ascending: false }),
+      admin
+        .from("book_steps")
+        .select("id, book_id, rank, label_fr, status, awaiting, species, note")
+        .eq("id", data.bookStepId)
+        .maybeSingle(),
     ]);
 
+    let situation: StepSituation | null = null;
+    if (step.data) {
+      const { data: book } = await admin
+        .from("books")
+        .select("title_fr")
+        .eq("id", step.data.book_id)
+        .maybeSingle();
+      situation = {
+        stepId: step.data.id,
+        bookId: step.data.book_id,
+        bookTitle: book?.title_fr ?? "",
+        rank: step.data.rank,
+        labelFr: step.data.label_fr,
+        status: step.data.status,
+        awaiting: step.data.awaiting ?? null,
+        species: step.data.species,
+        note: step.data.note ?? null,
+      };
+    }
+
     return {
+      situation,
       artifacts: (arts.data ?? []).map((a) => ({
         id: a.id,
         type: a.type,
