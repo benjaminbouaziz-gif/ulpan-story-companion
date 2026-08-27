@@ -7,6 +7,7 @@ import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { atelierBookChain, atelierBooks } from "@/lib/atelier-books.functions";
 import { BookFiche, NewBookForm } from "@/components/AtelierBookFiche";
+import { BookDecisions } from "@/components/AtelierDecisions";
 
 /**
  * La salle des livres. La liste et la chaîne restent lues en base à
@@ -163,6 +164,9 @@ function BooksRoom() {
               </tbody>
             </table>
           )}
+
+          {/* BRIQUE 7 — la mémoire des arbitrages, sous la chaîne. */}
+          <BookDecisions bookId={openId} />
 
           {/* La fiche ensuite, sous son titre, inchangée. */}
           <div id="fiche-du-livre">
