@@ -1,7 +1,372 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Room } from "@/components/AtelierRoom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useI18n } from "@/i18n/context";
+import {
+  activatePromptVersion,
+  atelierPromptSteps,
+  atelierPrompts,
+  createPrompt,
+  promptDossier,
+  publishPromptVersion,
+} from "@/lib/atelier-prompts.functions";
 
+/**
+ * LA BIBLIOTHÈQUE DE PROMPTS.
+ *
+ * Un prompt ne se modifie jamais : il se re-publie. L'écran n'offre donc aucun
+ * champ « modifier » sur une version existante — seulement « nouvelle version »
+ * avec sa note de changement, obligatoire dès la version 2.
+ *
+ * Le contenu s'affiche à chasse fixe, sans coloration ni formatage : c'est du
+ * texte, on le lit et on le copie. Aucun prompt n'est rédigé ici par la
+ * machine : les contenus sont collés par l'éditeur.
+ *
+ * L'axe langue reste en sommeil : aucun sélecteur de langue.
+ */
 export const Route = createFileRoute("/atelier/prompts")({
-  head: () => ({ meta: [{ title: "Prompts — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }] }),
-  component: () => <Room titleKey="atelier.room.prompts" descKey="atelier.room.prompts.desc" />,
+  head: () => ({
+    meta: [{ title: "Prompts — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
+  }),
+  component: PromptsRoom,
 });
+
+const cell = "border-line border-b px-2 py-1 text-left align-top";
+const field = "border-line w-full rounded-[2px] border px-2 py-1 text-[13px]";
+const mono = "font-mono w-full whitespace-pre-wrap break-words text-[13px] leading-[1.5]";
+const button = "border-line rounded-[2px] border px-3 py-1 text-[13px]";
+
+function fmt(iso: string | null): string {
+  return iso ? new Date(iso).toLocaleString("fr-FR") : "—";
+}
+
+function PromptsRoom() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const fetchList = useServerFn(atelierPrompts);
+  const fetchSteps = useServerFn(atelierPromptSteps);
+  const list = useQuery({ queryKey: ["atelier", "prompts"], queryFn: () => fetchList() });
+  const steps = useQuery({ queryKey: ["atelier", "promptSteps"], queryFn: () => fetchSteps() });
+
+  const create = useServerFn(createPrompt);
+  const [creating, setCreating] = useState(false);
+  const [newStep, setNewStep] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const createMut = useMutation({
+    mutationFn: () =>
+      create({ data: { stepCode: newStep, name: newName, content: newContent, collectionId: null } }),
+    onSuccess: async (res) => {
+      setCreating(false);
+      setNewStep("");
+      setNewName("");
+      setNewContent("");
+      setError(null);
+      await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
+      setOpenId(res.promptId);
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  return (
+    <section className="max-w-[1000px]">
+      <h1 className="font-latin text-[24px]">{t("atelier.room.prompts")}</h1>
+      <p className="mt-2 text-[14px]">{t("atelier.room.prompts.desc")}</p>
+
+      <div className="border-line mt-6 border-t pt-4">
+        {list.isLoading ? (
+          <p className="text-[14px]">{t("atelier.loading")}</p>
+        ) : (list.data ?? []).length === 0 ? (
+          <p className="text-[14px]">{t("atelier.prompts.emptyList")}</p>
+        ) : (
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr>
+                <th className={cell}>{t("atelier.prompts.col.step")}</th>
+                <th className={cell}>{t("atelier.prompts.col.name")}</th>
+                <th className={cell}>{t("atelier.prompts.col.active")}</th>
+                <th className={cell}>{t("atelier.prompts.col.lastVersion")}</th>
+                <th className={cell}>{t("atelier.prompts.col.count")}</th>
+                <th className={cell} />
+              </tr>
+            </thead>
+            <tbody>
+              {(list.data ?? []).map((p) => (
+                <tr key={p.id}>
+                  <td className={cell}>{p.stepLabelFr}</td>
+                  <td className={cell}>{p.name}</td>
+                  <td className={cell}>{p.activeVersion ?? t("atelier.none")}</td>
+                  <td className={cell}>{fmt(p.lastVersionAt)}</td>
+                  <td className={cell}>{p.versionsCount}</td>
+                  <td className={cell}>
+                    <button
+                      type="button"
+                      className="border-b border-current"
+                      onClick={() => setOpenId(openId === p.id ? null : p.id)}
+                    >
+                      {openId === p.id ? t("atelier.prompts.close") : t("atelier.prompts.open")}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="mt-6">
+          {creating ? (
+            <div className="border-line border-t pt-4">
+              <h2 className="font-latin text-[16px]">{t("atelier.prompts.new")}</h2>
+              <label className="mt-3 block text-[13px]">
+                {t("atelier.prompts.field.step")}
+                <select value={newStep} onChange={(e) => setNewStep(e.target.value)} className={`${field} mt-1`}>
+                  <option value="">{t("atelier.prompts.chooseStep")}</option>
+                  {(steps.data ?? []).map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {s.rank}. {s.labelFr}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="mt-3 block text-[13px]">
+                {t("atelier.prompts.field.name")}
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} className={`${field} mt-1`} />
+              </label>
+              <label className="mt-3 block text-[13px]">
+                {t("atelier.prompts.field.content")}
+                <textarea
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  rows={14}
+                  className={`${field} ${mono} mt-1`}
+                />
+              </label>
+              {error ? <p className="mt-2 text-[13px]">{error}</p> : null}
+              <div className="mt-3 flex gap-3">
+                <button
+                  type="button"
+                  className={button}
+                  disabled={!newStep || !newName.trim() || !newContent.trim() || createMut.isPending}
+                  onClick={() => createMut.mutate()}
+                >
+                  {t("atelier.prompts.save")}
+                </button>
+                <button type="button" className={button} onClick={() => setCreating(false)}>
+                  {t("atelier.prompts.cancel")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className={button} onClick={() => setCreating(true)}>
+              {t("atelier.prompts.new")}
+            </button>
+          )}
+        </div>
+
+        {openId ? <PromptDossier promptId={openId} /> : null}
+      </div>
+    </section>
+  );
+}
+
+function PromptDossier({ promptId }: { promptId: string }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const fetchDossier = useServerFn(promptDossier);
+  const dossier = useQuery({
+    queryKey: ["atelier", "prompt", promptId],
+    queryFn: () => fetchDossier({ data: { promptId } }),
+  });
+
+  const publish = useServerFn(publishPromptVersion);
+  const activate = useServerFn(activatePromptVersion);
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({});
+
+  const refresh = async () => {
+    await qc.invalidateQueries({ queryKey: ["atelier", "prompt", promptId] });
+    await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
+  };
+
+  const publishMut = useMutation({
+    mutationFn: () => publish({ data: { promptId, content, changeNote: note } }),
+    onSuccess: async () => {
+      setEditing(false);
+      setNote("");
+      setError(null);
+      await refresh();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const activateMut = useMutation({
+    mutationFn: (versionId: string) => activate({ data: { promptId, versionId } }),
+    onSuccess: refresh,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  if (dossier.isLoading) return <p className="mt-8 text-[14px]">{t("atelier.loading")}</p>;
+  const data = dossier.data;
+  if (!data?.prompt) return <p className="mt-8 text-[14px]">{t("atelier.prompts.notFound")}</p>;
+
+  const active = data.versions.find((v) => v.isActive) ?? null;
+  const others = data.versions.filter((v) => !v.isActive);
+
+  return (
+    <div className="border-line mt-10 border-t pt-6">
+      <h2 className="font-latin text-[18px]">
+        {data.prompt.name} — {data.prompt.stepLabelFr}
+      </h2>
+
+      <h3 className="mt-6 text-[14px] font-medium">
+        {t("atelier.prompts.activeVersion")}{" "}
+        {active ? `${t("atelier.prompts.version")} ${active.version} — ${fmt(active.createdAt)}` : t("atelier.none")}
+      </h3>
+      {active ? <pre className={`${mono} mt-2`}>{active.content}</pre> : null}
+      {active?.changeNote ? (
+        <p className="mt-2 text-[13px]">
+          {t("atelier.prompts.changeNote")} : {active.changeNote}
+        </p>
+      ) : null}
+
+      <div className="mt-6">
+        {editing ? (
+          <div>
+            <label className="block text-[13px]">
+              {t("atelier.prompts.field.content")}
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={14}
+                className={`${field} ${mono} mt-1`}
+              />
+            </label>
+            <label className="mt-3 block text-[13px]">
+              {t("atelier.prompts.field.changeNote")}
+              <input value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mt-1`} />
+            </label>
+            <p className="mt-1 text-[12px]">{t("atelier.prompts.noteRequired")}</p>
+            {error ? <p className="mt-2 text-[13px]">{error}</p> : null}
+            <div className="mt-3 flex gap-3">
+              <button
+                type="button"
+                className={button}
+                disabled={!content.trim() || !note.trim() || publishMut.isPending}
+                onClick={() => publishMut.mutate()}
+              >
+                {t("atelier.prompts.publish")}
+              </button>
+              <button type="button" className={button} onClick={() => setEditing(false)}>
+                {t("atelier.prompts.cancel")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={button}
+            onClick={() => {
+              setContent(active?.content ?? "");
+              setNote("");
+              setEditing(true);
+            }}
+          >
+            {t("atelier.prompts.newVersion")}
+          </button>
+        )}
+      </div>
+
+      <h3 className="mt-8 text-[14px] font-medium">{t("atelier.prompts.previous")}</h3>
+      {others.length === 0 ? (
+        <p className="mt-2 text-[13px]">{t("atelier.prompts.noPrevious")}</p>
+      ) : (
+        <ul className="mt-2 text-[13px]">
+          {others.map((v) => (
+            <li key={v.id} className="border-line border-b py-2">
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  className="border-b border-current"
+                  onClick={() => setOpenHistory((s) => ({ ...s, [v.id]: !s[v.id] }))}
+                >
+                  {t("atelier.prompts.version")} {v.version} — {fmt(v.createdAt)}
+                </button>
+                <button
+                  type="button"
+                  className={button}
+                  onClick={() => {
+                    const ok = window.confirm(
+                      t("atelier.prompts.confirmActivate")
+                        .replace("{version}", String(v.version))
+                        .replace("{name}", data.prompt!.name),
+                    );
+                    if (ok) activateMut.mutate(v.id);
+                  }}
+                >
+                  {t("atelier.prompts.activate")}
+                </button>
+              </div>
+              {v.changeNote ? (
+                <p className="mt-1">
+                  {t("atelier.prompts.changeNote")} : {v.changeNote}
+                </p>
+              ) : null}
+              {openHistory[v.id] ? <pre className={`${mono} mt-2`}>{v.content}</pre> : null}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h3 className="mt-8 text-[14px] font-medium">{t("atelier.prompts.produced")}</h3>
+      {data.produced.length === 0 ? (
+        <p className="mt-2 text-[13px]">{t("atelier.prompts.producedEmpty")}</p>
+      ) : (
+        <table className="mt-2 w-full border-collapse text-[13px]">
+          <thead>
+            <tr>
+              <th className={cell}>{t("atelier.prompts.version")}</th>
+              <th className={cell}>{t("atelier.queue.col.book")}</th>
+              <th className={cell}>{t("atelier.queue.col.step")}</th>
+              <th className={cell}>{t("atelier.prompts.col.artifact")}</th>
+              <th className={cell}>{t("atelier.prompts.col.date")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.produced.map((p, i) => (
+              <tr key={`${p.versionId}-${i}`}>
+                <td className={cell}>{data.versions.find((v) => v.id === p.versionId)?.version ?? "—"}</td>
+                <td className={cell}>{p.bookTitle}</td>
+                <td className={cell}>{p.stepLabelFr}</td>
+                <td className={cell}>
+                  {p.type} v{p.version}
+                </td>
+                <td className={cell}>{fmt(p.createdAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <h3 className="mt-8 text-[14px] font-medium">{t("atelier.prompts.activations")}</h3>
+      {data.activations.length === 0 ? (
+        <p className="mt-2 text-[13px]">{t("atelier.prompts.noActivations")}</p>
+      ) : (
+        <ul className="mt-2 text-[13px]">
+          {data.activations.map((a) => (
+            <li key={a.id} className="border-line border-b py-1">
+              {t("atelier.prompts.version")} {a.version} — {fmt(a.createdAt)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
