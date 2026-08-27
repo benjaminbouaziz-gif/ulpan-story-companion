@@ -109,6 +109,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const situation = dossier.data?.situation ?? null;
   const artifacts: ArtifactRow[] = dossier.data?.artifacts ?? [];
   const reviews = dossier.data?.reviews ?? [];
+  const ficheChanges = dossier.data?.ficheChanges ?? [];
   const current = artifacts[0] ?? null;
   const previous = artifacts.slice(1);
   const horsCrm = situation?.status === "valide_hors_crm";
