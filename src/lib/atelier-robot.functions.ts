@@ -506,6 +506,17 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
     });
     if (artErr) throw new Error("Dépôt du plan refusé.");
 
+    /**
+     * BRIQUE 7 — JUSTE APRÈS le dépôt : les « Points à trancher » deviennent des
+     * décisions ouvertes, sans un clic. Une lecture impossible n'est pas un
+     * silence : elle est marquée et dite dans le dossier de l'étape.
+     */
+    await synchroniserDecisions(editor, {
+      bookId: step.book_id,
+      bookStepId: step.id,
+      markdown: result.text,
+    });
+
     await admin
       .from("agent_runs")
       .update({
