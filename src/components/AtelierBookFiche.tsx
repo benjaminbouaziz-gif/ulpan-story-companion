@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -13,15 +13,19 @@ import {
 
 /**
  * La fiche du livre : ce que le robot du plan lira. Le seul champ dont il ne
- * peut pas se passer est le résumé de l'éditeur ; la matière documentaire est
- * facultative, la recherche est son métier.
+ * peut pas se passer est le résumé de l'éditeur : la recherche documentaire
+ * est le métier du robot, aucun champ ne la remplace à l'écran.
+ *
+ * La colonne source_material_fr reste en base, intacte, hors de l'écran : elle
+ * resservira le jour où une matière que la recherche ne donne pas existera.
  *
  * Aucun sélecteur de langue (axe en sommeil), aucune icône, aucune carte :
- * filets fins, zones de texte hautes, statuts en toutes lettres.
+ * filets fins, zones de texte courtes qui grandissent d'elles-mêmes, statuts
+ * en toutes lettres.
  */
 
 const cell = "border-line border-b px-2 py-1 text-left align-top";
-const area = "border-line mt-1 w-full border px-2 py-1 text-[13px]";
+const area = "border-line mt-1 w-full resize-none border px-2 py-1 text-[13px]";
 const field = "border-line mt-1 w-full border px-2 py-1 text-[13px]";
 
 function formatDate(iso: string): string {
@@ -46,12 +50,16 @@ export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void
   const [tomeNo, setTomeNo] = useState("");
   const [qrCode, setQrCode] = useState("");
   const [workSummaryFr, setWorkSummaryFr] = useState("");
-  const [sourceMaterialFr, setSourceMaterialFr] = useState("");
   const [bookConstraintsFr, setBookConstraintsFr] = useState("");
   const [intentNoteFr, setIntentNoteFr] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Le bouton n'est jamais muet : ce qui manque se dit sous le champ.
+  const [touched, setTouched] = useState(false);
 
-  const ready = titleFr.trim().length > 0 && collectionId !== "" && qrCode.trim().length >= 3;
+  const missTitle = titleFr.trim().length === 0;
+  const missCollection = collectionId === "";
+  const missQr = qrCode.trim().length < 3;
+  const ready = !missTitle && !missCollection && !missQr;
 
   const save = useMutation({
     mutationFn: () =>
@@ -62,7 +70,6 @@ export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void
           tomeNo: tomeNo.trim() === "" ? null : Number(tomeNo),
           qrCode: qrCode.trim(),
           workSummaryFr: workSummaryFr.trim(),
-          sourceMaterialFr: sourceMaterialFr.trim(),
           bookConstraintsFr: bookConstraintsFr.trim(),
           intentNoteFr: intentNoteFr.trim(),
         },
@@ -80,60 +87,60 @@ export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void
     <div className="border-line mt-4 border p-4 text-[13px]">
       <h2 className="font-latin text-[16px]">{t("atelier.books.newBook")}</h2>
 
-      <label className="mt-3 block">
-        {t("atelier.fiche.field.title")}
-        <input className={field} value={titleFr} onChange={(e) => setTitleFr(e.target.value)} />
-      </label>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <label className="block">
+          {t("atelier.fiche.field.title")}
+          <input className={field} value={titleFr} onChange={(e) => setTitleFr(e.target.value)} />
+          {touched && missTitle ? <span className="mt-1 block">{t("atelier.fiche.needTitle")}</span> : null}
+        </label>
 
-      <label className="mt-3 block">
-        {t("atelier.fiche.field.collection")}
-        <select
-          className={field}
-          value={collectionId}
-          onChange={(e) => setCollectionId(e.target.value)}
-        >
-          <option value="">{t("atelier.fiche.chooseCollection")}</option>
-          {(collections.data ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nameFr}
-            </option>
-          ))}
-        </select>
-      </label>
+        <label className="block">
+          {t("atelier.fiche.field.collection")}
+          <select
+            className={field}
+            value={collectionId}
+            onChange={(e) => setCollectionId(e.target.value)}
+          >
+            <option value="">{t("atelier.fiche.chooseCollection")}</option>
+            {(collections.data ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nameFr}
+              </option>
+            ))}
+          </select>
+          {touched && missCollection ? (
+            <span className="mt-1 block">{t("atelier.fiche.needCollection")}</span>
+          ) : null}
+        </label>
 
-      <label className="mt-3 block">
-        {t("atelier.fiche.field.tome")}
-        <input
-          className={field}
-          inputMode="numeric"
-          value={tomeNo}
-          onChange={(e) => setTomeNo(e.target.value.replace(/[^0-9]/g, ""))}
-        />
-      </label>
+        <label className="block">
+          {t("atelier.fiche.field.tome")}
+          <input
+            className={field}
+            inputMode="numeric"
+            value={tomeNo}
+            onChange={(e) => setTomeNo(e.target.value.replace(/[^0-9]/g, ""))}
+          />
+        </label>
 
-      <label className="mt-3 block">
-        {t("atelier.fiche.field.qr")}
-        <input
-          className={field}
-          value={qrCode}
-          onChange={(e) => setQrCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
-        />
-      </label>
-      <p className="mt-1 opacity-70">
-        {t("atelier.fiche.qrUrl")} /b/{qrCode || "…"}
-      </p>
-      <p className="mt-1 opacity-70">{t("atelier.fiche.qrRule")}</p>
+        <label className="block">
+          {t("atelier.fiche.field.qr")}
+          <input
+            className={field}
+            value={qrCode}
+            onChange={(e) => setQrCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
+          />
+          <span className="mt-1 block opacity-70">
+            {t("atelier.fiche.qrUrl")} /b/{qrCode || "…"} — {t("atelier.fiche.qrRule")}
+          </span>
+          {touched && missQr ? <span className="mt-1 block">{t("atelier.fiche.needQr")}</span> : null}
+        </label>
+      </div>
 
       <FicheTextArea
         label={t("atelier.fiche.field.summary")}
         value={workSummaryFr}
         onChange={setWorkSummaryFr}
-      />
-      <FicheTextArea
-        label={t("atelier.fiche.field.source")}
-        value={sourceMaterialFr}
-        onChange={setSourceMaterialFr}
-        hint={t("atelier.fiche.sourceHint")}
       />
       <FicheTextArea
         label={t("atelier.fiche.field.constraints")}
@@ -152,8 +159,13 @@ export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void
         <button
           type="button"
           className="border-line border px-2 py-0.5"
-          disabled={!ready || save.isPending}
-          onClick={() => save.mutate()}
+          disabled={save.isPending}
+          onClick={() => {
+            setTouched(true);
+            setError(null);
+            if (!ready) return;
+            save.mutate();
+          }}
         >
           {save.isPending ? t("atelier.fiche.saving") : t("atelier.fiche.create")}
         </button>
@@ -164,6 +176,7 @@ export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void
   );
 }
 
+/** Trois lignes au départ, grandit avec le texte, plafonne à quinze lignes. */
 function FicheTextArea({
   label,
   value,
@@ -177,12 +190,25 @@ function FicheTextArea({
   hint?: string;
   readOnly?: boolean;
 }) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const line = 20;
+    el.style.height = "auto";
+    const wanted = Math.max(3 * line, Math.min(el.scrollHeight, 15 * line));
+    el.style.height = `${wanted}px`;
+    el.style.overflowY = el.scrollHeight > 15 * line ? "auto" : "hidden";
+  }, [value]);
+
   return (
     <label className="mt-3 block">
       {label}
       <textarea
+        ref={ref}
         className={area}
-        rows={10}
+        rows={3}
         value={value}
         readOnly={readOnly}
         onChange={(e) => onChange?.(e.target.value)}
@@ -191,6 +217,7 @@ function FicheTextArea({
     </label>
   );
 }
+
 
 /** ------------------------------------------------------------ lecture/édition */
 
@@ -208,7 +235,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
   const [editing, setEditing] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [workSummaryFr, setWorkSummaryFr] = useState("");
-  const [sourceMaterialFr, setSourceMaterialFr] = useState("");
   const [bookConstraintsFr, setBookConstraintsFr] = useState("");
   const [intentNoteFr, setIntentNoteFr] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -219,7 +245,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
     if (!data) return;
     setQrCode(data.qrCode);
     setWorkSummaryFr(data.workSummaryFr);
-    setSourceMaterialFr(data.sourceMaterialFr);
     setBookConstraintsFr(data.bookConstraintsFr);
     setIntentNoteFr(data.intentNoteFr);
   }, [data]);
@@ -233,7 +258,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
           ...(data && !data.planValidated
             ? {
                 workSummaryFr,
-                sourceMaterialFr,
                 bookConstraintsFr,
                 intentNoteFr,
               }
@@ -337,12 +361,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
             onChange={setWorkSummaryFr}
           />
           <FicheTextArea
-            label={t("atelier.fiche.field.source")}
-            value={sourceMaterialFr}
-            onChange={setSourceMaterialFr}
-            hint={t("atelier.fiche.sourceHint")}
-          />
-          <FicheTextArea
             label={t("atelier.fiche.field.constraints")}
             value={bookConstraintsFr}
             onChange={setBookConstraintsFr}
@@ -358,11 +376,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
           <FicheTextArea
             label={t("atelier.fiche.field.summary")}
             value={data.workSummaryFr || t("atelier.fiche.empty")}
-            readOnly
-          />
-          <FicheTextArea
-            label={t("atelier.fiche.field.source")}
-            value={data.sourceMaterialFr || t("atelier.fiche.empty")}
             readOnly
           />
           <FicheTextArea
@@ -409,11 +422,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
         <p className="mt-1">
           {missing ? t("atelier.fiche.missingSummary") : t("atelier.fiche.materialComplete")}
         </p>
-        {data.sourceMaterialFr.trim().length === 0 ? (
-          <p className="mt-1 opacity-70">{t("atelier.fiche.sourceOptional")}</p>
-        ) : (
-          <p className="mt-1 opacity-70">{t("atelier.fiche.sourcePrevails")}</p>
-        )}
         <p className="mt-1 opacity-70">{t("atelier.fiche.noLaunchYet")}</p>
       </div>
 
