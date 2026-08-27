@@ -224,6 +224,9 @@ const fr = {
   "atelier.robot.model": "Modèle",
   "atelier.robot.launch": "Lancer le plan",
   "atelier.robot.relaunch": "Relancer avec mon motif",
+  "atelier.robot.fresh": "Repartir de zéro",
+  "atelier.robot.freshConfirm":
+    "Relancer sans tenir compte du plan précédent ? Il restera consultable dans les versions.",
   "atelier.robot.running": "Le robot travaille. Cette étape se rouvrira quand il aura déposé son plan.",
   "atelier.robot.blocked": "Ce qui manque avant de lancer :",
   "atelier.robot.quota": "Lancements aujourd'hui : {used} sur {cap}.",
@@ -669,6 +672,9 @@ const en: Record<DictKey, string> = {
   "atelier.robot.model": "Model",
   "atelier.robot.launch": "Run the plan",
   "atelier.robot.relaunch": "Run again with my reason",
+  "atelier.robot.fresh": "Start from scratch",
+  "atelier.robot.freshConfirm":
+    "Run again ignoring the previous plan? It stays available in the versions.",
   "atelier.robot.running": "The robot is working. This step reopens once it has filed its plan.",
   "atelier.robot.blocked": "What is missing before running:",
   "atelier.robot.quota": "Runs today: {used} of {cap}.",

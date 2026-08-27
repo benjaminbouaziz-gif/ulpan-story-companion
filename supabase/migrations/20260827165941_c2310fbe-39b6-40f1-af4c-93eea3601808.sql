@@ -1,0 +1,2 @@
+ALTER TABLE public.agent_runs ADD COLUMN IF NOT EXISTS mode text;
+ALTER TABLE public.agent_runs ADD CONSTRAINT agent_runs_mode_connu CHECK (mode IS NULL OR mode IN ('initial', 'avec_precedent', 'sans_precedent'));

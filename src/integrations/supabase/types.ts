@@ -95,6 +95,7 @@ export type Database = {
           input_chars: number
           input_tokens: number | null
           kind: string
+          mode: string | null
           model: string | null
           model_used: string | null
           ok: boolean
@@ -122,6 +123,7 @@ export type Database = {
           input_chars?: number
           input_tokens?: number | null
           kind: string
+          mode?: string | null
           model?: string | null
           model_used?: string | null
           ok?: boolean
@@ -149,6 +151,7 @@ export type Database = {
           input_chars?: number
           input_tokens?: number | null
           kind?: string
+          mode?: string | null
           model?: string | null
           model_used?: string | null
           ok?: boolean

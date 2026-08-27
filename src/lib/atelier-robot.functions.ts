@@ -285,6 +285,8 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .object({
         bookStepId: z.string().uuid(),
         withReason: z.boolean().optional(),
+        /** 'sans_precedent' = repartir de zéro : ni plan précédent, ni motif. */
+        mode: z.enum(["avec_precedent", "sans_precedent"]).optional(),
       })
       .parse(data),
   )
@@ -361,9 +363,20 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       : null;
 
     // Le motif de révision et le plan précédent, seulement si on relance dessus.
+    // Le mode dit ce qui part avec le prompt. « Repartir de zéro » n'emporte ni
+    // le plan précédent ni le motif : seules les données du livre et mes
+    // décisions tranchées, qui font toujours foi.
+    const fromScratch = data.mode === "sans_precedent";
+    const avecPrecedent = !fromScratch && (data.withReason ?? false);
+    const mode: "initial" | "avec_precedent" | "sans_precedent" = fromScratch
+      ? "sans_precedent"
+      : avecPrecedent
+        ? "avec_precedent"
+        : "initial";
+
     let reason: string | null = null;
     let previousPlan: string | null = null;
-    if (data.withReason) {
+    if (avecPrecedent) {
       const { data: rev } = await admin
         .from("reviews")
         .select("comment")
@@ -384,7 +397,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
     //    La clé nomme LA TENTATIVE — étape + horodatage — et non la version
     //    d'artefact à venir : un échec ne consomme plus la clé d'après.
     const startedAt = Date.now();
-    const idempotencyKey = `plan:${step.id}:${new Date(startedAt).toISOString()}${data.withReason ? ":revision" : ""}`;
+    const idempotencyKey = `plan:${step.id}:${new Date(startedAt).toISOString()}${mode === "initial" ? "" : `:${mode}`}`;
     const { data: run, error: runErr } = await admin
       .from("agent_runs")
       .insert({
@@ -395,6 +408,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         entity_id: step.id,
         book_step_id: step.id,
         model,
+        mode,
         idempotency_key: idempotencyKey,
         ok: false,
         fields: 0,
@@ -566,6 +580,7 @@ export type RobotRunLine = {
   outputTokens: number | null;
   truncated: boolean;
   errorSummary: string | null;
+  mode: string | null;
 };
 
 /** L'historique des lancements, pour la salle Robots. Rien de décoratif. */
@@ -577,7 +592,7 @@ export const listRobotRuns = createServerFn({ method: "GET" })
     const { data: runs } = await admin
       .from("agent_runs")
       .select(
-        "id, created_at, robot_name, model, model_used, status, duration_ms, output_tokens, truncated, error_summary, book_step_id",
+        "id, created_at, robot_name, model, model_used, status, duration_ms, output_tokens, truncated, error_summary, book_step_id, mode",
       )
       .order("created_at", { ascending: false })
       .limit(100);
@@ -605,5 +620,6 @@ export const listRobotRuns = createServerFn({ method: "GET" })
       outputTokens: r.output_tokens,
       truncated: r.truncated ?? false,
       errorSummary: r.error_summary,
+      mode: r.mode ?? null,
     }));
   });
