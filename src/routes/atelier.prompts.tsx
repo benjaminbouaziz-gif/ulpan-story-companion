@@ -183,8 +183,18 @@ function PromptsRoom() {
                 <button
                   type="button"
                   className={button}
-                  disabled={!newStep || !newName.trim() || !newContent.trim() || createMut.isPending}
-                  onClick={() => createMut.mutate()}
+                  disabled={createMut.isPending}
+                  onClick={() => {
+                    const m = {
+                      step: !newStep,
+                      name: !newName.trim(),
+                      content: !newContent.trim(),
+                    };
+                    setMissing(m);
+                    setError(null);
+                    if (m.step || m.name || m.content) return;
+                    createMut.mutate();
+                  }}
                 >
                   {t("atelier.prompts.save")}
                 </button>
