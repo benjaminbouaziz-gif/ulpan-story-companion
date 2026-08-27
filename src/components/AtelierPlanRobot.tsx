@@ -154,10 +154,11 @@ export function PlanRobotPanel({
         <div className="mt-2">
           <p>
             {t("atelier.robot.inFlight")
-              .replace("{robot}", s.runningRobot ?? t("atelier.none"))
-              .replace("{model}", s.runningModel ?? t("atelier.none"))
-              .replace("{ago}", s.runningSince ? ago(s.runningSince) : "—")}
+              .replace("{robot}", s.runningRobot ?? s.promptName ?? t("atelier.none"))
+              .replace("{model}", s.runningModel ?? s.model ?? t("atelier.none"))
+              .replace("{ago}", ago(s.runningSince ?? startedAt))}
           </p>
+
           <p className="opacity-70">{t("atelier.robot.running")}</p>
           {s.runningStale ? <p className="mt-1">{t("atelier.robot.stale")}</p> : null}
         </div>
