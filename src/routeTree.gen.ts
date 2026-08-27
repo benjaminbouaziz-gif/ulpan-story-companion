@@ -34,6 +34,7 @@ import { Route as AtelierPromptsRouteImport } from './routes/atelier.prompts'
 import { Route as AtelierReglagesRouteImport } from './routes/atelier.reglages'
 import { Route as AtelierRobotsRouteImport } from './routes/atelier.robots'
 import { Route as AtelierSiteRouteImport } from './routes/atelier.site'
+import { Route as AtelierConnexionRouteImport } from './routes/atelier_.connexion'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -168,6 +169,11 @@ const AtelierSiteRoute = AtelierSiteRouteImport.update({
   path: '/site',
   getParentRoute: () => AtelierRoute,
 } as any)
+const AtelierConnexionRoute = AtelierConnexionRouteImport.update({
+  id: '/atelier_/connexion',
+  path: '/atelier/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
   path: '/b/$qr_code',
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
   '/atelier/site': typeof AtelierSiteRoute
+  '/atelier/connexion': typeof AtelierConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
   '/atelier/site': typeof AtelierSiteRoute
+  '/atelier/connexion': typeof AtelierConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -302,6 +310,7 @@ export interface FileRoutesById {
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
   '/atelier/site': typeof AtelierSiteRoute
+  '/atelier_/connexion': typeof AtelierConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -339,6 +348,7 @@ export interface FileRouteTypes {
     | '/atelier/reglages'
     | '/atelier/robots'
     | '/atelier/site'
+    | '/atelier/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/atelier/reglages'
     | '/atelier/robots'
     | '/atelier/site'
+    | '/atelier/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/atelier/reglages'
     | '/atelier/robots'
     | '/atelier/site'
+    | '/atelier_/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -430,6 +442,7 @@ export interface RootRouteChildren {
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
   AdminConnexionRoute: typeof AdminConnexionRoute
+  AtelierConnexionRoute: typeof AtelierConnexionRoute
   BQr_codeRoute: typeof BQr_codeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   CompagnonBook_slugRoute: typeof CompagnonBook_slugRoute
@@ -617,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierSiteRouteImport
       parentRoute: typeof AtelierRoute
     }
+    '/atelier_/connexion': {
+      id: '/atelier_/connexion'
+      path: '/atelier/connexion'
+      fullPath: '/atelier/connexion'
+      preLoaderRoute: typeof AtelierConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/b/$qr_code': {
       id: '/b/$qr_code'
       path: '/b/$qr_code'
@@ -734,6 +754,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
   AdminConnexionRoute: AdminConnexionRoute,
+  AtelierConnexionRoute: AtelierConnexionRoute,
   BQr_codeRoute: BQr_codeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   CompagnonBook_slugRoute: CompagnonBook_slugRoute,
