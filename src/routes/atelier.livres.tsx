@@ -102,7 +102,6 @@ function BooksRoom() {
                 <tr>
                   <th className={cell}>{t("atelier.books.col.rank")}</th>
                   <th className={cell}>{t("atelier.books.col.label")}</th>
-                  
                   <th className={cell}>{t("atelier.books.col.species")}</th>
                   <th className={cell}>{t("atelier.books.col.status")}</th>
                   <th className={cell}>{t("atelier.books.col.awaiting")}</th>
@@ -114,7 +113,6 @@ function BooksRoom() {
                   <tr key={s.id}>
                     <td className={cell}>{s.rank}</td>
                     <td className={cell}>{lang === "en" ? s.labelEn : s.labelFr}</td>
-                    <td className={cell}>{t(`atelier.lang.${s.lang}` as DictKey)}</td>
                     <td className={cell}>{t(`atelier.species.${s.species}` as DictKey)}</td>
                     <td className={cell}>
                       {t(`atelier.status.${s.status}` as DictKey)}
@@ -135,7 +133,7 @@ function BooksRoom() {
                   </tr>,
                   openStep === s.id ? (
                     <tr key={`${s.id}-dossier`}>
-                      <td className={cell} colSpan={7}>
+                      <td className={cell} colSpan={6}>
                         <StepDossier bookStepId={s.id} status={s.status} />
                       </td>
                     </tr>
