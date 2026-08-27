@@ -19,6 +19,22 @@ import { ARTIFACT_BUCKET } from "./artifact-path";
 
 export const SIGNED_URL_TTL_SECONDS = 15 * 60;
 const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
+const ARTIFACT_READ_TIMEOUT_MS = 30 * 1000;
+const MAX_TEXT_ARTIFACT_BYTES = 1024 * 1024;
+
+async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} : délai de ${timeoutMs / 1000} s dépassé.`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -44,10 +60,41 @@ export async function uploadArtifactBytes(
   contentType: string,
 ): Promise<void> {
   const admin = await getAdminClient(ctx);
-  const { error } = await admin.storage
-    .from(ARTIFACT_BUCKET)
-    .upload(storagePath, bytes, { contentType, upsert: false });
+  const { error } = await withTimeout(
+    admin.storage.from(ARTIFACT_BUCKET).upload(storagePath, bytes, { contentType, upsert: false }),
+    ARTIFACT_READ_TIMEOUT_MS,
+    "Téléversement du livrable",
+  );
   if (error) throw new Error(`Téléversement refusé : ${error.message}`);
+}
+
+/** Lit un livrable texte sans attente infinie, avec taille et UTF-8 contrôlés. */
+export async function downloadArtifactText(
+  ctx: EditorContext,
+  storagePath: string,
+): Promise<{ text: string; sizeBytes: number }> {
+  const admin = await getAdminClient(ctx);
+  const { data: blob, error } = await withTimeout(
+    admin.storage.from(ARTIFACT_BUCKET).download(storagePath),
+    ARTIFACT_READ_TIMEOUT_MS,
+    "Lecture du plan précédent",
+  );
+  if (error || !blob) throw new Error(`Lecture du plan précédent impossible : ${error?.message ?? "fichier absent"}`);
+  if (blob.size > MAX_TEXT_ARTIFACT_BYTES) {
+    throw new Error(`Plan précédent trop volumineux : ${blob.size} octets (maximum ${MAX_TEXT_ARTIFACT_BYTES}).`);
+  }
+  const bytes = await withTimeout(
+    blob.arrayBuffer(),
+    ARTIFACT_READ_TIMEOUT_MS,
+    "Décodage du plan précédent",
+  );
+  let text: string;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error("Le plan précédent n'est pas un fichier UTF-8 valide.");
+  }
+  return { text, sizeBytes: bytes.byteLength };
 }
 
 type StoredObject = { path: string; createdAt: number };
