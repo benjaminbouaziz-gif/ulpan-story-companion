@@ -235,7 +235,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
   const [editing, setEditing] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [workSummaryFr, setWorkSummaryFr] = useState("");
-  const [sourceMaterialFr, setSourceMaterialFr] = useState("");
   const [bookConstraintsFr, setBookConstraintsFr] = useState("");
   const [intentNoteFr, setIntentNoteFr] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -246,7 +245,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
     if (!data) return;
     setQrCode(data.qrCode);
     setWorkSummaryFr(data.workSummaryFr);
-    setSourceMaterialFr(data.sourceMaterialFr);
     setBookConstraintsFr(data.bookConstraintsFr);
     setIntentNoteFr(data.intentNoteFr);
   }, [data]);
@@ -260,7 +258,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
           ...(data && !data.planValidated
             ? {
                 workSummaryFr,
-                sourceMaterialFr,
                 bookConstraintsFr,
                 intentNoteFr,
               }
@@ -364,12 +361,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
             onChange={setWorkSummaryFr}
           />
           <FicheTextArea
-            label={t("atelier.fiche.field.source")}
-            value={sourceMaterialFr}
-            onChange={setSourceMaterialFr}
-            hint={t("atelier.fiche.sourceHint")}
-          />
-          <FicheTextArea
             label={t("atelier.fiche.field.constraints")}
             value={bookConstraintsFr}
             onChange={setBookConstraintsFr}
@@ -385,11 +376,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
           <FicheTextArea
             label={t("atelier.fiche.field.summary")}
             value={data.workSummaryFr || t("atelier.fiche.empty")}
-            readOnly
-          />
-          <FicheTextArea
-            label={t("atelier.fiche.field.source")}
-            value={data.sourceMaterialFr || t("atelier.fiche.empty")}
             readOnly
           />
           <FicheTextArea
@@ -436,11 +422,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
         <p className="mt-1">
           {missing ? t("atelier.fiche.missingSummary") : t("atelier.fiche.materialComplete")}
         </p>
-        {data.sourceMaterialFr.trim().length === 0 ? (
-          <p className="mt-1 opacity-70">{t("atelier.fiche.sourceOptional")}</p>
-        ) : (
-          <p className="mt-1 opacity-70">{t("atelier.fiche.sourcePrevails")}</p>
-        )}
         <p className="mt-1 opacity-70">{t("atelier.fiche.noLaunchYet")}</p>
       </div>
 
