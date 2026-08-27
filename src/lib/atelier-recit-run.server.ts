@@ -10,7 +10,9 @@ import {
   lirePlanChapitres,
   mesurerChapitre,
   MOTS_MAX,
+  MOTS_MAX_DUR,
   MOTS_MIN,
+  MOTS_MIN_DUR,
   type ChapitrePlan,
   type MesureChapitre,
 } from "./recit-calibrage";
@@ -95,6 +97,8 @@ export type ContexteRecit = {
   missing: string[];
   motsMin: number;
   motsMax: number;
+  motsMinDur: number;
+  motsMaxDur: number;
 };
 
 type Prepare = {
@@ -324,6 +328,8 @@ export async function etatRecit(editor: EditorContext, bookStepId: string): Prom
     missing: prepare.missing,
     motsMin: MOTS_MIN,
     motsMax: MOTS_MAX,
+    motsMinDur: MOTS_MIN_DUR,
+    motsMaxDur: MOTS_MAX_DUR,
   };
 }
 
@@ -528,7 +534,10 @@ export async function executerChapitre(
     expected_pages: cible.pages,
     first_page: cible.firstPage,
     pages: mesure.pages,
-    problems: mesure.problems,
+    problems: [
+      ...mesure.problems,
+      ...mesure.warnings.map((w) => `Signalement (déposé quand même) : ${w}`),
+    ],
   });
 
   if (!mesure.ok) {
@@ -652,7 +661,9 @@ export async function ecrireChapitresRestants(
       maillons.push({
         chapterNo: cible,
         ok: true,
-        message: `Chapitre ${cible} écrit (v${r.artifactVersion}) : ${r.mesure.pages.length} page(s), ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.`,
+        message:
+          `Chapitre ${cible} écrit (v${r.artifactVersion}) : ${r.mesure.pages.length} page(s), ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.` +
+          (r.mesure.warnings.length > 0 ? ` Signalement : ${r.mesure.warnings.join(" · ")}` : ""),
       });
     } catch (e) {
       maillons.push({

@@ -13,10 +13,16 @@
  * jamais comptées dans le texte du livre.
  */
 
+/** La fourchette VISÉE : hors d'elle, la page est signalée, mais le chapitre est déposé. */
 export const MOTS_MIN = 165;
 export const MOTS_MAX = 210;
 
+/** La fourchette BLOQUANTE : hors d'elle, le lancement échoue et rien n'est déposé. */
+export const MOTS_MIN_DUR = 160;
+export const MOTS_MAX_DUR = 215;
+
 const MOT = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+
 
 export function compterMots(texte: string): number {
   return texte.match(MOT)?.length ?? 0;
@@ -119,14 +125,27 @@ export function lirePlanChapitres(markdown: string): LecturePlan {
 /* LE CHAPITRE RENDU : page par page, le compte réel                   */
 /* ------------------------------------------------------------------ */
 
-export type MesurePage = { pageNo: number; words: number; ok: boolean; empty: boolean };
+export type MesurePage = {
+  pageNo: number;
+  words: number;
+  /** Dans la fourchette visée 165–210 et non vide. */
+  ok: boolean;
+  /** Dans l'élargie 160–215 : le dépôt reste possible. */
+  acceptable: boolean;
+  empty: boolean;
+};
 
 export type MesureChapitre = {
+  /** Vrai si rien ne bloque : le chapitre peut être déposé. */
   ok: boolean;
   pages: MesurePage[];
+  /** Ce qui BLOQUE le dépôt. */
   problems: string[];
+  /** Ce qui est seulement SIGNALÉ : le chapitre est déposé quand même. */
+  warnings: string[];
   totalWords: number;
 };
+
 
 type PageBrute = { pageNo: number; texte: string };
 
@@ -159,15 +178,18 @@ export function mesurerChapitre(
   const brutes = decouperPages(markdown);
   const pages: MesurePage[] = brutes.map((p) => {
     const words = compterMots(p.texte);
+    const nonVide = p.texte.trim().length > 0;
     return {
       pageNo: p.pageNo,
       words,
-      empty: p.texte.trim().length === 0,
-      ok: words >= MOTS_MIN && words <= MOTS_MAX && p.texte.trim().length > 0,
+      empty: !nonVide,
+      ok: words >= MOTS_MIN && words <= MOTS_MAX && nonVide,
+      acceptable: words >= MOTS_MIN_DUR && words <= MOTS_MAX_DUR && nonVide,
     };
   });
 
   const problems: string[] = [];
+  const warnings: string[] = [];
   if (pages.length === 0)
     problems.push("Aucune page trouvée : le rendu ne contient aucune ligne « ### Page N ».");
   if (pages.length !== attendu.pages)
@@ -193,16 +215,22 @@ export function mesurerChapitre(
       problems.push(`La page ${p.pageNo} est vide.`);
       continue;
     }
-    if (p.words < MOTS_MIN)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — sous le plancher de ${MOTS_MIN}.`);
+    // Hors de l'élargie 160–215 : bloquant. Hors de 165–210 seulement : signalé.
+    if (p.words < MOTS_MIN_DUR)
+      problems.push(`Page ${p.pageNo} : ${p.words} mots — sous le plancher bloquant de ${MOTS_MIN_DUR}.`);
+    else if (p.words > MOTS_MAX_DUR)
+      problems.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`);
+    else if (p.words < MOTS_MIN)
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots — sous la fourchette visée de ${MOTS_MIN} (dans l'élargie).`);
     else if (p.words > MOTS_MAX)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus du plafond de ${MOTS_MAX}.`);
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus de la fourchette visée de ${MOTS_MAX} (dans l'élargie).`);
   }
 
   return {
     ok: problems.length === 0,
     pages,
     problems,
+    warnings,
     totalWords: pages.reduce((n, p) => n + p.words, 0),
   };
 }
