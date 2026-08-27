@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Room } from "@/components/AtelierRoom";
-import { StepDossier } from "@/components/AtelierStepDossier";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { atelierBookChain, atelierBooks } from "@/lib/atelier-books.functions";
@@ -109,7 +108,7 @@ function BooksRoom() {
                 </tr>
               </thead>
               <tbody>
-                {(steps.data ?? []).flatMap((s) => [
+                {(steps.data ?? []).map((s) => (
                   <tr key={s.id}>
                     <td className={cell}>{s.rank}</td>
                     <td className={cell}>{lang === "en" ? s.labelEn : s.labelFr}</td>
@@ -122,23 +121,17 @@ function BooksRoom() {
                       {s.awaiting ? t(`atelier.awaiting.${s.awaiting}` as DictKey) : t("atelier.none")}
                     </td>
                     <td className={cell}>
+                      {/* Une seule addition à cet écran : la ligne mène au dossier. */}
                       <Link
-                        to="/atelier/livres"
-                        search={{ livre: openId, etape: openStep === s.id ? undefined : s.id }}
+                        to="/atelier/etape/$id"
+                        params={{ id: s.id }}
                         className="border-b border-current"
                       >
-                        {openStep === s.id ? t("atelier.step.close") : t("atelier.step.open")}
+                        {t("atelier.queue.open")}
                       </Link>
                     </td>
-                  </tr>,
-                  openStep === s.id ? (
-                    <tr key={`${s.id}-dossier`}>
-                      <td className={cell} colSpan={6}>
-                        <StepDossier bookStepId={s.id} status={s.status} />
-                      </td>
-                    </tr>
-                  ) : null,
-                ])}
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
