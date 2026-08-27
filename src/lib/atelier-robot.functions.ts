@@ -33,6 +33,12 @@ export const ROBOT_PLAN = "plan";
 export const PLAN_STEP_CODE = "plan";
 export const PLAFOND_PAR_JOUR = 20;
 
+export const ROBOT_PLAN = "plan";
+export const PLAN_STEP_CODE = "plan";
+export const PLAFOND_PAR_JOUR = 20;
+/** Au-delà de ce délai, un lancement resté « en cours » est tenu pour abandonné. */
+export const DELAI_ABANDON_MS = 15 * 60 * 1000;
+
 export type PlanRobotState = {
   stepCode: string;
   isPlanStep: boolean;
@@ -45,6 +51,12 @@ export type PlanRobotState = {
   keyConfigured: boolean;
   summaryFilled: boolean;
   running: boolean;
+  /** Depuis quand le lancement en cours tourne, et avec quoi. */
+  runningSince: string | null;
+  runningRobot: string | null;
+  runningModel: string | null;
+  /** Vrai quand ce lancement traîne au-delà du délai d'abandon. */
+  runningStale: boolean;
   hasPrevious: boolean;
   inRevision: boolean;
   lastReason: string | null;
@@ -66,6 +78,71 @@ function debutDeJournee(): string {
   d.setUTCHours(0, 0, 0, 0);
   return d.toISOString();
 }
+
+/**
+ * LE BALAI DES LANCEMENTS MORTS. Un onglet fermé, une coupure, un serveur
+ * redémarré : la ligne reste « en cours » et l'index d'unicité interdit tout
+ * nouveau lancement. Au-delà du délai, on la clôt en échec et l'étape
+ * redevient lançable. Appelé au chargement du dossier, côté serveur.
+ */
+async function balayerLancementsMorts(
+  admin: Awaited<ReturnType<typeof getAdminClient>>,
+  stepId: string,
+): Promise<void> {
+  const limite = new Date(Date.now() - DELAI_ABANDON_MS).toISOString();
+  const { data: morts } = await admin
+    .from("agent_runs")
+    .select("id")
+    .eq("book_step_id", stepId)
+    .eq("status", "en_cours")
+    .lt("created_at", limite);
+  if (!morts || morts.length === 0) return;
+
+  await admin
+    .from("agent_runs")
+    .update({
+      status: "echoue",
+      ok: false,
+      error: "lancement interrompu",
+      error_summary: "lancement interrompu",
+    })
+    .in(
+      "id",
+      morts.map((r) => r.id),
+    );
+
+  const { data: step } = await admin
+    .from("book_steps")
+    .select("status")
+    .eq("id", stepId)
+    .maybeSingle();
+  if (step?.status === "en_cours")
+    await admin
+      .from("book_steps")
+      .update({ status: "echoue", awaiting: "ben", updated_at: new Date().toISOString() })
+      .eq("id", stepId);
+}
+
+/** Le déblocage à la main, quand un lancement traîne au-delà du délai. */
+export const unblockPlanStep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ bookStepId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ freed: boolean }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const limite = new Date(Date.now() - DELAI_ABANDON_MS).toISOString();
+    const { data: morts } = await admin
+      .from("agent_runs")
+      .select("id")
+      .eq("book_step_id", data.bookStepId)
+      .eq("status", "en_cours")
+      .lt("created_at", limite);
+    if (!morts || morts.length === 0)
+      throw new Error("Aucun lancement abandonné à débloquer sur cette étape.");
+    await balayerLancementsMorts(admin, data.bookStepId);
+    return { freed: true };
+  });
+
 
 /** L'état du robot pour une étape : sert à dire ce qui manque AVANT de lancer. */
 export const planRobotState = createServerFn({ method: "GET" })
