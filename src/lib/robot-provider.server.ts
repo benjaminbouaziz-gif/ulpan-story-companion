@@ -18,6 +18,15 @@
 
 export type Fournisseur = "anthropic" | "google" | "lovable";
 
+/**
+ * Signal de vie du flux, remonté dès le premier événement utile : il permet
+ * d'inscrire le modèle réellement employé sans attendre la fin de la réponse.
+ */
+export type Progression = (info: {
+  phase: "premier_evenement";
+  modelUsed: string;
+}) => void | Promise<void>;
+
 export type AppelResultat = {
   text: string;
   modelUsed: string;
@@ -32,12 +41,24 @@ export type AppelResultat = {
 /** Assez haut pour laisser passer un document entier (plan complet, annexes). */
 const MAX_TOKENS = 32000;
 const MODEL_TOTAL_TIMEOUT_MS = 12 * 60 * 1000;
+/**
+ * Silence UTILE. Attention au piège : Anthropic envoie des `ping` de courtoisie
+ * toutes les quelques secondes. Si l'on remet le compteur à zéro dès que des
+ * OCTETS arrivent, un modèle bloqué qui ne fait que pinguer n'est jamais coupé :
+ * le garde-fou existe mais ne protège de rien. Ici seuls les événements qui font
+ * AVANCER la réponse (début de message, texte, fin de bloc, fin de message)
+ * réarment le délai. Les pings et les lignes vides ne comptent pas.
+ */
 const MODEL_IDLE_TIMEOUT_MS = 90 * 1000;
+/** Attente maximale des EN-TÊTES : avant eux, aucun flux n'existe à surveiller. */
+const MODEL_CONNECT_TIMEOUT_MS = 60 * 1000;
 
-function timeoutMessage(model: string, kind: "total" | "idle"): string {
-  return kind === "idle"
-    ? `Appel interrompu : aucune donnée reçue du modèle ${model} pendant ${MODEL_IDLE_TIMEOUT_MS / 1000} s.`
-    : `Appel interrompu : délai maximal de ${MODEL_TOTAL_TIMEOUT_MS / 60000} min dépassé pour ${model}.`;
+function timeoutMessage(model: string, kind: "total" | "idle" | "connect"): string {
+  if (kind === "idle")
+    return `Appel interrompu : le modèle ${model} n'a rien fait avancer pendant ${MODEL_IDLE_TIMEOUT_MS / 1000} s (les pings de maintien ne comptent pas).`;
+  if (kind === "connect")
+    return `Appel interrompu : le fournisseur n'a pas répondu (aucun en-tête) en ${MODEL_CONNECT_TIMEOUT_MS / 1000} s pour ${model}.`;
+  return `Appel interrompu : délai maximal de ${MODEL_TOTAL_TIMEOUT_MS / 60000} min dépassé pour ${model}.`;
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
@@ -135,6 +156,7 @@ async function appelAnthropic(
   webSearch: boolean,
   system: string,
   user: string,
+  onProgress?: Progression,
 ): Promise<AppelResultat> {
   const key = process.env["ANTHROPIC_API_KEY"];
   if (!key) throw new Error("La clé ANTHROPIC_API_KEY n'est pas configurée.");
@@ -142,6 +164,16 @@ async function appelAnthropic(
   const t0 = Date.now();
   const controller = new AbortController();
   const totalTimer = setTimeout(() => controller.abort(timeoutMessage(model, "total")), MODEL_TOTAL_TIMEOUT_MS);
+  // Avant les en-têtes il n'y a aucun flux à surveiller : c'est ce délai-là qui
+  // couvre une requête qui part et ne revient jamais.
+  let connectTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(
+    () => controller.abort(timeoutMessage(model, "connect")),
+    MODEL_CONNECT_TIMEOUT_MS,
+  );
+  const arreteConnectTimer = () => {
+    if (connectTimer) clearTimeout(connectTimer);
+    connectTimer = undefined;
+  };
   let res: Response;
   try {
     res = await fetch(url, {
@@ -164,8 +196,14 @@ async function appelAnthropic(
           : {}),
       }),
     });
+    arreteConnectTimer();
   } catch (e) {
+    arreteConnectTimer();
     clearTimeout(totalTimer);
+    if (controller.signal.aborted) {
+      const raison = typeof controller.signal.reason === "string" ? controller.signal.reason : null;
+      throw new Error(raison ?? timeoutMessage(model, "connect"));
+    }
     throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
   }
   if (!res.ok) {
@@ -185,13 +223,18 @@ async function appelAnthropic(
   let outputTokens: number | null = null;
   let stopReason: string | null = null;
   let reste = "";
+  let premierEvenementAnnonce = false;
+  /** Dernier événement qui a fait AVANCER la réponse. Réarme le délai de silence. */
+  let dernierUtile = Date.now();
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   try {
     for (;;) {
+      const restant = MODEL_IDLE_TIMEOUT_MS - (Date.now() - dernierUtile);
+      if (restant <= 0) throw new Error(timeoutMessage(model, "idle"));
       const { done, value } = await withTimeout(
         reader.read(),
-        MODEL_IDLE_TIMEOUT_MS,
+        restant,
         timeoutMessage(model, "idle"),
       );
       if (done) break;
@@ -208,6 +251,19 @@ async function appelAnthropic(
         } catch {
           continue;
         }
+        // Seuls ces types comptent comme « la réponse avance ».
+        const utile =
+          ev.type === "message_start" ||
+          ev.type === "content_block_start" ||
+          ev.type === "content_block_stop" ||
+          ev.type === "message_delta" ||
+          ev.type === "message_stop" ||
+          (ev.type === "content_block_delta" &&
+            (ev.delta?.type === "text_delta" ||
+              ev.delta?.type === "input_json_delta" ||
+              ev.delta?.type === "thinking_delta"));
+        if (utile) dernierUtile = Date.now();
+
         if (ev.type === "message_start") {
           modelUsed = ev.message?.model ?? model;
           inputTokens = ev.message?.usage?.input_tokens ?? inputTokens;
@@ -221,6 +277,13 @@ async function appelAnthropic(
             `Erreur en cours de réponse du fournisseur — ${model} · ${Date.now() - t0} ms · ${JSON.stringify(ev.error).slice(0, 2000)}`,
           );
         }
+
+        // Le premier événement utile est annoncé tout de suite : c'est ce qui
+        // permet d'écrire le modèle réellement employé sans attendre la fin.
+        if (utile && !premierEvenementAnnonce) {
+          premierEvenementAnnonce = true;
+          void onProgress?.({ phase: "premier_evenement", modelUsed });
+        }
       }
     }
   } catch (e) {
@@ -229,6 +292,7 @@ async function appelAnthropic(
     if (e instanceof Error && e.message.startsWith("Appel interrompu")) throw e;
     throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
   } finally {
+    arreteConnectTimer();
     clearTimeout(totalTimer);
     reader.releaseLock();
   }
@@ -348,12 +412,13 @@ export async function appelerModele(input: {
   webSearch: boolean;
   system: string;
   user: string;
+  onProgress?: Progression;
 }): Promise<AppelResultat> {
   const f = fournisseurDuModele(input.model);
   const web = input.webSearch && rechercheEnLignePossible(input.model);
   switch (f) {
     case "anthropic":
-      return appelAnthropic(input.model, web, input.system, input.user);
+      return appelAnthropic(input.model, web, input.system, input.user, input.onProgress);
     case "google":
       return appelGoogle(input.model, web, input.system, input.user);
     case "lovable":

@@ -201,6 +201,16 @@ export async function executerLancementPlan(
       webSearch: version.web_search ?? false,
       system: version.content,
       user: matiere,
+      // Dès que le flux fait avancer la réponse, on inscrit le modèle employé :
+      // un lancement dont `model_used` reste vide est donc un lancement qui n'a
+      // JAMAIS reçu le premier événement, et cela se lit maintenant sans doute.
+      onProgress: async (info) => {
+        await admin
+          .from("agent_runs")
+          .update({ model_used: info.modelUsed })
+          .eq("id", run.id)
+          .eq("status", "en_cours");
+      },
     });
     if (result.text.trim().length === 0) throw new Error("Le modèle a répondu sans contenu.");
     if (result.truncated) throw new Error("la réponse a été coupée : plafond de longueur atteint");
