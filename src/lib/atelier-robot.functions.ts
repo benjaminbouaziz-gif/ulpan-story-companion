@@ -3,14 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
-import { artifactPath } from "./artifact-path";
-import { downloadArtifactText, sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
-import {
-  archiverDecisionsDeLEtape,
-  blocDecisionsPourRobot,
-  synchroniserDecisions,
-} from "./decisions.server";
-import { texteErreurBase, violeIndex } from "./db-error";
+import { texteErreurBase } from "./db-error";
 import { cleConfiguree, fournisseurDuModele, secretDuModele } from "./robot-provider.server";
 import {
   enchainerApresValidation,
