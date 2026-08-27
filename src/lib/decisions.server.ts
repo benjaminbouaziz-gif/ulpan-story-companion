@@ -180,11 +180,15 @@ export async function synchroniserDecisions(
     at: new Date().toISOString(),
   });
 
+  // Les décisions ARCHIVÉES sont hors jeu : une question identique repart
+  // ouverte, elle n'est jamais rattachée à un plan abandonné.
   const { data: existantes } = await admin
     .from("book_decisions")
     .select("id, question_key, stale, sort_order")
     .eq("book_id", args.bookId)
-    .eq("book_step_id", args.bookStepId);
+    .eq("book_step_id", args.bookStepId)
+    .is("archived_at", null);
+
 
   const parCle = new Map((existantes ?? []).map((d) => [d.question_key, d]));
   const clesVues = new Set<string>();
