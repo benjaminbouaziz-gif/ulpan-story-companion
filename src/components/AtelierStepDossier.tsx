@@ -62,6 +62,16 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
     queryFn: () => fetchDossier({ data: { bookStepId } }),
   });
 
+  /** BRIQUE 7 — la validation ne ment pas : elle compte les points non tranchés. */
+  const fetchDecisions = useServerFn(stepDecisions);
+  const decisions = useQuery({
+    queryKey: ["atelier", "decisions", bookStepId],
+    queryFn: () => fetchDecisions({ data: { bookStepId } }),
+  });
+  const openDecisions = (decisions.data?.decisions ?? []).filter(
+    (d) => !d.stale && d.status === "ouverte",
+  );
+
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["atelier", "dossier", bookStepId] });
     void qc.invalidateQueries({ queryKey: ["atelier", "chain"] });
