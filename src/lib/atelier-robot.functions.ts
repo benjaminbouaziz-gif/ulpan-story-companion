@@ -62,6 +62,8 @@ export type PlanRobotState = {
   /** Vrai quand ce lancement traîne au-delà du délai d'abandon. */
   runningStale: boolean;
   hasPrevious: boolean;
+  /** Décisions vivantes de l'étape : ce que « Repartir de zéro » archivera. */
+  liveDecisions: number;
   inRevision: boolean;
   lastReason: string | null;
   runsToday: number;
