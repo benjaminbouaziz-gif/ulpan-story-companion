@@ -370,6 +370,8 @@ export function BookDecisions({ bookId }: { bookId: string }) {
           </tbody>
         </table>
       )}
+      <ArchivedDecisions rows={archivees} />
+
     </div>
   );
 }
