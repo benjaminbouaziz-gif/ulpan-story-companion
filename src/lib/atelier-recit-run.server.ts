@@ -528,7 +528,10 @@ export async function executerChapitre(
     expected_pages: cible.pages,
     first_page: cible.firstPage,
     pages: mesure.pages,
-    problems: mesure.problems,
+    problems: [
+      ...mesure.problems,
+      ...mesure.warnings.map((w) => `Signalement (déposé quand même) : ${w}`),
+    ],
   });
 
   if (!mesure.ok) {
