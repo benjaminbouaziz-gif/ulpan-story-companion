@@ -156,7 +156,11 @@ export const planRobotState = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!step) return null;
 
+    // Le balai d'abord : un lancement mort ne doit jamais bloquer l'étape.
+    await balayerLancementsMorts(admin, step.id);
+
     const isPlanStep = step.step_code === PLAN_STEP_CODE;
+
 
     const [{ data: book }, { data: prompt }, { data: runs }, { data: arts }, { data: revs }] =
       await Promise.all([
