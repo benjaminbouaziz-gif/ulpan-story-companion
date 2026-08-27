@@ -173,7 +173,11 @@ export function PlanRobotPanel({
             className="border-line border px-2 py-0.5 disabled:opacity-40"
             disabled={blocked}
             onClick={() => {
-              if (window.confirm(t("atelier.robot.freshConfirm"))) run.mutate("sans_precedent");
+              const question = t("atelier.robot.freshConfirm").replace(
+                "{n}",
+                String(s.liveDecisions),
+              );
+              if (window.confirm(question)) run.mutate("sans_precedent");
             }}
           >
             {t("atelier.robot.fresh")}
