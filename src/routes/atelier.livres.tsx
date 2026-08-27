@@ -30,7 +30,6 @@ function BooksRoom() {
   const chain = useServerFn(atelierBookChain);
   const search = Route.useSearch();
   const openId = search.livre ?? null;
-  const openStep = search.etape ?? null;
 
   const books = useQuery({ queryKey: ["atelier", "books"], queryFn: () => list() });
   const steps = useQuery({
