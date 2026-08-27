@@ -271,3 +271,26 @@ export async function blocDecisionsPourRobot(
     ...lignes.map((l, i) => `${i + 1}. ${l}`),
   ].join("\n");
 }
+
+/**
+ * L'ARCHIVAGE — appelé UNIQUEMENT par « Repartir de zéro ». Les questions
+ * issues du plan abandonné sont mises de côté : ni modifiées, ni supprimées.
+ * On note au passage la version d'artefact qui les avait produites, pour
+ * qu'on sache toujours de quel plan elles venaient.
+ */
+export async function archiverDecisionsDeLEtape(
+  ctx: EditorContext,
+  args: { bookStepId: string; fromVersion: number | null },
+): Promise<number> {
+  const admin = await getAdminClient(ctx);
+  const { data } = await admin
+    .from("book_decisions")
+    .update({
+      archived_at: new Date().toISOString(),
+      archived_from_version: args.fromVersion,
+    })
+    .eq("book_step_id", args.bookStepId)
+    .is("archived_at", null)
+    .select("id");
+  return (data ?? []).length;
+}
