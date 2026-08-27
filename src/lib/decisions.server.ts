@@ -243,10 +243,12 @@ export async function blocDecisionsPourRobot(
   bookId: string,
 ): Promise<string | null> {
   const admin = await getAdminClient(ctx);
+  // Une décision archivée ne part JAMAIS, quel que soit son statut.
   const { data } = await admin
     .from("book_decisions")
     .select("question, decision, status, sort_order, created_at")
     .eq("book_id", bookId)
+    .is("archived_at", null)
     .in("status", ["tranchee", "ecartee"])
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
