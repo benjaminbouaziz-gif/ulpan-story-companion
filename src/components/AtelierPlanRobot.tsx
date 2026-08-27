@@ -32,6 +32,9 @@ export function PlanRobotPanel({
   const refreshAtelier = useAtelierRefresh();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // L'heure du clic : elle sert de repère tant que le serveur n'a pas répondu.
+  const [startedAt, setStartedAt] = useState<string>(() => new Date().toISOString());
+
 
   const state = useQuery({
     queryKey: ["atelier", "robotPlan", bookStepId],
