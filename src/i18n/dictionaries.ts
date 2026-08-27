@@ -321,6 +321,8 @@ const fr = {
   "atelier.dec.status.tranchee": "tranchée",
   "atelier.dec.status.ecartee": "écartée",
   "atelier.dec.stale": "Ce point n'apparaît plus dans la dernière version du livrable.",
+  "atelier.dec.archivedLine": "{n} décisions archivées (plan {v})",
+  "atelier.dec.archivedFrom": "Plan d'origine",
   "atelier.dec.showContext": "Voir le contexte du robot",
   "atelier.dec.hideContext": "Replier le contexte du robot",
   "atelier.dec.save": "Enregistrer",
