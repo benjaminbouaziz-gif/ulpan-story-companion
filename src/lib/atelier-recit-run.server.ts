@@ -655,7 +655,9 @@ export async function ecrireChapitresRestants(
       maillons.push({
         chapterNo: cible,
         ok: true,
-        message: `Chapitre ${cible} écrit (v${r.artifactVersion}) : ${r.mesure.pages.length} page(s), ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.`,
+        message:
+          `Chapitre ${cible} écrit (v${r.artifactVersion}) : ${r.mesure.pages.length} page(s), ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.` +
+          (r.mesure.warnings.length > 0 ? ` Signalement : ${r.mesure.warnings.join(" · ")}` : ""),
       });
     } catch (e) {
       maillons.push({
