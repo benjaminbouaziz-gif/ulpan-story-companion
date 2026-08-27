@@ -219,6 +219,14 @@ export const planRobotState = createServerFn({ method: "GET" })
       .eq("robot_name", ROBOT_PLAN)
       .gte("created_at", debutDeJournee());
 
+    // Ce que « Repartir de zéro » mettra de côté : on le NOMME au bouton.
+    const { count: liveDecisions } = await admin
+      .from("book_decisions")
+      .select("id", { count: "exact", head: true })
+      .eq("book_step_id", step.id)
+      .is("archived_at", null);
+
+
     const model = version?.model ?? null;
     const summaryFilled = (book?.work_summary_fr ?? "").trim().length > 0;
     const keyConfigured = model ? cleConfiguree(model) : false;
