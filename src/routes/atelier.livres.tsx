@@ -111,9 +111,8 @@ function BooksRoom() {
 
       {openId ? (
         <div className="mt-8">
-          {/* La fiche d'abord : c'est elle qui porte la matière du livre. */}
-          <BookFiche bookId={openId} />
-          <h2 className="font-latin mt-8 text-[16px]">{t("atelier.books.chain")}</h2>
+          {/* La chaîne d'abord : c'est l'avancement qu'on vient voir. */}
+          <h2 className="font-latin text-[16px]">{t("atelier.books.chain")}</h2>
           {steps.isLoading ? (
             <p className="mt-2 text-[13px]">…</p>
           ) : (steps.data ?? []).length === 0 ? (
@@ -144,20 +143,31 @@ function BooksRoom() {
                       {s.awaiting ? t(`atelier.awaiting.${s.awaiting}` as DictKey) : t("atelier.none")}
                     </td>
                     <td className={cell}>
-                      {/* Une seule addition à cet écran : la ligne mène au dossier. */}
-                      <Link
-                        to="/atelier/etape/$id"
-                        params={{ id: s.id }}
-                        className="border-b border-current"
-                      >
-                        {t("atelier.queue.open")}
-                      </Link>
+                      {/* La fiche du livre n'est pas un livrable : elle a son formulaire. */}
+                      {s.code === "fiche" ? (
+                        <a href="#fiche-du-livre" className="border-b border-current">
+                          {t("atelier.books.openFiche")}
+                        </a>
+                      ) : (
+                        <Link
+                          to="/atelier/etape/$id"
+                          params={{ id: s.id }}
+                          className="border-b border-current"
+                        >
+                          {t("atelier.queue.open")}
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
+
+          {/* La fiche ensuite, sous son titre, inchangée. */}
+          <div id="fiche-du-livre">
+            <BookFiche bookId={openId} />
+          </div>
         </div>
       ) : null}
     </Room>

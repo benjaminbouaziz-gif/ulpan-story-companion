@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
@@ -39,6 +40,7 @@ function sizeKo(bytes: number | null): string {
 export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const { t } = useI18n();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const fetchDossier = useServerFn(stepDossier);
   const sign = useServerFn(artifactSignedUrl);
   const upload = useServerFn(uploadArtifact);
@@ -115,7 +117,22 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const horsCrm = situation?.status === "valide_hors_crm";
   const closed = situation?.status === "valide";
 
+  /**
+   * L'étape « Fiche du livre » n'est pas un livrable qu'on dépose : son écran
+   * est le formulaire de la fiche, sur la page du livre. On y renvoie.
+   */
+  useEffect(() => {
+    if (situation?.stepCode !== "fiche") return;
+    void navigate({
+      to: "/atelier/livres",
+      search: { livre: situation.bookId, etape: undefined },
+      hash: "fiche-du-livre",
+      replace: true,
+    });
+  }, [situation?.stepCode, situation?.bookId, navigate]);
+
   if (dossier.isLoading) return <p className="text-[13px]">…</p>;
+  if (situation?.stepCode === "fiche") return <p className="text-[13px]">…</p>;
   if (!situation) return <p className="text-[13px]">{t("atelier.step.unknown")}</p>;
 
   const line = (a: ArtifactRow) => (
