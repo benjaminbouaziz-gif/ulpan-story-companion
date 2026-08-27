@@ -191,7 +191,10 @@ export function StepDecisions({ bookStepId }: { bookStepId: string }) {
     onError: (e: Error) => setMessage(e.message),
   });
 
-  const rows = q.data?.decisions ?? [];
+  const toutes = q.data?.decisions ?? [];
+  // Une décision archivée sort de ma vue : elle ne compte pas, elle attend en bas.
+  const rows = toutes.filter((r) => r.archivedAt === null);
+  const archivees = toutes.filter((r) => r.archivedAt !== null);
   const vives = rows.filter((r) => !r.stale);
   const perimees = rows.filter((r) => r.stale);
   const tranchees = rows.filter((r) => r.status !== "ouverte").length;
@@ -215,6 +218,9 @@ export function StepDecisions({ bookStepId }: { bookStepId: string }) {
       {[...vives, ...perimees].map((row) => (
         <DecisionLine key={row.id} row={row} onDone={invalidate} />
       ))}
+
+      <ArchivedDecisions rows={archivees} />
+
 
       <div className="mt-4">
         {adding ? (
