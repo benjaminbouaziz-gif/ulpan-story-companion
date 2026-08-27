@@ -77,6 +77,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
     void qc.invalidateQueries({ queryKey: ["atelier", "chain"] });
     void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
     void qc.invalidateQueries({ queryKey: ["atelier", "queue"] });
+    void qc.invalidateQueries({ queryKey: ["atelier", "decisions"] });
   };
 
   const download = async (artifactId: string) => {
@@ -210,6 +211,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
       {/* c-bis. le robot de l'étape, quand elle en a un */}
       <PlanRobotPanel bookStepId={bookStepId} onDone={invalidate} />
 
+      {/* c-ter. mes arbitrages : ils deviennent une donnée du livre */}
+      <StepDecisions bookStepId={bookStepId} />
+
       {/* d. les deux actions */}
       {horsCrm ? (
         <p className="mt-5">
@@ -237,7 +241,11 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
               className="border-line border px-2 py-0.5"
               disabled={decide.isPending}
               onClick={() => {
-                const question = `${t("atelier.step.confirmValidate")} ${situation.labelFr} — ${situation.bookTitle}. ${t("atelier.step.confirmEffect")}`;
+                const nonTranches =
+                  openDecisions.length > 0
+                    ? `\n\n${t("atelier.dec.openWarning")} ${openDecisions.length}. ${t("atelier.dec.openWarningEffect")}`
+                    : "";
+                const question = `${t("atelier.step.confirmValidate")} ${situation.labelFr} — ${situation.bookTitle}. ${t("atelier.step.confirmEffect")}${nonTranches}`;
                 if (window.confirm(question)) decide.mutate("valide");
               }}
             >
