@@ -5,6 +5,7 @@ import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
 import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
+import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
 import {
   appelerModele,
   cleConfiguree,
@@ -407,6 +408,13 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .from("book_steps")
       .update({ status: "en_cours", awaiting: "robot", updated_at: new Date().toISOString() })
       .eq("id", step.id);
+
+    /**
+     * BRIQUE 7 — mes arbitrages partent avec CHAQUE appel, après les données du
+     * livre. Le bloc est fabriqué à un seul endroit (decisions.server.ts) : les
+     * robots suivants l'appellent sans le réécrire.
+     */
+    const blocDecisions = await blocDecisionsPourRobot(editor, book.id);
 
     // 2) L'appel. Le contenu envoyé n'est écrit nulle part.
     const matiere = [
