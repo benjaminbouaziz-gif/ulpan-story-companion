@@ -16,6 +16,7 @@ import {
   uploadArtifact,
   type ArtifactRow,
 } from "@/lib/atelier-artifacts.functions";
+import { chainAfterValidation } from "@/lib/atelier-robot.functions";
 
 /**
  * LE DOSSIER D'ÉTAPE — ordre de lecture FIXE :
