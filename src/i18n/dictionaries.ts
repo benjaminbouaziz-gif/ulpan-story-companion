@@ -226,7 +226,7 @@ const fr = {
   "atelier.robot.relaunch": "Relancer avec mon motif",
   "atelier.robot.fresh": "Repartir de zéro",
   "atelier.robot.freshConfirm":
-    "Relancer sans tenir compte du plan précédent ? Il restera consultable dans les versions.",
+    "Relancer sans tenir compte du plan précédent ? Il restera consultable dans les versions, et les {n} décisions de cette étape seront archivées.",
   "atelier.robot.running": "Le robot travaille. Cette étape se rouvrira quand il aura déposé son plan.",
   "atelier.robot.blocked": "Ce qui manque avant de lancer :",
   "atelier.robot.quota": "Lancements aujourd'hui : {used} sur {cap}.",
