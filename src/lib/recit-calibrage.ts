@@ -125,14 +125,27 @@ export function lirePlanChapitres(markdown: string): LecturePlan {
 /* LE CHAPITRE RENDU : page par page, le compte réel                   */
 /* ------------------------------------------------------------------ */
 
-export type MesurePage = { pageNo: number; words: number; ok: boolean; empty: boolean };
+export type MesurePage = {
+  pageNo: number;
+  words: number;
+  /** Dans la fourchette visée 165–210 et non vide. */
+  ok: boolean;
+  /** Dans l'élargie 160–215 : le dépôt reste possible. */
+  acceptable: boolean;
+  empty: boolean;
+};
 
 export type MesureChapitre = {
+  /** Vrai si rien ne bloque : le chapitre peut être déposé. */
   ok: boolean;
   pages: MesurePage[];
+  /** Ce qui BLOQUE le dépôt. */
   problems: string[];
+  /** Ce qui est seulement SIGNALÉ : le chapitre est déposé quand même. */
+  warnings: string[];
   totalWords: number;
 };
+
 
 type PageBrute = { pageNo: number; texte: string };
 
