@@ -53,6 +53,7 @@ export const stepDossier = createServerFn({ method: "GET" })
     artifacts: ArtifactRow[];
     reviews: ReviewRow[];
     ficheChanges: { id: string; at: string; fields: string[] }[];
+    decisionChanges: { id: string; at: string; action: string; before: string | null }[];
   }> => {
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
