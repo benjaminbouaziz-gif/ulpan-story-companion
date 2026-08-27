@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
+import { PlanRobotPanel } from "./AtelierPlanRobot";
 import {
   artifactSignedUrl,
   reviewStep,
@@ -189,6 +190,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
           ) : null}
         </div>
       ) : null}
+
+      {/* c-bis. le robot de l'étape, quand elle en a un */}
+      <PlanRobotPanel bookStepId={bookStepId} onDone={invalidate} />
 
       {/* d. les deux actions */}
       {horsCrm ? (
