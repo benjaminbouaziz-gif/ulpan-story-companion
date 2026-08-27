@@ -21,6 +21,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminChiffresRouteImport } from './routes/admin.chiffres'
 import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
+import { Route as AdminConnexionRouteImport } from './routes/admin_.connexion'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -90,6 +91,11 @@ const AdminPagesRoute = AdminPagesRouteImport.update({
   path: '/pages',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminConnexionRoute = AdminConnexionRouteImport.update({
+  id: '/admin_/connexion',
+  path: '/admin/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
   path: '/b/$qr_code',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/admin/chiffres': typeof AdminChiffresRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/connexion': typeof AdminConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/admin/chiffres': typeof AdminChiffresRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/connexion': typeof AdminConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/admin/chiffres': typeof AdminChiffresRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin_/connexion': typeof AdminConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/admin/chiffres'
     | '/admin/extraits'
     | '/admin/pages'
+    | '/admin/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/admin/chiffres'
     | '/admin/extraits'
     | '/admin/pages'
+    | '/admin/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/chiffres'
     | '/admin/extraits'
     | '/admin/pages'
+    | '/admin_/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
+  AdminConnexionRoute: typeof AdminConnexionRoute
   BQr_codeRoute: typeof BQr_codeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   CompagnonBook_slugRoute: typeof CompagnonBook_slugRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPagesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin_/connexion': {
+      id: '/admin_/connexion'
+      path: '/admin/connexion'
+      fullPath: '/admin/connexion'
+      preLoaderRoute: typeof AdminConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/b/$qr_code': {
       id: '/b/$qr_code'
       path: '/b/$qr_code'
@@ -454,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
+  AdminConnexionRoute: AdminConnexionRoute,
   BQr_codeRoute: BQr_codeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   CompagnonBook_slugRoute: CompagnonBook_slugRoute,
