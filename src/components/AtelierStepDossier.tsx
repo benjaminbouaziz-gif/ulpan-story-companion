@@ -109,6 +109,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const situation = dossier.data?.situation ?? null;
   const artifacts: ArtifactRow[] = dossier.data?.artifacts ?? [];
   const reviews = dossier.data?.reviews ?? [];
+  const ficheChanges = dossier.data?.ficheChanges ?? [];
   const current = artifacts[0] ?? null;
   const previous = artifacts.slice(1);
   const horsCrm = situation?.status === "valide_hors_crm";
@@ -251,7 +252,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
 
       {/* f. journal */}
       <h2 className="font-latin mt-6 text-[16px]">{t("atelier.step.journal")}</h2>
-      {reviews.length === 0 && artifacts.length === 0 ? (
+      {reviews.length === 0 && artifacts.length === 0 && ficheChanges.length === 0 ? (
         <p className="mt-1">{t("atelier.step.noJournal")}</p>
       ) : (
         <table className="mt-2 w-full border-collapse">
@@ -268,6 +269,14 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
                 id: a.id,
                 at: a.createdAt,
                 what: `${t("atelier.step.deposit")} · ${a.type} ${t("atelier.step.version")} ${a.version} · ${t(`atelier.origin.${a.origin}` as DictKey)}`,
+                comment: null as string | null,
+              })),
+              ...ficheChanges.map((f) => ({
+                id: f.id,
+                at: f.at,
+                what: `${t("atelier.step.ficheChange")} · ${f.fields
+                  .map((k) => t(`atelier.fiche.f.${k}` as DictKey))
+                  .join(", ")}`,
                 comment: null as string | null,
               })),
             ]

@@ -433,6 +433,7 @@ export type Database = {
           blurb_en_hash: string | null
           blurb_en_source: string | null
           blurb_fr: string | null
+          book_constraints_fr: string | null
           chapters_count: number | null
           collection_id: string | null
           cover_url: string | null
@@ -444,6 +445,7 @@ export type Database = {
           expected_at: string | null
           figures_verified_at: string | null
           id: string
+          intent_note_fr: string | null
           isbn: string | null
           kdp_page_count: number | null
           level_note_en: string | null
@@ -459,6 +461,7 @@ export type Database = {
           retired_at: string | null
           sample_pdf_url: string | null
           slug: string
+          source_material_fr: string | null
           spine_mm: number | null
           spread_chapter_en: string | null
           spread_chapter_fr: string | null
@@ -490,6 +493,7 @@ export type Database = {
           blurb_en_hash?: string | null
           blurb_en_source?: string | null
           blurb_fr?: string | null
+          book_constraints_fr?: string | null
           chapters_count?: number | null
           collection_id?: string | null
           cover_url?: string | null
@@ -501,6 +505,7 @@ export type Database = {
           expected_at?: string | null
           figures_verified_at?: string | null
           id?: string
+          intent_note_fr?: string | null
           isbn?: string | null
           kdp_page_count?: number | null
           level_note_en?: string | null
@@ -516,6 +521,7 @@ export type Database = {
           retired_at?: string | null
           sample_pdf_url?: string | null
           slug: string
+          source_material_fr?: string | null
           spine_mm?: number | null
           spread_chapter_en?: string | null
           spread_chapter_fr?: string | null
@@ -547,6 +553,7 @@ export type Database = {
           blurb_en_hash?: string | null
           blurb_en_source?: string | null
           blurb_fr?: string | null
+          book_constraints_fr?: string | null
           chapters_count?: number | null
           collection_id?: string | null
           cover_url?: string | null
@@ -558,6 +565,7 @@ export type Database = {
           expected_at?: string | null
           figures_verified_at?: string | null
           id?: string
+          intent_note_fr?: string | null
           isbn?: string | null
           kdp_page_count?: number | null
           level_note_en?: string | null
@@ -573,6 +581,7 @@ export type Database = {
           retired_at?: string | null
           sample_pdf_url?: string | null
           slug?: string
+          source_material_fr?: string | null
           spine_mm?: number | null
           spread_chapter_en?: string | null
           spread_chapter_fr?: string | null

@@ -51,6 +51,7 @@ export const stepDossier = createServerFn({ method: "GET" })
     situation: StepSituation | null;
     artifacts: ArtifactRow[];
     reviews: ReviewRow[];
+    ficheChanges: { id: string; at: string; fields: string[] }[];
   }> => {
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
@@ -68,10 +69,35 @@ export const stepDossier = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false }),
       admin
         .from("book_steps")
-        .select("id, book_id, rank, label_fr, status, awaiting, species, note")
+        .select("id, book_id, step_code, rank, label_fr, status, awaiting, species, note")
         .eq("id", data.bookStepId)
         .maybeSingle(),
     ]);
+
+    /**
+     * Le journal de l'étape « Fiche du livre » compte les modifications de la
+     * fiche comme des dépôts : elles sont lues dans content_versions.
+     */
+    let ficheChanges: { id: string; at: string; fields: string[] }[] = [];
+    if (step.data?.step_code === "fiche") {
+      const { data: rows } = await admin
+        .from("content_versions")
+        .select("id, snapshot, created_at")
+        .eq("entity", "book_fiche")
+        .eq("entity_id", step.data.book_id)
+        .order("created_at", { ascending: false });
+      ficheChanges = (rows ?? []).map((r) => {
+        const snap = (r.snapshot ?? {}) as Record<string, unknown>;
+        const fields = Array.isArray(snap['fields'])
+          ? (snap['fields'] as string[])
+          : Object.keys(snap).filter((k) => k !== "action");
+        return {
+          id: r.id,
+          at: r.created_at,
+          fields: snap['action'] === "creation" ? ["creation"] : fields,
+        };
+      });
+    }
 
     let situation: StepSituation | null = null;
     if (step.data) {
@@ -95,6 +121,7 @@ export const stepDossier = createServerFn({ method: "GET" })
 
     return {
       situation,
+      ficheChanges,
       artifacts: (arts.data ?? []).map((a) => ({
         id: a.id,
         type: a.type,
