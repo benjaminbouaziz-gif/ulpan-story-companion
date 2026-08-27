@@ -29,6 +29,8 @@ export type PromptListRow = {
   rank: number;
   name: string;
   activeVersion: number | null;
+  activeModel: string | null;
+  activeWebSearch: boolean;
   lastVersionAt: string | null;
   versionsCount: number;
 };
