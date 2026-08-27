@@ -234,6 +234,8 @@ const fr = {
   "atelier.robot.failed": "Le dernier lancement a échoué :",
   "atelier.robot.done": "Le plan est déposé : il attend votre lecture.",
   "atelier.robot.reason": "Motif de révision retenu :",
+  "atelier.robot.waitingOnMe":
+    "En révision — cliquez « Relancer avec mon motif » pour repartir. Aucun robot ne travaille en ce moment.",
   "atelier.robot.inFlight": "Un lancement est en cours : {robot} · {model} — lancé {ago}.",
   "atelier.robot.agoSec": "il y a {n} s",
   "atelier.robot.agoMin": "il y a {n} min",
@@ -684,6 +686,8 @@ const en: Record<DictKey, string> = {
   "atelier.robot.failed": "The last run failed:",
   "atelier.robot.done": "The plan is filed: it awaits your reading.",
   "atelier.robot.reason": "Revision reason used:",
+  "atelier.robot.waitingOnMe":
+    "In revision — click \"Run again with my reason\" to restart. No robot is working right now.",
   "atelier.robot.inFlight": "A run is under way: {robot} · {model} — started {ago}.",
   "atelier.robot.agoSec": "{n} s ago",
   "atelier.robot.agoMin": "{n} min ago",
