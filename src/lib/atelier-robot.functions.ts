@@ -6,6 +6,7 @@ import { getAdminClient } from "./supabase-admin.server";
 import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
 import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
 import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
+import { texteErreurBase, violeIndex } from "./db-error";
 import {
   appelerModele,
   cleConfiguree,
@@ -22,10 +23,11 @@ import {
  * seuls comptent l'artefact déposé et la ligne d'agent_runs.
  *
  * GARDE-FOUS :
- *  - un seul lancement à la fois par étape : garanti en base par un index
- *    unique partiel sur agent_runs (book_step_id) où status = 'en_cours', et
- *    par l'unicité de la clé d'idempotence — un double clic échoue à l'insert,
- *    jamais après l'appel ;
+ *  - un seul lancement à la fois par étape : garanti en base par l'index unique
+ *    partiel sur agent_runs (book_step_id) où status = 'en_cours' — un double
+ *    clic échoue à l'insert, jamais après l'appel ;
+ *  - la clé d'idempotence identifie LA TENTATIVE (étape + horodatage), jamais
+ *    le résultat : un échec ne verrouille plus l'étape pour toujours ;
  *  - un plafond de lancements par jour (PLAFOND_PAR_JOUR) ;
  *  - aucun artefact n'est créé quand l'appel échoue.
  */
