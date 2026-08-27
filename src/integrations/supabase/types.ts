@@ -174,6 +174,7 @@ export type Database = {
       artifacts: {
         Row: {
           book_step_id: string
+          chapter_no: number | null
           checksum: string | null
           created_at: string
           created_by: string | null
@@ -188,6 +189,7 @@ export type Database = {
         }
         Insert: {
           book_step_id: string
+          chapter_no?: number | null
           checksum?: string | null
           created_at?: string
           created_by?: string | null
@@ -202,6 +204,7 @@ export type Database = {
         }
         Update: {
           book_step_id?: string
+          chapter_no?: number | null
           checksum?: string | null
           created_at?: string
           created_by?: string | null
@@ -704,6 +707,70 @@ export type Database = {
             columns: ["prompt_id"]
             isOneToOne: false
             referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_measures: {
+        Row: {
+          agent_run_id: string | null
+          artifact_id: string | null
+          book_step_id: string
+          chapter_no: number
+          created_at: string
+          expected_pages: number
+          first_page: number
+          id: string
+          ok: boolean
+          pages: Json
+          problems: Json
+        }
+        Insert: {
+          agent_run_id?: string | null
+          artifact_id?: string | null
+          book_step_id: string
+          chapter_no: number
+          created_at?: string
+          expected_pages: number
+          first_page: number
+          id?: string
+          ok: boolean
+          pages?: Json
+          problems?: Json
+        }
+        Update: {
+          agent_run_id?: string | null
+          artifact_id?: string | null
+          book_step_id?: string
+          chapter_no?: number
+          created_at?: string
+          expected_pages?: number
+          first_page?: number
+          id?: string
+          ok?: boolean
+          pages?: Json
+          problems?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_measures_agent_run_id_fkey"
+            columns: ["agent_run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_measures_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_measures_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
             referencedColumns: ["id"]
           },
         ]
