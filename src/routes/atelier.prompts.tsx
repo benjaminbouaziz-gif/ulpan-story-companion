@@ -233,6 +233,7 @@ function PromptDossier({ promptId }: { promptId: string }) {
   const [model, setModel] = useState("");
   const [webSearch, setWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [missing, setMissing] = useState<{ content?: boolean; note?: boolean }>({});
   const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({});
 
   const refresh = async () => {
