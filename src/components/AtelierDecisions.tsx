@@ -334,7 +334,9 @@ export function BookDecisions({ bookId }: { bookId: string }) {
     queryKey: ["atelier", "decisions", "book", bookId],
     queryFn: () => fetchAll({ data: { bookId } }),
   });
-  const rows = q.data ?? [];
+  const toutes = q.data ?? [];
+  const rows = toutes.filter((r) => r.archivedAt === null);
+  const archivees = toutes.filter((r) => r.archivedAt !== null);
 
   return (
     <div className="mt-8 text-[13px]">
