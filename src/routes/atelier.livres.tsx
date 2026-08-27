@@ -16,7 +16,7 @@ export const Route = createFileRoute("/atelier/livres")({
     meta: [{ title: "Livres — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    livre: typeof search.livre === "string" ? search.livre : undefined,
+    livre: typeof search['livre'] === "string" ? (search['livre'] as string) : undefined,
   }),
   component: BooksRoom,
 });
@@ -71,7 +71,7 @@ function BooksRoom() {
                 <td className={cell}>
                   <Link
                     to="/atelier/livres"
-                    search={openId === b.id ? {} : { livre: b.id }}
+                    search={openId === b.id ? { livre: undefined } : { livre: b.id }}
                     className="border-b border-current"
                   >
                     {openId === b.id ? t("atelier.books.close") : t("atelier.books.chain")}
