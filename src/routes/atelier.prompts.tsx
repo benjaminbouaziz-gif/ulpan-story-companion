@@ -60,7 +60,7 @@ function PromptsRoom() {
   const [newWebSearch, setNewWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Le bouton reste toujours cliquable : au clic, il nomme ce qui manque.
-  const [missing, setMissing] = useState<Record<string, boolean>>({});
+  const [missing, setMissing] = useState<{ step?: boolean; name?: boolean; content?: boolean }>({});
 
   const createMut = useMutation({
     mutationFn: () =>
