@@ -6,6 +6,8 @@ import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
 import { PlanRobotPanel } from "./AtelierPlanRobot";
+import { StepDecisions } from "./AtelierDecisions";
+import { stepDecisions } from "@/lib/atelier-decisions.functions";
 import {
   artifactSignedUrl,
   reviewStep,
@@ -60,11 +62,22 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
     queryFn: () => fetchDossier({ data: { bookStepId } }),
   });
 
+  /** BRIQUE 7 — la validation ne ment pas : elle compte les points non tranchés. */
+  const fetchDecisions = useServerFn(stepDecisions);
+  const decisions = useQuery({
+    queryKey: ["atelier", "decisions", bookStepId],
+    queryFn: () => fetchDecisions({ data: { bookStepId } }),
+  });
+  const openDecisions = (decisions.data?.decisions ?? []).filter(
+    (d) => !d.stale && d.status === "ouverte",
+  );
+
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["atelier", "dossier", bookStepId] });
     void qc.invalidateQueries({ queryKey: ["atelier", "chain"] });
     void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
     void qc.invalidateQueries({ queryKey: ["atelier", "queue"] });
+    void qc.invalidateQueries({ queryKey: ["atelier", "decisions"] });
   };
 
   const download = async (artifactId: string) => {
@@ -117,6 +130,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const artifacts: ArtifactRow[] = dossier.data?.artifacts ?? [];
   const reviews = dossier.data?.reviews ?? [];
   const ficheChanges = dossier.data?.ficheChanges ?? [];
+  const decisionChanges = dossier.data?.decisionChanges ?? [];
   const current = artifacts[0] ?? null;
   const previous = artifacts.slice(1);
   const horsCrm = situation?.status === "valide_hors_crm";
@@ -198,6 +212,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
       {/* c-bis. le robot de l'étape, quand elle en a un */}
       <PlanRobotPanel bookStepId={bookStepId} onDone={invalidate} />
 
+      {/* c-ter. mes arbitrages : ils deviennent une donnée du livre */}
+      <StepDecisions bookStepId={bookStepId} />
+
       {/* d. les deux actions */}
       {horsCrm ? (
         <p className="mt-5">
@@ -225,7 +242,11 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
               className="border-line border px-2 py-0.5"
               disabled={decide.isPending}
               onClick={() => {
-                const question = `${t("atelier.step.confirmValidate")} ${situation.labelFr} — ${situation.bookTitle}. ${t("atelier.step.confirmEffect")}`;
+                const nonTranches =
+                  openDecisions.length > 0
+                    ? `\n\n${t("atelier.dec.openWarning")} ${openDecisions.length}. ${t("atelier.dec.openWarningEffect")}`
+                    : "";
+                const question = `${t("atelier.step.confirmValidate")} ${situation.labelFr} — ${situation.bookTitle}. ${t("atelier.step.confirmEffect")}${nonTranches}`;
                 if (window.confirm(question)) decide.mutate("valide");
               }}
             >
@@ -298,7 +319,10 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
 
       {/* f. journal */}
       <h2 className="font-latin mt-6 text-[16px]">{t("atelier.step.journal")}</h2>
-      {reviews.length === 0 && artifacts.length === 0 && ficheChanges.length === 0 ? (
+      {reviews.length === 0 &&
+      artifacts.length === 0 &&
+      ficheChanges.length === 0 &&
+      decisionChanges.length === 0 ? (
         <p className="mt-1">{t("atelier.step.noJournal")}</p>
       ) : (
         <table className="mt-2 w-full border-collapse">
@@ -324,6 +348,12 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
                   .map((k) => t(`atelier.fiche.f.${k}` as DictKey))
                   .join(", ")}`,
                 comment: null as string | null,
+              })),
+              ...decisionChanges.map((d) => ({
+                id: d.id,
+                at: d.at,
+                what: `${t("atelier.dec.change")} · ${d.action}`,
+                comment: d.before,
               })),
             ]
               .sort((a, b) => (a.at < b.at ? 1 : -1))

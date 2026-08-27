@@ -5,6 +5,7 @@ import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
 import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
+import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
 import {
   appelerModele,
   cleConfiguree,
@@ -408,6 +409,13 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .update({ status: "en_cours", awaiting: "robot", updated_at: new Date().toISOString() })
       .eq("id", step.id);
 
+    /**
+     * BRIQUE 7 — mes arbitrages partent avec CHAQUE appel, après les données du
+     * livre. Le bloc est fabriqué à un seul endroit (decisions.server.ts) : les
+     * robots suivants l'appellent sans le réécrire.
+     */
+    const blocDecisions = await blocDecisionsPourRobot(editor, book.id);
+
     // 2) L'appel. Le contenu envoyé n'est écrit nulle part.
     const matiere = [
       `Titre de travail : ${book.title_fr}`,
@@ -422,6 +430,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       (book.source_material_fr ?? "").trim().length > 0
         ? `Matière documentaire :\n${book.source_material_fr}`
         : null,
+      blocDecisions,
       previousPlan ? `Plan précédent :\n${previousPlan}` : null,
       reason ? `Motif de révision de l'éditeur :\n${reason}` : null,
     ]
@@ -496,6 +505,17 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       created_by: editor.userId,
     });
     if (artErr) throw new Error("Dépôt du plan refusé.");
+
+    /**
+     * BRIQUE 7 — JUSTE APRÈS le dépôt : les « Points à trancher » deviennent des
+     * décisions ouvertes, sans un clic. Une lecture impossible n'est pas un
+     * silence : elle est marquée et dite dans le dossier de l'étape.
+     */
+    await synchroniserDecisions(editor, {
+      bookId: step.book_id,
+      bookStepId: step.id,
+      markdown: result.text,
+    });
 
     await admin
       .from("agent_runs")
