@@ -349,6 +349,12 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
                   .join(", ")}`,
                 comment: null as string | null,
               })),
+              ...decisionChanges.map((d) => ({
+                id: d.id,
+                at: d.at,
+                what: `${t("atelier.dec.change")} · ${d.action}`,
+                comment: d.before,
+              })),
             ]
               .sort((a, b) => (a.at < b.at ? 1 : -1))
               .map((e) => (
