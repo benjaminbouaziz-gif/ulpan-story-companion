@@ -34,6 +34,7 @@ export type ReviewRow = {
 /** La ligne de situation qui ouvre le dossier : rien d'inventé, tout est lu. */
 export type StepSituation = {
   stepId: string;
+  stepCode: string;
   bookId: string;
   bookTitle: string;
   rank: number;
@@ -108,6 +109,7 @@ export const stepDossier = createServerFn({ method: "GET" })
         .maybeSingle();
       situation = {
         stepId: step.data.id,
+        stepCode: step.data.step_code,
         bookId: step.data.book_id,
         bookTitle: book?.title_fr ?? "",
         rank: step.data.rank,

@@ -46,6 +46,7 @@ export type BookFiche = {
   intentNoteFr: string;
   planValidated: boolean;
   ficheStepId: string | null;
+  ficheStepStatus: string | null;
   journal: FicheJournalRow[];
 };
 
@@ -230,6 +231,7 @@ export const atelierBookFiche = createServerFn({ method: "GET" })
       intentNoteFr: book.intent_note_fr ?? "",
       planValidated: plan ? plan.status === "valide" || plan.status === "valide_hors_crm" : false,
       ficheStepId: fiche?.id ?? null,
+      ficheStepStatus: (fiche?.status as string | undefined) ?? null,
       journal: (journal.data ?? []).map((row) => {
         const snap = (row.snapshot ?? {}) as Record<string, unknown>;
         const fields = Array.isArray(snap['fields'])
