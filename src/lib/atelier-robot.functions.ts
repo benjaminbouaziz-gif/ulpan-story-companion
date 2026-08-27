@@ -358,6 +358,8 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         .update({
           status: "echoue",
           ok: false,
+          // Je dois savoir à qui on a parlé même quand ça a raté.
+          model_used: model,
           error: message.slice(0, 2000),
           error_summary: message.slice(0, 300),
           duration_ms: Date.now() - startedAt,
@@ -402,7 +404,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
     await admin
       .from("agent_runs")
       .update({
-        status: "ok",
+        status: "termine",
         ok: true,
         model_used: result.modelUsed,
         cost_usd: result.costUsd,

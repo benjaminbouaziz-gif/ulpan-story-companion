@@ -85,7 +85,7 @@ export function PlanRobotPanel({
           {t("atelier.robot.failed")} <span className="opacity-80">{s.lastRun.errorSummary}</span>
         </p>
       ) : null}
-      {s.lastRun?.status === "ok" ? (
+      {s.lastRun?.status === "termine" ? (
         <p className="mt-2 opacity-70">
           {t("atelier.robot.lastRun")} : {new Date(s.lastRun.createdAt).toLocaleString("fr-FR")} ·{" "}
           {s.lastRun.modelUsed ?? "—"}
