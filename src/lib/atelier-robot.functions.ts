@@ -3,8 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
-import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
-import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
+import { artifactPath } from "./artifact-path";
+import { downloadArtifactText, sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
 import {
   archiverDecisionsDeLEtape,
   blocDecisionsPourRobot,
@@ -147,6 +147,33 @@ export const unblockPlanStep = createServerFn({ method: "POST" })
       throw new Error("Aucun lancement abandonné à débloquer sur cette étape.");
     await balayerLancementsMorts(admin, data.bookStepId);
     return { freed: true };
+  });
+
+/** Arrêt explicite : clôt le lancement immédiatement, quel que soit son âge. */
+export const cancelPlanRun = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ bookStepId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ stopped: boolean }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const { data: runs, error } = await admin
+      .from("agent_runs")
+      .update({
+        status: "echoue",
+        ok: false,
+        error: "lancement arrêté manuellement",
+        error_summary: "lancement arrêté manuellement",
+      })
+      .eq("book_step_id", data.bookStepId)
+      .eq("status", "en_cours")
+      .select("id");
+    if (error) throw new Error(texteErreurBase("L'arrêt du lancement a échoué", error));
+    if (!runs || runs.length === 0) throw new Error("Aucun lancement en cours à arrêter.");
+    await admin
+      .from("book_steps")
+      .update({ status: "echoue", awaiting: "ben", updated_at: new Date().toISOString() })
+      .eq("id", data.bookStepId);
+    return { stopped: true };
   });
 
 
@@ -402,10 +429,10 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       reason = rev?.[0]?.comment ?? null;
       if (!reason) throw new Error("Aucun motif de révision n'a été écrit sur cette étape.");
       const path = lastArt?.[0]?.storage_path;
-      if (path) {
-        const { data: blob } = await admin.storage.from(ARTIFACT_BUCKET).download(path);
-        previousPlan = blob ? await blob.text() : null;
-      }
+      if (!path) throw new Error("Le plan précédent est introuvable dans le coffre.");
+      const downloaded = await downloadArtifactText(editor, path);
+      previousPlan = downloaded.text;
+      if (previousPlan.trim().length === 0) throw new Error("Le plan précédent est vide.");
     }
 
     // 1) La ligne de lancement d'abord : c'est elle qui interdit le second clic.
@@ -529,45 +556,74 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
 
     if (!result) throw new Error("Le lancement n'a rien produit.");
 
+    // Un arrêt manuel peut intervenir pendant l'appel distant. Dans ce cas,
+    // la réponse tardive est ignorée et aucun livrable n'est déposé.
+    const { data: currentRun } = await admin
+      .from("agent_runs")
+      .select("status")
+      .eq("id", run.id)
+      .maybeSingle();
+    if (currentRun?.status !== "en_cours") throw new Error("Le lancement a été arrêté.");
+
     // 3) Le dépôt : octets d'abord, ligne ensuite (comme tout artefact).
+    try {
+      const fileName = `plan-v${artifactVersion}.md`;
+      const storagePath = artifactPath({
+        bookId: step.book_id,
+        stepCode: step.step_code,
+        lang: step.lang,
+        type: "plan",
+        version: artifactVersion,
+        fileName,
+      });
+      const bytes = new TextEncoder().encode(result.text).buffer as ArrayBuffer;
+      await uploadArtifactBytes(editor, storagePath, bytes, "text/markdown; charset=utf-8");
+      const checksum = await sha256Hex(bytes);
 
-    const fileName = `plan-v${artifactVersion}.md`;
-    const storagePath = artifactPath({
-      bookId: step.book_id,
-      stepCode: step.step_code,
-      lang: step.lang,
-      type: "plan",
-      version: artifactVersion,
-      fileName,
-    });
-    const bytes = new TextEncoder().encode(result.text).buffer as ArrayBuffer;
-    await uploadArtifactBytes(editor, storagePath, bytes, "text/markdown; charset=utf-8");
-    const checksum = await sha256Hex(bytes);
+      const { error: artErr } = await admin.from("artifacts").insert({
+        book_step_id: step.id,
+        type: "plan",
+        version: artifactVersion,
+        storage_path: storagePath,
+        checksum,
+        size_bytes: bytes.byteLength,
+        origin: "robot",
+        robot_run_id: run.id,
+        prompt_version_id: version.id,
+        created_by: editor.userId,
+      });
+      if (artErr) throw new Error(texteErreurBase("Dépôt du plan refusé", artErr));
 
-    const { error: artErr } = await admin.from("artifacts").insert({
-      book_step_id: step.id,
-      type: "plan",
-      version: artifactVersion,
-      storage_path: storagePath,
-      checksum,
-      size_bytes: bytes.byteLength,
-      origin: "robot",
-      robot_run_id: run.id,
-      prompt_version_id: version.id,
-      created_by: editor.userId,
-    });
-    if (artErr) throw new Error(texteErreurBase("Dépôt du plan refusé", artErr));
-
-    /**
-     * BRIQUE 7 — JUSTE APRÈS le dépôt : les « Points à trancher » deviennent des
-     * décisions ouvertes, sans un clic. Une lecture impossible n'est pas un
-     * silence : elle est marquée et dite dans le dossier de l'étape.
-     */
-    await synchroniserDecisions(editor, {
-      bookId: step.book_id,
-      bookStepId: step.id,
-      markdown: result.text,
-    });
+      await synchroniserDecisions(editor, {
+        bookId: step.book_id,
+        bookStepId: step.id,
+        markdown: result.text,
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      await admin
+        .from("agent_runs")
+        .update({
+          status: "echoue",
+          ok: false,
+          model_used: result.modelUsed,
+          error: message.slice(0, 2000),
+          error_summary: message.slice(0, 300),
+          duration_ms: Date.now() - startedAt,
+          input_chars: version.content.length + matiere.length,
+          output_chars: result.text.length,
+          output_tokens: result.outputTokens,
+          input_tokens: result.inputTokens,
+          truncated: result.truncated,
+        })
+        .eq("id", run.id)
+        .eq("status", "en_cours");
+      await admin
+        .from("book_steps")
+        .update({ status: "echoue", awaiting: "ben", updated_at: new Date().toISOString() })
+        .eq("id", step.id);
+      throw new Error(message);
+    }
 
     await admin
       .from("agent_runs")

@@ -60,9 +60,11 @@ export async function uploadArtifactBytes(
   contentType: string,
 ): Promise<void> {
   const admin = await getAdminClient(ctx);
-  const { error } = await admin.storage
-    .from(ARTIFACT_BUCKET)
-    .upload(storagePath, bytes, { contentType, upsert: false });
+  const { error } = await withTimeout(
+    admin.storage.from(ARTIFACT_BUCKET).upload(storagePath, bytes, { contentType, upsert: false }),
+    ARTIFACT_READ_TIMEOUT_MS,
+    "Téléversement du livrable",
+  );
   if (error) throw new Error(`Téléversement refusé : ${error.message}`);
 }
 
