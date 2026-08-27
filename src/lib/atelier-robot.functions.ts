@@ -428,7 +428,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .filter((s): s is string => s !== null)
       .join("\n\n");
 
-    let result: Awaited<ReturnType<typeof appelerModele>>;
+    let result: Awaited<ReturnType<typeof appelerModele>> | undefined;
     try {
       result = await appelerModele({
         model,
