@@ -33,6 +33,7 @@ import { Route as AtelierMesureRouteImport } from './routes/atelier.mesure'
 import { Route as AtelierPromptsRouteImport } from './routes/atelier.prompts'
 import { Route as AtelierReglagesRouteImport } from './routes/atelier.reglages'
 import { Route as AtelierRobotsRouteImport } from './routes/atelier.robots'
+import { Route as AtelierSiteRouteImport } from './routes/atelier.site'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -162,6 +163,11 @@ const AtelierRobotsRoute = AtelierRobotsRouteImport.update({
   path: '/robots',
   getParentRoute: () => AtelierRoute,
 } as any)
+const AtelierSiteRoute = AtelierSiteRouteImport.update({
+  id: '/site',
+  path: '/site',
+  getParentRoute: () => AtelierRoute,
+} as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
   path: '/b/$qr_code',
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/atelier/prompts': typeof AtelierPromptsRoute
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
+  '/atelier/site': typeof AtelierSiteRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/atelier/prompts': typeof AtelierPromptsRoute
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
+  '/atelier/site': typeof AtelierSiteRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/atelier/prompts': typeof AtelierPromptsRoute
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
+  '/atelier/site': typeof AtelierSiteRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/atelier/prompts'
     | '/atelier/reglages'
     | '/atelier/robots'
+    | '/atelier/site'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/atelier/prompts'
     | '/atelier/reglages'
     | '/atelier/robots'
+    | '/atelier/site'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/atelier/prompts'
     | '/atelier/reglages'
     | '/atelier/robots'
+    | '/atelier/site'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -598,6 +610,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierRobotsRouteImport
       parentRoute: typeof AtelierRoute
     }
+    '/atelier/site': {
+      id: '/atelier/site'
+      path: '/site'
+      fullPath: '/atelier/site'
+      preLoaderRoute: typeof AtelierSiteRouteImport
+      parentRoute: typeof AtelierRoute
+    }
     '/b/$qr_code': {
       id: '/b/$qr_code'
       path: '/b/$qr_code'
@@ -684,6 +703,7 @@ interface AtelierRouteChildren {
   AtelierPromptsRoute: typeof AtelierPromptsRoute
   AtelierReglagesRoute: typeof AtelierReglagesRoute
   AtelierRobotsRoute: typeof AtelierRobotsRoute
+  AtelierSiteRoute: typeof AtelierSiteRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
 }
 
@@ -696,6 +716,7 @@ const AtelierRouteChildren: AtelierRouteChildren = {
   AtelierPromptsRoute: AtelierPromptsRoute,
   AtelierReglagesRoute: AtelierReglagesRoute,
   AtelierRobotsRoute: AtelierRobotsRoute,
+  AtelierSiteRoute: AtelierSiteRoute,
   AtelierIndexRoute: AtelierIndexRoute,
 }
 
