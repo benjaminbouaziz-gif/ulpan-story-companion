@@ -119,7 +119,6 @@ export const adminDashboard = createServerFn({ method: "GET" })
         email: roleEmails.get(r.user_id) ?? r.user_id,
         role: r.role as string,
       })),
-      pagesTableCount: (pages.data ?? []).length,
-      unusedBookLabels: bookLabel.size,
     };
   });
+
