@@ -324,6 +324,8 @@ export async function etatRecit(editor: EditorContext, bookStepId: string): Prom
     missing: prepare.missing,
     motsMin: MOTS_MIN,
     motsMax: MOTS_MAX,
+    motsMinDur: MOTS_MIN_DUR,
+    motsMaxDur: MOTS_MAX_DUR,
   };
 }
 

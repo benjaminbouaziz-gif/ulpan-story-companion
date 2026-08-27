@@ -159,8 +159,8 @@ export function RecitRobotPanel({
       </p>
       <p>Modèle : {s.model ?? "aucun"}</p>
       <p className="mt-1">
-        Plan : {s.chapitres.length} chapitre(s), {s.totalPages} pages · calibrage exigé {s.motsMin} à{" "}
-        {s.motsMax} mots par page.
+        Plan : {s.chapitres.length} chapitre(s), {s.totalPages} pages · fourchette visée {s.motsMin} à{" "}
+        {s.motsMax} mots par page, bloquant hors {s.motsMinDur}–{s.motsMaxDur}.
       </p>
       <p>
         Écrits : {s.ecrits.length} · restants : {restants}
