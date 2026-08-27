@@ -73,7 +73,11 @@ function BooksRoom() {
                 <td className={cell}>
                   <Link
                     to="/atelier/livres"
-                    search={openId === b.id ? { livre: undefined } : { livre: b.id }}
+                    search={
+                      openId === b.id
+                        ? { livre: undefined, etape: undefined }
+                        : { livre: b.id, etape: undefined }
+                    }
                     className="border-b border-current"
                   >
                     {openId === b.id ? t("atelier.books.close") : t("atelier.books.chain")}
