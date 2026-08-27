@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
+import { useAtelierRefresh } from "@/lib/atelier-refresh";
 import type { DictKey } from "@/i18n/dictionaries";
 import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
 import { PlanRobotPanel } from "./AtelierPlanRobot";
@@ -42,7 +43,6 @@ function sizeKo(bytes: number | null): string {
 
 export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const { t } = useI18n();
-  const qc = useQueryClient();
   const navigate = useNavigate();
   const fetchDossier = useServerFn(stepDossier);
   const sign = useServerFn(artifactSignedUrl);
@@ -72,13 +72,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
     (d) => !d.stale && d.status === "ouverte",
   );
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: ["atelier", "dossier", bookStepId] });
-    void qc.invalidateQueries({ queryKey: ["atelier", "chain"] });
-    void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
-    void qc.invalidateQueries({ queryKey: ["atelier", "queue"] });
-    void qc.invalidateQueries({ queryKey: ["atelier", "decisions"] });
-  };
+  // Toute action confirmée relit l'atelier entier : dossier, chaîne, file,
+  // salle Robots, décisions — et donc les boutons eux-mêmes.
+  const invalidate = useAtelierRefresh();
 
   const download = async (artifactId: string) => {
     try {

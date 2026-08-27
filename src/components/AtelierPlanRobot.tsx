@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/context";
+import { useAtelierRefresh } from "@/lib/atelier-refresh";
 import { cancelPlanRun, launchPlanRobot, planRobotState } from "@/lib/atelier-robot.functions";
 
 /**
@@ -11,8 +12,9 @@ import { cancelPlanRun, launchPlanRobot, planRobotState } from "@/lib/atelier-ro
  * Un seul bouton, et au-dessus de lui la vérité : quel prompt, quelle version,
  * quel modèle, avec ou sans recherche en ligne. Quand quelque chose manque, le
  * bouton reste éteint et la raison est écrite en clair — jamais « erreur ».
- * Pendant qu'un lancement tourne, l'écran le dit et s'interroge tout seul
- * toutes les 5 secondes, puis s'arrête dès que c'est fini.
+ * Dès qu'un lancement part, l'écran s'interroge tout seul toutes les 5 secondes
+ * et la durée écoulée s'incrémente ; l'interrogation cesse dès la fin, l'échec
+ * ou l'annulation. Au repos, rien n'est demandé au serveur.
  * Rien de ce qui part au modèle n'est montré ni conservé : seul le plan déposé
  * compte.
  */
@@ -27,8 +29,12 @@ export function PlanRobotPanel({
   const fetchState = useServerFn(planRobotState);
   const launch = useServerFn(launchPlanRobot);
   const cancel = useServerFn(cancelPlanRun);
+  const refreshAtelier = useAtelierRefresh();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // L'heure du clic : elle sert de repère tant que le serveur n'a pas répondu.
+  const [startedAt, setStartedAt] = useState<string>(() => new Date().toISOString());
+
 
   const state = useQuery({
     queryKey: ["atelier", "robotPlan", bookStepId],
@@ -39,7 +45,6 @@ export function PlanRobotPanel({
   });
 
   const s = state.data;
-  const running = s?.running ?? false;
 
   const run = useMutation({
     mutationFn: (mode: "avec_precedent" | "sans_precedent" | null) =>
@@ -50,18 +55,42 @@ export function PlanRobotPanel({
           ...(mode ? { mode } : {}),
         },
       }),
-    onSuccess: async () => {
+    onMutate: () => {
       setError(null);
       setNotice(null);
-      await state.refetch();
-      onDone();
+      setStartedAt(new Date().toISOString());
     },
-    onError: async (e: Error) => {
-      setError(e.message);
+
+    onSuccess: () => setError(null),
+    onError: (e: Error) => setError(e.message),
+    // Que le lancement aboutisse ou échoue, tout l'atelier se relit.
+    onSettled: async () => {
       await state.refetch();
+      refreshAtelier();
       onDone();
     },
   });
+
+  // Le lancement est une requête longue : dès le clic, l'écran se comporte
+  // comme si un robot travaillait, sans attendre sa réponse.
+  const running = (s?.running ?? false) || run.isPending;
+
+  // Pendant le lancement, l'écran s'interroge tout seul même si la réponse
+  // du lancement n'est pas encore revenue (c'est là que naît le bouton Arrêter).
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => void state.refetch(), 5000);
+    return () => clearInterval(id);
+  }, [running, state]);
+
+  // La durée écoulée s'incrémente : une horloge locale, une seconde à la fois.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!running) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [running]);
 
   const stop = useMutation({
     mutationFn: () => cancel({ data: { bookStepId } }),
@@ -69,6 +98,7 @@ export function PlanRobotPanel({
       setError(null);
       setNotice(t("atelier.robot.stopped"));
       await state.refetch();
+      refreshAtelier();
       onDone();
     },
     onError: (e: Error) => setError(e.message),
@@ -77,21 +107,25 @@ export function PlanRobotPanel({
   // Dès que le lancement cesse, le dossier se rafraîchit sans rechargement.
   const wasRunning = useRef(false);
   useEffect(() => {
-    if (wasRunning.current && !running) onDone();
+    if (wasRunning.current && !running) {
+      refreshAtelier();
+      onDone();
+    }
     wasRunning.current = running;
-  }, [running, onDone]);
+  }, [running, onDone, refreshAtelier]);
 
   if (!s || !s.isPlanStep) return null;
 
   const relaunch = s.hasPrevious && s.lastReason !== null;
-  const blocked = s.missing.length > 0 || run.isPending;
+  const blocked = s.missing.length > 0 || running;
 
   const ago = (iso: string): string => {
-    const sec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+    const sec = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
     return sec < 60
       ? t("atelier.robot.agoSec").replace("{n}", String(sec))
       : t("atelier.robot.agoMin").replace("{n}", String(Math.round(sec / 60)));
   };
+
 
   return (
     <div className="border-line mt-5 border-t pt-4">
@@ -125,10 +159,11 @@ export function PlanRobotPanel({
         <div className="mt-2">
           <p>
             {t("atelier.robot.inFlight")
-              .replace("{robot}", s.runningRobot ?? t("atelier.none"))
-              .replace("{model}", s.runningModel ?? t("atelier.none"))
-              .replace("{ago}", s.runningSince ? ago(s.runningSince) : "—")}
+              .replace("{robot}", s.runningRobot ?? s.promptName ?? t("atelier.none"))
+              .replace("{model}", s.runningModel ?? s.model ?? t("atelier.none"))
+              .replace("{ago}", ago(s.runningSince ?? startedAt))}
           </p>
+
           <p className="opacity-70">{t("atelier.robot.running")}</p>
           {s.runningStale ? <p className="mt-1">{t("atelier.robot.stale")}</p> : null}
         </div>
