@@ -65,10 +65,10 @@ export const atelierQueue = createServerFn({ method: "GET" })
 
     const { data: steps } = await admin
       .from("book_steps")
-      .select("id, book_id, rank, step_code, label_fr, status, awaiting, note, updated_at")
+      .select("id, book_id, rank, step_code, label_fr, status, awaiting, note, awaiting_since")
       .in("lang", LANGS_VISIBLES)
       .in("status", ["attend_validation", "en_cours", "en_revision", "echoue"])
-      .order("updated_at", { ascending: true });
+      .order("awaiting_since", { ascending: true, nullsFirst: false });
 
     const rows = steps ?? [];
     const stepIds = rows.map((s) => s.id);
