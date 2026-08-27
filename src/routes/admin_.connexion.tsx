@@ -4,7 +4,7 @@ import { useState } from "react";
 import { PageShell } from "@/components/SiteChrome";
 import { useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
-import { adminLoginAllowed, adminLoginFailed } from "@/lib/admin-auth.functions";
+import { adminSignIn } from "@/lib/admin-auth.functions";
 
 /**
  * La connexion de l'éditeur : deux champs, un bouton. Le message d'erreur est
