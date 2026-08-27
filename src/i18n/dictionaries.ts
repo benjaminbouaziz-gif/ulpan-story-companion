@@ -771,6 +771,8 @@ const en: Record<DictKey, string> = {
   "atelier.dec.status.tranchee": "settled",
   "atelier.dec.status.ecartee": "set aside",
   "atelier.dec.stale": "This point no longer appears in the latest deliverable.",
+  "atelier.dec.archivedLine": "{n} archived decisions (plan {v})",
+  "atelier.dec.archivedFrom": "Original plan",
   "atelier.dec.showContext": "Show the robot's context",
   "atelier.dec.hideContext": "Hide the robot's context",
   "atelier.dec.save": "Save",
