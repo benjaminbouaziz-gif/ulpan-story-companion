@@ -271,6 +271,7 @@ export const planRobotState = createServerFn({ method: "GET" })
       runningModel: enCours?.model ?? enCours?.model_used ?? null,
       runningStale,
       hasPrevious: (arts ?? []).length > 0,
+      liveDecisions: liveDecisions ?? 0,
       inRevision: step.status === "en_revision",
       lastReason: revs?.[0]?.comment ?? null,
       runsToday: runsToday ?? 0,
