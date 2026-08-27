@@ -11,9 +11,9 @@ import { getAdminClient } from "./supabase-admin.server";
  * conservé, aucun compteur n'est décoratif.
  *
  * ORDRE DE LA FILE : les étapes en `attend_validation` dont l'attente est
- * 'ben', triées par `updated_at` croissant — celle qui attend depuis le plus
- * longtemps d'abord. `updated_at` est la date à laquelle l'étape est entrée en
- * attente (le dépôt et la décision l'écrivent tous les deux).
+ * 'ben', triées par `awaiting_since` croissant — celle qui attend depuis le plus
+ * longtemps d'abord. `awaiting_since` est écrite par déclencheur au seul moment
+ * de l'entrée en attente ; aucun dépôt, aucune note, aucun robot ne la rajeunit.
  *
  * AXE LANGUE EN SOMMEIL : seules les étapes 'shared' et 'fr' sont lues, et
  * aucune langue n'est affichée.
@@ -65,10 +65,10 @@ export const atelierQueue = createServerFn({ method: "GET" })
 
     const { data: steps } = await admin
       .from("book_steps")
-      .select("id, book_id, rank, step_code, label_fr, status, awaiting, note, updated_at")
+      .select("id, book_id, rank, step_code, label_fr, status, awaiting, note, awaiting_since")
       .in("lang", LANGS_VISIBLES)
       .in("status", ["attend_validation", "en_cours", "en_revision", "echoue"])
-      .order("updated_at", { ascending: true });
+      .order("awaiting_since", { ascending: true, nullsFirst: false });
 
     const rows = steps ?? [];
     const stepIds = rows.map((s) => s.id);
@@ -113,7 +113,7 @@ export const atelierQueue = createServerFn({ method: "GET" })
       labelFr: s.label_fr,
       status: s.status,
       awaiting: s.awaiting ?? null,
-      since: s.updated_at ?? null,
+      since: s.awaiting_since ?? null,
       note: s.note ?? null,
       robotName: lastRun.get(s.id)?.robot ?? null,
       errorSummary: lastRun.get(s.id)?.error ?? null,

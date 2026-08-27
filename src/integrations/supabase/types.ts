@@ -361,6 +361,7 @@ export type Database = {
       book_steps: {
         Row: {
           awaiting: string | null
+          awaiting_since: string | null
           book_id: string
           closed_at: string | null
           created_at: string
@@ -378,6 +379,7 @@ export type Database = {
         }
         Insert: {
           awaiting?: string | null
+          awaiting_since?: string | null
           book_id: string
           closed_at?: string | null
           created_at?: string
@@ -395,6 +397,7 @@ export type Database = {
         }
         Update: {
           awaiting?: string | null
+          awaiting_since?: string | null
           book_id?: string
           closed_at?: string | null
           created_at?: string
