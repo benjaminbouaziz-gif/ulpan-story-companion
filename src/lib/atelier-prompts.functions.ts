@@ -271,7 +271,8 @@ export const createPrompt = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (vErr || !version) throw new Error("La première version du prompt n’a pas pu être enregistrée.");
+    if (vErr || !version)
+      throw new Error(texteErreurBase("La première version du prompt n’a pas pu être enregistrée", vErr));
 
     const { error: activeError } = await admin.from("prompts").update({ active_version_id: version.id }).eq("id", prompt.id);
     if (activeError) throw new Error("Le prompt a été créé, mais sa version n’a pas pu être activée.");

@@ -325,7 +325,7 @@ export const updateAtelierBookFiche = createServerFn({ method: "POST" })
     if (changed.length === 0) return { ok: true, changed: [] };
 
     const { error } = await admin.from("books").update(patch).eq("id", book.id);
-    if (error) throw new Error("Enregistrement refusé.");
+    if (error) throw new Error(texteErreurBase("Enregistrement refusé", error));
 
     await admin.from("content_versions").insert({
       entity: FICHE_ENTITY,

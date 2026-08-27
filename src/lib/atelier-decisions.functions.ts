@@ -231,7 +231,7 @@ export const saveDecision = createServerFn({ method: "POST" })
         decided_at: data.status === "ouverte" ? null : now,
       })
       .eq("id", data.id);
-    if (error) throw new Error("Modification refusée.");
+    if (error) throw new Error(texteErreurBase("Modification refusée", error));
 
     await admin.from("content_versions").insert({
       entity: "book_decision",
@@ -282,6 +282,6 @@ export const deleteDecision = createServerFn({ method: "POST" })
       created_by: editor.userId,
     });
     const { error } = await admin.from("book_decisions").delete().eq("id", data.id);
-    if (error) throw new Error("Suppression refusée.");
+    if (error) throw new Error(texteErreurBase("Suppression refusée", error));
     return { deleted: true };
   });

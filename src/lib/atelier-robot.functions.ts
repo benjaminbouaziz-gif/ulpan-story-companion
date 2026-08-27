@@ -513,7 +513,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       prompt_version_id: version.id,
       created_by: editor.userId,
     });
-    if (artErr) throw new Error("Dépôt du plan refusé.");
+    if (artErr) throw new Error(texteErreurBase("Dépôt du plan refusé", artErr));
 
     /**
      * BRIQUE 7 — JUSTE APRÈS le dépôt : les « Points à trancher » deviennent des
