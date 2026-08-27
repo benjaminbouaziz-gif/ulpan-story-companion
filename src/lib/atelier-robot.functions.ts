@@ -5,7 +5,11 @@ import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
 import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
-import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
+import {
+  archiverDecisionsDeLEtape,
+  blocDecisionsPourRobot,
+  synchroniserDecisions,
+} from "./decisions.server";
 import { texteErreurBase, violeIndex } from "./db-error";
 import {
   appelerModele,
