@@ -38,6 +38,8 @@ export type PromptVersionRow = {
   version: number;
   content: string;
   changeNote: string | null;
+  model: string | null;
+  webSearch: boolean;
   createdAt: string;
   isActive: boolean;
 };
@@ -132,7 +134,7 @@ export const promptDossier = createServerFn({ method: "GET" })
       admin.from("step_templates").select("label_fr").eq("code", prompt.step_code).maybeSingle(),
       admin
         .from("prompt_versions")
-        .select("id, version, content, change_note, created_at")
+        .select("id, version, content, change_note, model, web_search, created_at")
         .eq("prompt_id", prompt.id)
         .order("version", { ascending: false }),
       admin
@@ -185,6 +187,8 @@ export const promptDossier = createServerFn({ method: "GET" })
         version: v.version,
         content: v.content,
         changeNote: v.change_note ?? null,
+        model: v.model ?? null,
+        webSearch: v.web_search ?? false,
         createdAt: v.created_at,
         isActive: v.id === prompt.active_version_id,
       })),
@@ -203,6 +207,8 @@ export const createPrompt = createServerFn({ method: "POST" })
         name: z.string().trim().min(1),
         collectionId: z.string().uuid().nullable().optional(),
         content: z.string().trim().min(1),
+        model: z.string().trim().min(1).nullable().optional(),
+        webSearch: z.boolean().optional(),
       })
       .parse(data),
   )
@@ -243,7 +249,14 @@ export const createPrompt = createServerFn({ method: "POST" })
 
     const { data: version, error: vErr } = await admin
       .from("prompt_versions")
-      .insert({ prompt_id: prompt.id, version: 1, content: data.content, created_by: editor.userId })
+      .insert({
+        prompt_id: prompt.id,
+        version: 1,
+        content: data.content,
+        model: data.model ?? null,
+        web_search: data.webSearch ?? false,
+        created_by: editor.userId,
+      })
       .select("id")
       .single();
     if (vErr || !version) throw new Error("Version refusée");
@@ -269,6 +282,8 @@ export const publishPromptVersion = createServerFn({ method: "POST" })
         promptId: z.string().uuid(),
         content: z.string().trim().min(1),
         changeNote: z.string().trim().min(1),
+        model: z.string().trim().min(1).nullable().optional(),
+        webSearch: z.boolean().optional(),
       })
       .parse(data),
   )
@@ -291,6 +306,8 @@ export const publishPromptVersion = createServerFn({ method: "POST" })
         version,
         content: data.content,
         change_note: data.changeNote,
+        model: data.model ?? null,
+        web_search: data.webSearch ?? false,
         created_by: editor.userId,
       })
       .select("id")
