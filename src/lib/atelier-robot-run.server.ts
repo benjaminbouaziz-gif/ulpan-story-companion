@@ -31,7 +31,7 @@ export type ModeLancement = "avec_precedent" | "sans_precedent" | "enchainement"
 
 export async function executerLancementPlan(
   editor: EditorContext,
-  data: { bookStepId: string; withReason?: boolean; mode?: ModeLancement },
+  data: { bookStepId: string; withReason?: boolean | undefined; mode?: ModeLancement | undefined },
 ): Promise<{ artifactVersion: number; modelUsed: string }> {
   const admin = await getAdminClient(editor);
 
