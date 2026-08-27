@@ -78,51 +78,150 @@ export type Database = {
       }
       agent_runs: {
         Row: {
+          batch_current: number | null
+          batch_total: number | null
+          book_step_id: string | null
           cost_usd: number | null
           created_at: string
           created_by: string | null
+          duration_ms: number | null
           entity: string | null
           entity_id: string | null
           error: string | null
+          error_summary: string | null
           fields: number
           id: string
+          idempotency_key: string | null
           input_chars: number
           kind: string
           model: string | null
           ok: boolean
           output_chars: number
+          robot_name: string | null
+          status: string | null
         }
         Insert: {
+          batch_current?: number | null
+          batch_total?: number | null
+          book_step_id?: string | null
           cost_usd?: number | null
           created_at?: string
           created_by?: string | null
+          duration_ms?: number | null
           entity?: string | null
           entity_id?: string | null
           error?: string | null
+          error_summary?: string | null
           fields?: number
           id?: string
+          idempotency_key?: string | null
           input_chars?: number
           kind: string
           model?: string | null
           ok?: boolean
           output_chars?: number
+          robot_name?: string | null
+          status?: string | null
         }
         Update: {
+          batch_current?: number | null
+          batch_total?: number | null
+          book_step_id?: string | null
           cost_usd?: number | null
           created_at?: string
           created_by?: string | null
+          duration_ms?: number | null
           entity?: string | null
           entity_id?: string | null
           error?: string | null
+          error_summary?: string | null
           fields?: number
           id?: string
+          idempotency_key?: string | null
           input_chars?: number
           kind?: string
           model?: string | null
           ok?: boolean
           output_chars?: number
+          robot_name?: string | null
+          status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agent_runs_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      artifacts: {
+        Row: {
+          book_step_id: string
+          checksum: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          origin: string
+          prompt_version_id: string | null
+          robot_run_id: string | null
+          size_bytes: number | null
+          storage_path: string
+          type: string
+          version: number
+        }
+        Insert: {
+          book_step_id: string
+          checksum?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          origin: string
+          prompt_version_id?: string | null
+          robot_run_id?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          type: string
+          version: number
+        }
+        Update: {
+          book_step_id?: string
+          checksum?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          origin?: string
+          prompt_version_id?: string | null
+          robot_run_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          type?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artifacts_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artifacts_prompt_version_id_fkey"
+            columns: ["prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artifacts_robot_run_id_fkey"
+            columns: ["robot_run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audio_tracks: {
         Row: {
@@ -259,6 +358,65 @@ export type Database = {
           },
         ]
       }
+      book_steps: {
+        Row: {
+          awaiting: string | null
+          book_id: string
+          closed_at: string | null
+          created_at: string
+          id: string
+          label_en: string
+          label_fr: string
+          note: string | null
+          opened_at: string | null
+          rank: number
+          species: string
+          status: string
+          step_code: string
+          updated_at: string
+        }
+        Insert: {
+          awaiting?: string | null
+          book_id: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          label_en: string
+          label_fr: string
+          note?: string | null
+          opened_at?: string | null
+          rank: number
+          species: string
+          status?: string
+          step_code: string
+          updated_at?: string
+        }
+        Update: {
+          awaiting?: string | null
+          book_id?: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          label_en?: string
+          label_fr?: string
+          note?: string | null
+          opened_at?: string | null
+          rank?: number
+          species?: string
+          status?: string
+          step_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_steps_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       books: {
         Row: {
           amazon_asin: string | null
@@ -273,6 +431,7 @@ export type Database = {
           collection_id: string | null
           cover_url: string | null
           created_at: string
+          current_step_code: string | null
           excerpt_he: string | null
           excerpt_translation_en: string | null
           excerpt_translation_fr: string | null
@@ -287,6 +446,7 @@ export type Database = {
           level_note_fr: string | null
           page_count: number | null
           price_eur: number | null
+          prompt_id: string | null
           published_at: string | null
           qr_code: string
           qr_reserved_at: string | null
@@ -313,6 +473,7 @@ export type Database = {
           what_you_learn_en_source: string | null
           what_you_learn_fr: Json
           words_unique: number | null
+          work_summary_fr: string | null
         }
         Insert: {
           amazon_asin?: string | null
@@ -327,6 +488,7 @@ export type Database = {
           collection_id?: string | null
           cover_url?: string | null
           created_at?: string
+          current_step_code?: string | null
           excerpt_he?: string | null
           excerpt_translation_en?: string | null
           excerpt_translation_fr?: string | null
@@ -341,6 +503,7 @@ export type Database = {
           level_note_fr?: string | null
           page_count?: number | null
           price_eur?: number | null
+          prompt_id?: string | null
           published_at?: string | null
           qr_code: string
           qr_reserved_at?: string | null
@@ -367,6 +530,7 @@ export type Database = {
           what_you_learn_en_source?: string | null
           what_you_learn_fr?: Json
           words_unique?: number | null
+          work_summary_fr?: string | null
         }
         Update: {
           amazon_asin?: string | null
@@ -381,6 +545,7 @@ export type Database = {
           collection_id?: string | null
           cover_url?: string | null
           created_at?: string
+          current_step_code?: string | null
           excerpt_he?: string | null
           excerpt_translation_en?: string | null
           excerpt_translation_fr?: string | null
@@ -395,6 +560,7 @@ export type Database = {
           level_note_fr?: string | null
           page_count?: number | null
           price_eur?: number | null
+          prompt_id?: string | null
           published_at?: string | null
           qr_code?: string
           qr_reserved_at?: string | null
@@ -421,6 +587,7 @@ export type Database = {
           what_you_learn_en_source?: string | null
           what_you_learn_fr?: Json
           words_unique?: number | null
+          work_summary_fr?: string | null
         }
         Relationships: [
           {
@@ -428,6 +595,13 @@ export type Database = {
             columns: ["collection_id"]
             isOneToOne: false
             referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "books_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
             referencedColumns: ["id"]
           },
         ]
@@ -942,6 +1116,85 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_versions: {
+        Row: {
+          change_note: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          prompt_id: string
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          prompt_id: string
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          prompt_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_versions_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompts: {
+        Row: {
+          code: string
+          collection_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          step_code: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          collection_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          step_code: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          collection_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          step_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           answer: Json
@@ -1033,6 +1286,51 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          artifact_id: string | null
+          author: string | null
+          book_step_id: string
+          comment: string | null
+          created_at: string
+          decision: string
+          id: string
+        }
+        Insert: {
+          artifact_id?: string | null
+          author?: string | null
+          book_step_id: string
+          comment?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+        }
+        Update: {
+          artifact_id?: string | null
+          author?: string | null
+          book_step_id?: string
+          comment?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spread_paragraphs: {
         Row: {
           book_id: string
@@ -1082,6 +1380,53 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      step_templates: {
+        Row: {
+          code: string
+          collection_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          label_en: string
+          label_fr: string
+          rank: number
+          species: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          collection_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_en: string
+          label_fr: string
+          rank: number
+          species: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          collection_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_en?: string
+          label_fr?: string
+          rank?: number
+          species?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "step_templates_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
             referencedColumns: ["id"]
           },
         ]
