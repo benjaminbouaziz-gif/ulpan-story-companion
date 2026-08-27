@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useI18n } from "@/i18n/context";
+import { useAtelierRefresh } from "@/lib/atelier-refresh";
 import type { DictKey } from "@/i18n/dictionaries";
 import {
   addDecision,
@@ -229,10 +230,7 @@ export function StepDecisions({ bookStepId }: { bookStepId: string }) {
     queryFn: () => fetchAll({ data: { bookStepId } }),
   });
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: ["atelier", "decisions"] });
-    void qc.invalidateQueries({ queryKey: ["atelier", "dossier", bookStepId] });
-  };
+  const invalidate = useAtelierRefresh();
 
   const creation = useMutation({
     mutationFn: () => add({ data: { bookStepId, question: newQuestion.trim() } }),

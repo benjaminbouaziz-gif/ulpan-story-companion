@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useI18n } from "@/i18n/context";
+import { useAtelierRefresh } from "@/lib/atelier-refresh";
 import {
   activatePromptVersion,
   atelierPromptSteps,
@@ -43,7 +44,7 @@ function fmt(iso: string | null): string {
 
 function PromptsRoom() {
   const { t } = useI18n();
-  const qc = useQueryClient();
+  const refreshAtelier = useAtelierRefresh();
   const [openId, setOpenId] = useState<string | null>(null);
 
   const fetchList = useServerFn(atelierPrompts);
@@ -83,7 +84,7 @@ function PromptsRoom() {
       setNewWebSearch(false);
       setError(null);
       setMissing({});
-      await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
+      refreshAtelier();
       setOpenId(res.promptId);
     },
     onError: (e: Error) => setError(e.message || "L’enregistrement du prompt a échoué."),
@@ -222,7 +223,7 @@ function PromptsRoom() {
 
 function PromptDossier({ promptId }: { promptId: string }) {
   const { t } = useI18n();
-  const qc = useQueryClient();
+  const refreshAtelier = useAtelierRefresh();
   const fetchDossier = useServerFn(promptDossier);
   const dossier = useQuery({
     queryKey: ["atelier", "prompt", promptId],
@@ -241,8 +242,7 @@ function PromptDossier({ promptId }: { promptId: string }) {
   const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({});
 
   const refresh = async () => {
-    await qc.invalidateQueries({ queryKey: ["atelier", "prompt", promptId] });
-    await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
+    refreshAtelier();
   };
 
   const publishMut = useMutation({

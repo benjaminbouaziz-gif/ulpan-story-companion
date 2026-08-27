@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useI18n } from "@/i18n/context";
+import { useAtelierRefresh } from "@/lib/atelier-refresh";
 import type { DictKey } from "@/i18n/dictionaries";
 import { reviewStep } from "@/lib/atelier-artifacts.functions";
 import {
@@ -36,7 +37,7 @@ function formatDate(iso: string): string {
 
 export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void }) {
   const { t } = useI18n();
-  const qc = useQueryClient();
+  const refreshAtelier = useAtelierRefresh();
   const fetchCollections = useServerFn(atelierCollections);
   const create = useServerFn(createAtelierBook);
 
@@ -76,8 +77,7 @@ export function NewBookForm({ onCreated }: { onCreated: (bookId: string) => void
       }),
     onSuccess: (res) => {
       setError(null);
-      void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
-      void qc.invalidateQueries({ queryKey: ["atelier", "queue"] });
+      refreshAtelier();
       onCreated(res.id);
     },
     onError: (e: unknown) => setError(e instanceof Error ? e.message : String(e)),
@@ -223,7 +223,7 @@ function FicheTextArea({
 
 export function BookFiche({ bookId }: { bookId: string }) {
   const { t } = useI18n();
-  const qc = useQueryClient();
+  const refreshAtelier = useAtelierRefresh();
   const fetchFiche = useServerFn(atelierBookFiche);
   const update = useServerFn(updateAtelierBookFiche);
   const review = useServerFn(reviewStep);
@@ -268,9 +268,7 @@ export function BookFiche({ bookId }: { bookId: string }) {
     onSuccess: (res) => {
       setMessage(res.changed.length === 0 ? t("atelier.fiche.noChange") : t("atelier.fiche.saved"));
       setEditing(false);
-      void qc.invalidateQueries({ queryKey: ["atelier", "fiche", bookId] });
-      void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
-      void qc.invalidateQueries({ queryKey: ["atelier", "dossier"] });
+      refreshAtelier();
     },
     onError: (e: unknown) => setMessage(e instanceof Error ? e.message : String(e)),
   });
@@ -287,10 +285,7 @@ export function BookFiche({ bookId }: { bookId: string }) {
     },
     onSuccess: () => {
       setMessage(t("atelier.fiche.validateDone"));
-      void qc.invalidateQueries({ queryKey: ["atelier", "fiche", bookId] });
-      void qc.invalidateQueries({ queryKey: ["atelier", "chain"] });
-      void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
-      void qc.invalidateQueries({ queryKey: ["atelier", "queue"] });
+      refreshAtelier();
     },
     onError: (e: unknown) => setMessage(e instanceof Error ? e.message : String(e)),
   });
