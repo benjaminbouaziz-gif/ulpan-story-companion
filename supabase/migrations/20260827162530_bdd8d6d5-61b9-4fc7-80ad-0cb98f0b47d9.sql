@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.agent_runs_idempotency_key_unique;
