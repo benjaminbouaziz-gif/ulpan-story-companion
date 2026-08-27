@@ -13,10 +13,16 @@
  * jamais comptées dans le texte du livre.
  */
 
+/** La fourchette VISÉE : hors d'elle, la page est signalée, mais le chapitre est déposé. */
 export const MOTS_MIN = 165;
 export const MOTS_MAX = 210;
 
+/** La fourchette BLOQUANTE : hors d'elle, le lancement échoue et rien n'est déposé. */
+export const MOTS_MIN_DUR = 160;
+export const MOTS_MAX_DUR = 215;
+
 const MOT = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+
 
 export function compterMots(texte: string): number {
   return texte.match(MOT)?.length ?? 0;
