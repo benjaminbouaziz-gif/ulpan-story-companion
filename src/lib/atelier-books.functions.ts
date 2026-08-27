@@ -71,6 +71,19 @@ export type AtelierStepRow = {
   note: string | null;
 };
 
+/**
+ * AXE LANGUE EN SOMMEIL. Les colonnes `lang` (book_steps) et `langs`
+ * (step_templates) restent en base, mais rien ne les montre à l'écran et
+ * l'instanciation d'une chaîne ne crée que l'édition française.
+ *
+ * La chaîne anglaise est INCOMPLÈTE en l'état : neuf étapes sont dédoublées
+ * en fr/en, mais AUCUNE étape ne produit le texte de soutien anglais. Les
+ * pages de soutien ne se traduisent jamais automatiquement : ce sont des
+ * constructions pédagogiques distinctes. L'étape manquante sera ajoutée
+ * quand une édition anglaise sera décidée.
+ */
+const LANGS_VISIBLES = ["shared", "fr"] as const;
+
 export const atelierBookChain = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ bookId: z.string().uuid() }).parse(data))
@@ -82,6 +95,7 @@ export const atelierBookChain = createServerFn({ method: "GET" })
       .from("book_steps")
       .select("id, rank, step_code, label_fr, label_en, species, status, awaiting, lang, note")
       .eq("book_id", data.bookId)
+      .in("lang", LANGS_VISIBLES as unknown as string[])
       .order("rank", { ascending: true })
       .order("lang", { ascending: true });
 
