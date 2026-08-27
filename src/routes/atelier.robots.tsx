@@ -52,9 +52,11 @@ function RunsTable() {
                 ? "avec mon motif"
                 : r.mode === "sans_precedent"
                   ? "sans précédent"
-                  : r.mode === "initial"
-                    ? "premier lancement"
-                    : "—"}
+                  : r.mode === "enchainement"
+                    ? "déclenché par une validation"
+                    : r.mode === "initial"
+                      ? "premier lancement"
+                      : "—"}
             </td>
             <td className="py-1 pr-3">
               {r.status ?? "—"}
