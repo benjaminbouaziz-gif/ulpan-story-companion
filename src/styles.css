@@ -155,3 +155,24 @@
 @utility safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
 }
+
+/* L'atelier : un autre métier que le site public. Fond neutre clair, texte
+   quasi-noir, typographie utilitaire ; David Libre réservé aux titres. */
+.atelier {
+  --surface: #fbfbfa;
+  --on-surface: #111214;
+  --surface-rule: #e0e0dc;
+  --surface-muted: #5c5c5c;
+  background-color: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.atelier .font-latin,
+.atelier h1,
+.atelier h2,
+.atelier h3 {
+  font-family: var(--font-latin);
+}
