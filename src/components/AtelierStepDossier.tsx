@@ -16,6 +16,7 @@ import {
   uploadArtifact,
   type ArtifactRow,
 } from "@/lib/atelier-artifacts.functions";
+import { chainAfterValidation } from "@/lib/atelier-robot.functions";
 
 /**
  * LE DOSSIER D'ÉTAPE — ordre de lecture FIXE :
@@ -48,6 +49,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const sign = useServerFn(artifactSignedUrl);
   const upload = useServerFn(uploadArtifact);
   const review = useServerFn(reviewStep);
+  const chain = useServerFn(chainAfterValidation);
 
   const [type, setType] = useState<string>("autre");
   const [file, setFile] = useState<File | null>(null);
@@ -56,6 +58,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const [showOld, setShowOld] = useState(false);
   const [commentMissing, setCommentMissing] = useState(false);
   const [fileMissing, setFileMissing] = useState(false);
+  /** Décochée par défaut : la validation enchaîne, sauf demande contraire. */
+  const [noChain, setNoChain] = useState(false);
+  const [chainMessages, setChainMessages] = useState<string[]>([]);
 
   const dossier = useQuery({
     queryKey: ["atelier", "dossier", bookStepId],
@@ -103,6 +108,19 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
     onError: (e: Error) => setMessage(e.message),
   });
 
+  /**
+   * L'enchaînement : lancé APRÈS la validation, jamais avant. Il peut durer
+   * quelques minutes ; l'écran le dit et se relit à la fin.
+   */
+  const enchainer = useMutation({
+    mutationFn: () => chain({ data: { bookStepId } }),
+    onSuccess: (maillons) => {
+      setChainMessages(maillons.map((m) => m.message));
+      invalidate();
+    },
+    onError: (e: Error) => setChainMessages([e.message]),
+  });
+
   const decide = useMutation({
     mutationFn: (decision: "valide" | "revision_demandee") =>
       review({
@@ -112,12 +130,14 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
           ...(comment.trim() ? { comment: comment.trim() } : {}),
           ...(current ? { artifactId: current.id } : {}),
         },
-      }),
-    onSuccess: () => {
+      }).then(() => decision),
+    onSuccess: (decision) => {
       setComment("");
       setCommentMissing(false);
       setMessage(t("atelier.step.reviewDone"));
+      setChainMessages([]);
       invalidate();
+      if (decision === "valide" && !noChain && next?.autoLaunch) enchainer.mutate();
     },
     onError: (e: Error) => setMessage(e.message),
   });
@@ -127,6 +147,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const reviews = dossier.data?.reviews ?? [];
   const ficheChanges = dossier.data?.ficheChanges ?? [];
   const decisionChanges = dossier.data?.decisionChanges ?? [];
+  const next = dossier.data?.next ?? null;
   const current = artifacts[0] ?? null;
   const previous = artifacts.slice(1);
   const horsCrm = situation?.status === "valide_hors_crm";
@@ -242,12 +263,26 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
                   openDecisions.length > 0
                     ? `\n\n${t("atelier.dec.openWarning")} ${openDecisions.length}. ${t("atelier.dec.openWarningEffect")}`
                     : "";
-                const question = `${t("atelier.step.confirmValidate")} ${situation.labelFr} — ${situation.bookTitle}. ${t("atelier.step.confirmEffect")}${nonTranches}`;
+                const suite =
+                  !noChain && next?.autoLaunch
+                    ? ` ${t("atelier.step.confirmChain").replace("{next}", next.labelFr)}`
+                    : next?.raison
+                      ? ` ${next.raison}`
+                      : "";
+                const question = `${t("atelier.step.confirmValidate")} ${situation.labelFr} — ${situation.bookTitle}. ${t("atelier.step.confirmEffect")}${suite}${nonTranches}`;
                 if (window.confirm(question)) decide.mutate("valide");
               }}
             >
               {t("atelier.step.approve")}
             </button>
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={noChain}
+                onChange={(e) => setNoChain(e.target.checked)}
+              />
+              <span>{t("atelier.step.noChain")}</span>
+            </label>
             <button
               type="button"
               className="border-line border px-2 py-0.5"
@@ -262,6 +297,14 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
               {t("atelier.step.reject")}
             </button>
           </div>
+          {enchainer.isPending ? <p className="mt-2">{t("atelier.step.chainRunning")}</p> : null}
+          {chainMessages.length > 0 ? (
+            <ul className="mt-2 space-y-0.5">
+              {chainMessages.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       )}
 
@@ -310,6 +353,14 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
               {deposit.isPending ? t("atelier.step.sending") : t("atelier.step.send")}
             </button>
           </div>
+          {enchainer.isPending ? <p className="mt-2">{t("atelier.step.chainRunning")}</p> : null}
+          {chainMessages.length > 0 ? (
+            <ul className="mt-2 space-y-0.5">
+              {chainMessages.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       )}
 

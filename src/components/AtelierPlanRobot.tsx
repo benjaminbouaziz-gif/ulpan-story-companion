@@ -138,9 +138,6 @@ export function PlanRobotPanel({
         {t("atelier.robot.model")} : {s.model ?? t("atelier.none")} —{" "}
         {s.webSearch ? t("atelier.prompts.webSearchOn") : t("atelier.prompts.webSearchOff")}
       </p>
-      <p className="opacity-70">
-        {t("atelier.robot.quota").replace("{used}", String(s.runsToday)).replace("{cap}", String(s.dailyCap))}
-      </p>
       {s.webSearch ? <p className="opacity-70">{t("atelier.robot.slow")}</p> : null}
 
       {relaunch ? (

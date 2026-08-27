@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { ARTIFACT_TYPES, artifactPath } from "./artifact-path";
+import { etapeSuivante, type EtapeSuivante } from "./atelier-robot-run.server";
 import { balayerOrphelins, sha256Hex, signArtifact, uploadArtifactBytes } from "./atelier-artifacts.server";
 
 /**
@@ -54,6 +55,7 @@ export const stepDossier = createServerFn({ method: "GET" })
     reviews: ReviewRow[];
     ficheChanges: { id: string; at: string; fields: string[] }[];
     decisionChanges: { id: string; at: string; action: string; before: string | null }[];
+    next: EtapeSuivante | null;
   }> => {
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
@@ -150,8 +152,12 @@ export const stepDossier = createServerFn({ method: "GET" })
       };
     }
 
+    // Ce que la validation déclenchera : l'écran doit le nommer avant le clic.
+    const next = await etapeSuivante(editor, data.bookStepId);
+
     return {
       situation,
+      next,
       ficheChanges,
       decisionChanges,
       artifacts: (arts.data ?? []).map((a) => ({
