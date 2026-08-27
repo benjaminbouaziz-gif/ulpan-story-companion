@@ -212,9 +212,11 @@ async function appelGoogle(
 ): Promise<AppelResultat> {
   const key = process.env["GEMINI_API_KEY"];
   if (!key) throw new Error("La clé GEMINI_API_KEY n'est pas configurée.");
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const t0 = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
@@ -223,9 +225,15 @@ async function appelGoogle(
         ...(webSearch ? { tools: [{ google_search: {} }] } : {}),
         generationConfig: { maxOutputTokens: MAX_TOKENS },
       }),
-    },
-  );
-  if (!res.ok) throw new Error(texteErreur(res.status, await res.text()));
+    });
+  } catch (e) {
+    throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
+  }
+  if (!res.ok)
+    throw new Error(
+      texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
+    );
+
   const json = (await res.json()) as {
     modelVersion?: string;
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
