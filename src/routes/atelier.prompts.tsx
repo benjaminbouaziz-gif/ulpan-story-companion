@@ -56,16 +56,29 @@ function PromptsRoom() {
   const [newStep, setNewStep] = useState("");
   const [newName, setNewName] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [newModel, setNewModel] = useState("");
+  const [newWebSearch, setNewWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createMut = useMutation({
     mutationFn: () =>
-      create({ data: { stepCode: newStep, name: newName, content: newContent, collectionId: null } }),
+      create({
+        data: {
+          stepCode: newStep,
+          name: newName,
+          content: newContent,
+          collectionId: null,
+          model: newModel.trim() === "" ? null : newModel.trim(),
+          webSearch: newWebSearch,
+        },
+      }),
     onSuccess: async (res) => {
       setCreating(false);
       setNewStep("");
       setNewName("");
       setNewContent("");
+      setNewModel("");
+      setNewWebSearch(false);
       setError(null);
       await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
       setOpenId(res.promptId);
@@ -146,6 +159,19 @@ function PromptsRoom() {
                   className={`${field} ${mono} mt-1`}
                 />
               </label>
+              <label className="mt-3 block text-[13px]">
+                {t("atelier.prompts.field.model")}
+                <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
+              </label>
+              <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
+              <label className="mt-3 flex items-center gap-2 text-[13px]">
+                <input
+                  type="checkbox"
+                  checked={newWebSearch}
+                  onChange={(e) => setNewWebSearch(e.target.checked)}
+                />
+                {t("atelier.prompts.field.webSearch")}
+              </label>
               {error ? <p className="mt-2 text-[13px]">{error}</p> : null}
               <div className="mt-3 flex gap-3">
                 <button
@@ -188,6 +214,8 @@ function PromptDossier({ promptId }: { promptId: string }) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState("");
   const [note, setNote] = useState("");
+  const [model, setModel] = useState("");
+  const [webSearch, setWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({});
 
@@ -197,7 +225,16 @@ function PromptDossier({ promptId }: { promptId: string }) {
   };
 
   const publishMut = useMutation({
-    mutationFn: () => publish({ data: { promptId, content, changeNote: note } }),
+    mutationFn: () =>
+      publish({
+        data: {
+          promptId,
+          content,
+          changeNote: note,
+          model: model.trim() === "" ? null : model.trim(),
+          webSearch,
+        },
+      }),
     onSuccess: async () => {
       setEditing(false);
       setNote("");
@@ -230,6 +267,12 @@ function PromptDossier({ promptId }: { promptId: string }) {
         {t("atelier.prompts.activeVersion")}{" "}
         {active ? `${t("atelier.prompts.version")} ${active.version} — ${fmt(active.createdAt)}` : t("atelier.none")}
       </h3>
+      {active ? (
+        <p className="mt-1 text-[13px]">
+          {t("atelier.prompts.model")} : {active.model ?? t("atelier.none")} —{" "}
+          {active.webSearch ? t("atelier.prompts.webSearchOn") : t("atelier.prompts.webSearchOff")}
+        </p>
+      ) : null}
       {active ? <pre className={`${mono} mt-2`}>{active.content}</pre> : null}
       {active?.changeNote ? (
         <p className="mt-2 text-[13px]">
@@ -253,6 +296,15 @@ function PromptDossier({ promptId }: { promptId: string }) {
               {t("atelier.prompts.field.changeNote")}
               <input value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mt-1`} />
             </label>
+            <label className="mt-3 block text-[13px]">
+              {t("atelier.prompts.field.model")}
+              <input value={model} onChange={(e) => setModel(e.target.value)} className={`${field} mt-1`} />
+            </label>
+            <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
+            <label className="mt-3 flex items-center gap-2 text-[13px]">
+              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} />
+              {t("atelier.prompts.field.webSearch")}
+            </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.noteRequired")}</p>
             {error ? <p className="mt-2 text-[13px]">{error}</p> : null}
             <div className="mt-3 flex gap-3">
@@ -275,6 +327,8 @@ function PromptDossier({ promptId }: { promptId: string }) {
             className={button}
             onClick={() => {
               setContent(active?.content ?? "");
+              setModel(active?.model ?? "");
+              setWebSearch(active?.webSearch ?? false);
               setNote("");
               setEditing(true);
             }}
