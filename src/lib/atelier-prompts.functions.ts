@@ -245,7 +245,15 @@ export const createPrompt = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error || !prompt) throw new Error(error?.message ?? "Création refusée");
+    if (error || !prompt) {
+      // La base n'admet qu'un seul prompt actif par étape (hors collection).
+      if (error?.code === "23505" && (error.message ?? "").includes("prompts_actif_global")) {
+        throw new Error(
+          "Un prompt actif existe déjà pour cette étape. Ouvre-le et publie une nouvelle version plutôt que d'en créer un second.",
+        );
+      }
+      throw new Error(error?.message ?? "Création refusée");
+    }
 
     const { data: version, error: vErr } = await admin
       .from("prompt_versions")

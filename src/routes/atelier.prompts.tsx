@@ -59,6 +59,8 @@ function PromptsRoom() {
   const [newModel, setNewModel] = useState("");
   const [newWebSearch, setNewWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Le bouton reste toujours cliquable : au clic, il nomme ce qui manque.
+  const [missing, setMissing] = useState<{ step?: boolean; name?: boolean; content?: boolean }>({});
 
   const createMut = useMutation({
     mutationFn: () =>
@@ -80,6 +82,7 @@ function PromptsRoom() {
       setNewModel("");
       setNewWebSearch(false);
       setError(null);
+      setMissing({});
       await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
       setOpenId(res.promptId);
     },
@@ -146,10 +149,12 @@ function PromptsRoom() {
                   ))}
                 </select>
               </label>
+              {missing.step ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.name")}
                 <input value={newName} onChange={(e) => setNewName(e.target.value)} className={`${field} mt-1`} />
               </label>
+              {missing.name ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.name")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.content")}
                 <textarea
@@ -159,6 +164,7 @@ function PromptsRoom() {
                   className={`${field} ${mono} mt-1`}
                 />
               </label>
+              {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
                 <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
@@ -177,8 +183,18 @@ function PromptsRoom() {
                 <button
                   type="button"
                   className={button}
-                  disabled={!newStep || !newName.trim() || !newContent.trim() || createMut.isPending}
-                  onClick={() => createMut.mutate()}
+                  disabled={createMut.isPending}
+                  onClick={() => {
+                    const m = {
+                      step: !newStep,
+                      name: !newName.trim(),
+                      content: !newContent.trim(),
+                    };
+                    setMissing(m);
+                    setError(null);
+                    if (m.step || m.name || m.content) return;
+                    createMut.mutate();
+                  }}
                 >
                   {t("atelier.prompts.save")}
                 </button>
@@ -217,6 +233,7 @@ function PromptDossier({ promptId }: { promptId: string }) {
   const [model, setModel] = useState("");
   const [webSearch, setWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [missing, setMissing] = useState<{ content?: boolean; note?: boolean }>({});
   const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({});
 
   const refresh = async () => {
@@ -239,6 +256,7 @@ function PromptDossier({ promptId }: { promptId: string }) {
       setEditing(false);
       setNote("");
       setError(null);
+      setMissing({});
       await refresh();
     },
     onError: (e: Error) => setError(e.message),
@@ -292,10 +310,12 @@ function PromptDossier({ promptId }: { promptId: string }) {
                 className={`${field} ${mono} mt-1`}
               />
             </label>
+            {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.changeNote")}
               <input value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mt-1`} />
             </label>
+            {missing.note ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.note")}</p> : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.model")}
               <input value={model} onChange={(e) => setModel(e.target.value)} className={`${field} mt-1`} />
@@ -311,8 +331,14 @@ function PromptDossier({ promptId }: { promptId: string }) {
               <button
                 type="button"
                 className={button}
-                disabled={!content.trim() || !note.trim() || publishMut.isPending}
-                onClick={() => publishMut.mutate()}
+                disabled={publishMut.isPending}
+                onClick={() => {
+                  const m = { content: !content.trim(), note: !note.trim() };
+                  setMissing(m);
+                  setError(null);
+                  if (m.content || m.note) return;
+                  publishMut.mutate();
+                }}
               >
                 {t("atelier.prompts.publish")}
               </button>
@@ -409,18 +435,8 @@ function PromptDossier({ promptId }: { promptId: string }) {
         </table>
       )}
 
-      <h3 className="mt-8 text-[14px] font-medium">{t("atelier.prompts.activations")}</h3>
-      {data.activations.length === 0 ? (
-        <p className="mt-2 text-[13px]">{t("atelier.prompts.noActivations")}</p>
-      ) : (
-        <ul className="mt-2 text-[13px]">
-          {data.activations.map((a) => (
-            <li key={a.id} className="border-line border-b py-1">
-              {t("atelier.prompts.version")} {a.version} — {fmt(a.createdAt)}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Le registre des activations reste alimenté en base (trace pour le journal),
+          mais il n'encombre plus cet écran. */}
     </div>
   );
 }
