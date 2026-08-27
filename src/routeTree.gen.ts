@@ -40,6 +40,7 @@ import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as CompagnonIndexRouteImport } from './routes/compagnon.index'
 import { Route as CompagnonBook_slugRouteImport } from './routes/compagnon.$book_slug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
+import { Route as AtelierEtapeIdRouteImport } from './routes/atelier.etape.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -198,6 +199,11 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
   path: '/livres/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtelierEtapeIdRoute = AtelierEtapeIdRouteImport.update({
+  id: '/etape/$id',
+  path: '/etape/$id',
+  getParentRoute: () => AtelierRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/atelier/': typeof AtelierIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
+  '/atelier/etape/$id': typeof AtelierEtapeIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/atelier': typeof AtelierIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
+  '/atelier/etape/$id': typeof AtelierEtapeIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -310,6 +318,7 @@ export interface FileRoutesById {
   '/atelier/': typeof AtelierIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
+  '/atelier/etape/$id': typeof AtelierEtapeIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -347,6 +356,7 @@ export interface FileRouteTypes {
     | '/atelier/'
     | '/collections/'
     | '/compagnon/'
+    | '/atelier/etape/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/atelier'
     | '/collections'
     | '/compagnon'
+    | '/atelier/etape/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/atelier/'
     | '/collections/'
     | '/compagnon/'
+    | '/atelier/etape/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -659,6 +671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivresSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atelier/etape/$id': {
+      id: '/atelier/etape/$id'
+      path: '/etape/$id'
+      fullPath: '/atelier/etape/$id'
+      preLoaderRoute: typeof AtelierEtapeIdRouteImport
+      parentRoute: typeof AtelierRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -705,6 +724,7 @@ interface AtelierRouteChildren {
   AtelierRobotsRoute: typeof AtelierRobotsRoute
   AtelierSiteRoute: typeof AtelierSiteRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
+  AtelierEtapeIdRoute: typeof AtelierEtapeIdRoute
 }
 
 const AtelierRouteChildren: AtelierRouteChildren = {
@@ -718,6 +738,7 @@ const AtelierRouteChildren: AtelierRouteChildren = {
   AtelierRobotsRoute: AtelierRobotsRoute,
   AtelierSiteRoute: AtelierSiteRoute,
   AtelierIndexRoute: AtelierIndexRoute,
+  AtelierEtapeIdRoute: AtelierEtapeIdRoute,
 }
 
 const AtelierRouteWithChildren =
