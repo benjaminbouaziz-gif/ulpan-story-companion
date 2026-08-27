@@ -525,3 +525,56 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
 
     return { artifactVersion, modelUsed: result.modelUsed };
   });
+
+export type RobotRunLine = {
+  id: string;
+  createdAt: string;
+  bookTitle: string | null;
+  robot: string | null;
+  model: string | null;
+  status: string | null;
+  durationMs: number | null;
+  outputTokens: number | null;
+  truncated: boolean;
+  errorSummary: string | null;
+};
+
+/** L'historique des lancements, pour la salle Robots. Rien de décoratif. */
+export const listRobotRuns = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<RobotRunLine[]> => {
+    await assertEditor(context);
+    const admin = getAdminClient();
+    const { data: runs } = await admin
+      .from("agent_runs")
+      .select(
+        "id, created_at, robot_name, model, model_used, status, duration_ms, output_tokens, truncated, error_summary, book_step_id",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100);
+    const lignes = runs ?? [];
+    const stepIds = [...new Set(lignes.map((r) => r.book_step_id).filter((v): v is string => !!v))];
+    const titres = new Map<string, string>();
+    if (stepIds.length > 0) {
+      const { data: steps } = await admin
+        .from("book_steps")
+        .select("id, book_id")
+        .in("id", stepIds);
+      const bookIds = [...new Set((steps ?? []).map((s) => s.book_id))];
+      const { data: books } = await admin.from("books").select("id, title_fr").in("id", bookIds);
+      const parLivre = new Map((books ?? []).map((b) => [b.id, b.title_fr]));
+      for (const s of steps ?? []) titres.set(s.id, parLivre.get(s.book_id) ?? "—");
+    }
+    return lignes.map((r) => ({
+      id: r.id,
+      createdAt: r.created_at,
+      bookTitle: r.book_step_id ? (titres.get(r.book_step_id) ?? null) : null,
+      robot: r.robot_name,
+      model: r.model_used ?? r.model,
+      status: r.status,
+      durationMs: r.duration_ms,
+      outputTokens: r.output_tokens,
+      truncated: r.truncated ?? false,
+      errorSummary: r.error_summary,
+    }));
+  });
