@@ -367,6 +367,7 @@ export type Database = {
           id: string
           label_en: string
           label_fr: string
+          lang: string
           note: string | null
           opened_at: string | null
           rank: number
@@ -383,6 +384,7 @@ export type Database = {
           id?: string
           label_en: string
           label_fr: string
+          lang?: string
           note?: string | null
           opened_at?: string | null
           rank: number
@@ -399,6 +401,7 @@ export type Database = {
           id?: string
           label_en?: string
           label_fr?: string
+          lang?: string
           note?: string | null
           opened_at?: string | null
           rank?: number
@@ -1161,6 +1164,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          lang: string
           name: string
           step_code: string
           updated_at: string
@@ -1171,6 +1175,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          lang?: string
           name: string
           step_code: string
           updated_at?: string
@@ -1181,6 +1186,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          lang?: string
           name?: string
           step_code?: string
           updated_at?: string
@@ -1393,6 +1399,7 @@ export type Database = {
           is_active: boolean
           label_en: string
           label_fr: string
+          langs: string[]
           rank: number
           species: string
           updated_at: string
@@ -1405,6 +1412,7 @@ export type Database = {
           is_active?: boolean
           label_en: string
           label_fr: string
+          langs?: string[]
           rank: number
           species: string
           updated_at?: string
@@ -1417,6 +1425,7 @@ export type Database = {
           is_active?: boolean
           label_en?: string
           label_fr?: string
+          langs?: string[]
           rank?: number
           species?: string
           updated_at?: string
@@ -1464,6 +1473,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      instancier_chaine: { Args: { p_book_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "editor" | "user"

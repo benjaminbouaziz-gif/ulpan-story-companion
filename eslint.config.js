@@ -36,5 +36,25 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // Lot B — le client de service ne s'atteint que depuis un module serveur,
+    // et jamais autrement qu'en passant par getAdminClient(EditorContext).
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/**/*.server.ts", "src/**/*.server.tsx", "src/routes/api/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/supabase-admin.server", "**/integrations/supabase/client.server"],
+              message:
+                "Le client de service ne s'importe pas ici. Depuis une fonction serveur : const admin = await getAdminClient(await assertEditor(...)).",
+            },
+          ],
+        },
+      ],
+    },
+  },
   eslintPluginPrettier,
 );
