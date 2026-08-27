@@ -437,6 +437,20 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .eq("id", step.id);
 
     /**
+     * REPARTIR DE ZÉRO — les questions du plan abandonné n'ont plus d'objet :
+     * elles sont archivées AVANT l'appel, avec la version du plan qui les
+     * avait produites. Rien n'est détruit ; le nouveau livrable créera ses
+     * propres décisions, à neuf. Une relance avec motif ne touche à rien.
+     */
+    if (fromScratch) {
+      await archiverDecisionsDeLEtape(editor, {
+        bookStepId: step.id,
+        fromVersion: lastArt?.[0]?.version ?? null,
+      });
+    }
+
+
+    /**
      * BRIQUE 7 — mes arbitrages partent avec CHAQUE appel, après les données du
      * livre. Le bloc est fabriqué à un seul endroit (decisions.server.ts) : les
      * robots suivants l'appellent sans le réécrire.
