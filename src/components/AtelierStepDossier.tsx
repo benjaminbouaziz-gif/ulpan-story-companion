@@ -7,6 +7,7 @@ import { useAtelierRefresh } from "@/lib/atelier-refresh";
 import type { DictKey } from "@/i18n/dictionaries";
 import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
 import { PlanRobotPanel } from "./AtelierPlanRobot";
+import { RecitRobotPanel } from "./AtelierRecitRobot";
 import { StepDecisions } from "./AtelierDecisions";
 import { stepDecisions } from "@/lib/atelier-decisions.functions";
 import {
