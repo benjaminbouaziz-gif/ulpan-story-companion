@@ -149,10 +149,12 @@ function PromptsRoom() {
                   ))}
                 </select>
               </label>
+              {missing.step ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.name")}
                 <input value={newName} onChange={(e) => setNewName(e.target.value)} className={`${field} mt-1`} />
               </label>
+              {missing.name ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.name")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.content")}
                 <textarea
@@ -162,6 +164,7 @@ function PromptsRoom() {
                   className={`${field} ${mono} mt-1`}
                 />
               </label>
+              {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
                 <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
