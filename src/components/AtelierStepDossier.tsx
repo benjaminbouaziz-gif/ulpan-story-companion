@@ -130,6 +130,7 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const artifacts: ArtifactRow[] = dossier.data?.artifacts ?? [];
   const reviews = dossier.data?.reviews ?? [];
   const ficheChanges = dossier.data?.ficheChanges ?? [];
+  const decisionChanges = dossier.data?.decisionChanges ?? [];
   const current = artifacts[0] ?? null;
   const previous = artifacts.slice(1);
   const horsCrm = situation?.status === "valide_hors_crm";
@@ -318,7 +319,10 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
 
       {/* f. journal */}
       <h2 className="font-latin mt-6 text-[16px]">{t("atelier.step.journal")}</h2>
-      {reviews.length === 0 && artifacts.length === 0 && ficheChanges.length === 0 ? (
+      {reviews.length === 0 &&
+      artifacts.length === 0 &&
+      ficheChanges.length === 0 &&
+      decisionChanges.length === 0 ? (
         <p className="mt-1">{t("atelier.step.noJournal")}</p>
       ) : (
         <table className="mt-2 w-full border-collapse">
