@@ -428,7 +428,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .filter((s): s is string => s !== null)
       .join("\n\n");
 
-    let result: Awaited<ReturnType<typeof appelerModele>>;
+    let result: Awaited<ReturnType<typeof appelerModele>> | undefined;
     try {
       result = await appelerModele({
         model,
@@ -437,6 +437,8 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         user: matiere,
       });
       if (result.text.trim().length === 0) throw new Error("Le modèle a répondu sans contenu.");
+      // Un livrable coupé qui passe pour complet est pire qu'un échec.
+      if (result.truncated) throw new Error("la réponse a été coupée : plafond de longueur atteint");
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       await admin
@@ -445,11 +447,15 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
           status: "echoue",
           ok: false,
           // Je dois savoir à qui on a parlé même quand ça a raté.
-          model_used: model,
+          model_used: result?.modelUsed ?? model,
           error: message.slice(0, 2000),
           error_summary: message.slice(0, 300),
           duration_ms: Date.now() - startedAt,
           input_chars: version.content.length + matiere.length,
+          output_chars: result?.text.length ?? 0,
+          output_tokens: result?.outputTokens ?? null,
+          input_tokens: result?.inputTokens ?? null,
+          truncated: result?.truncated ?? false,
         })
         .eq("id", run.id);
       await admin
@@ -459,7 +465,11 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       throw new Error(message);
     }
 
+
+    if (!result) throw new Error("Le lancement n'a rien produit.");
+
     // 3) Le dépôt : octets d'abord, ligne ensuite (comme tout artefact).
+
     const fileName = `plan-v${artifactVersion}.md`;
     const storagePath = artifactPath({
       bookId: step.book_id,
@@ -497,6 +507,9 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         duration_ms: Date.now() - startedAt,
         input_chars: version.content.length + matiere.length,
         output_chars: result.text.length,
+        output_tokens: result.outputTokens,
+        input_tokens: result.inputTokens,
+        truncated: false,
         fields: 1,
       })
       .eq("id", run.id);
@@ -511,4 +524,57 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .eq("id", step.id);
 
     return { artifactVersion, modelUsed: result.modelUsed };
+  });
+
+export type RobotRunLine = {
+  id: string;
+  createdAt: string;
+  bookTitle: string | null;
+  robot: string | null;
+  model: string | null;
+  status: string | null;
+  durationMs: number | null;
+  outputTokens: number | null;
+  truncated: boolean;
+  errorSummary: string | null;
+};
+
+/** L'historique des lancements, pour la salle Robots. Rien de décoratif. */
+export const listRobotRuns = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<RobotRunLine[]> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const { data: runs } = await admin
+      .from("agent_runs")
+      .select(
+        "id, created_at, robot_name, model, model_used, status, duration_ms, output_tokens, truncated, error_summary, book_step_id",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100);
+    const lignes = runs ?? [];
+    const stepIds = [...new Set(lignes.map((r) => r.book_step_id).filter((v): v is string => !!v))];
+    const titres = new Map<string, string>();
+    if (stepIds.length > 0) {
+      const { data: steps } = await admin
+        .from("book_steps")
+        .select("id, book_id")
+        .in("id", stepIds);
+      const bookIds = [...new Set((steps ?? []).map((s) => s.book_id))];
+      const { data: books } = await admin.from("books").select("id, title_fr").in("id", bookIds);
+      const parLivre = new Map((books ?? []).map((b) => [b.id, b.title_fr]));
+      for (const s of steps ?? []) titres.set(s.id, parLivre.get(s.book_id) ?? "—");
+    }
+    return lignes.map((r) => ({
+      id: r.id,
+      createdAt: r.created_at,
+      bookTitle: r.book_step_id ? (titres.get(r.book_step_id) ?? null) : null,
+      robot: r.robot_name,
+      model: r.model_used ?? r.model,
+      status: r.status,
+      durationMs: r.duration_ms,
+      outputTokens: r.output_tokens,
+      truncated: r.truncated ?? false,
+      errorSummary: r.error_summary,
+    }));
   });
