@@ -6,6 +6,8 @@ import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
 import { PlanRobotPanel } from "./AtelierPlanRobot";
+import { StepDecisions } from "./AtelierDecisions";
+import { stepDecisions } from "@/lib/atelier-decisions.functions";
 import {
   artifactSignedUrl,
   reviewStep,
