@@ -412,12 +412,13 @@ export async function appelerModele(input: {
   webSearch: boolean;
   system: string;
   user: string;
+  onProgress?: Progression;
 }): Promise<AppelResultat> {
   const f = fournisseurDuModele(input.model);
   const web = input.webSearch && rechercheEnLignePossible(input.model);
   switch (f) {
     case "anthropic":
-      return appelAnthropic(input.model, web, input.system, input.user);
+      return appelAnthropic(input.model, web, input.system, input.user, input.onProgress);
     case "google":
       return appelGoogle(input.model, web, input.system, input.user);
     case "lovable":
