@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
+import { reviewStep } from "@/lib/atelier-artifacts.functions";
 import {
   atelierBookFiche,
   atelierCollections,
@@ -226,6 +227,7 @@ export function BookFiche({ bookId }: { bookId: string }) {
   const qc = useQueryClient();
   const fetchFiche = useServerFn(atelierBookFiche);
   const update = useServerFn(updateAtelierBookFiche);
+  const review = useServerFn(reviewStep);
 
   const fiche = useQuery({
     queryKey: ["atelier", "fiche", bookId],
@@ -270,6 +272,26 @@ export function BookFiche({ bookId }: { bookId: string }) {
       void qc.invalidateQueries({ queryKey: ["atelier", "fiche", bookId] });
       void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
       void qc.invalidateQueries({ queryKey: ["atelier", "dossier"] });
+    },
+    onError: (e: unknown) => setMessage(e instanceof Error ? e.message : String(e)),
+  });
+
+  /**
+   * La fiche se clôt ici, jamais dans le dossier générique : une ligne dans
+   * reviews, l'étape passe validée, la suivante devient la courante.
+   */
+  const validateStep = useMutation({
+    mutationFn: () => {
+      if (!data?.ficheStepId) throw new Error(t("atelier.fiche.notFound"));
+      if (data.workSummaryFr.trim().length === 0) throw new Error(t("atelier.fiche.missingSummary"));
+      return review({ data: { bookStepId: data.ficheStepId, decision: "valide" as const } });
+    },
+    onSuccess: () => {
+      setMessage(t("atelier.fiche.validateDone"));
+      void qc.invalidateQueries({ queryKey: ["atelier", "fiche", bookId] });
+      void qc.invalidateQueries({ queryKey: ["atelier", "chain"] });
+      void qc.invalidateQueries({ queryKey: ["atelier", "books"] });
+      void qc.invalidateQueries({ queryKey: ["atelier", "queue"] });
     },
     onError: (e: unknown) => setMessage(e instanceof Error ? e.message : String(e)),
   });
@@ -442,6 +464,29 @@ export function BookFiche({ bookId }: { bookId: string }) {
           </tbody>
         </table>
       )}
+
+      {/* La porte de l'étape « Fiche du livre » : au bas de la fiche, ici. */}
+      {data.ficheStepId ? (
+        <div className="mt-6">
+          {data.ficheStepStatus === "valide" || data.ficheStepStatus === "valide_hors_crm" ? (
+            <p>{t("atelier.fiche.validated")}</p>
+          ) : (
+            <button
+              type="button"
+              className="border-line border px-2 py-0.5"
+              disabled={validateStep.isPending}
+              onClick={() => {
+                setMessage(null);
+                validateStep.mutate();
+              }}
+            >
+              {validateStep.isPending
+                ? t("atelier.fiche.validating")
+                : t("atelier.fiche.validateStep")}
+            </button>
+          )}
+        </div>
+      ) : null}
 
       {data.ficheStepId ? (
         <p className="mt-2">
