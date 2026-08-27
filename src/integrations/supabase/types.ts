@@ -308,6 +308,72 @@ export type Database = {
           },
         ]
       }
+      book_decisions: {
+        Row: {
+          book_id: string
+          book_step_id: string | null
+          contexte: string | null
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decision: string | null
+          id: string
+          question: string
+          question_key: string
+          sort_order: number
+          stale: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          book_step_id?: string | null
+          contexte?: string | null
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          id?: string
+          question: string
+          question_key: string
+          sort_order?: number
+          stale?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          book_step_id?: string | null
+          contexte?: string | null
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decision?: string | null
+          id?: string
+          question?: string
+          question_key?: string
+          sort_order?: number
+          stale?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_decisions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_decisions_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_pages: {
         Row: {
           book_id: string
