@@ -55,6 +55,27 @@ export type Database = {
           },
         ]
       }
+      admin_login_attempts: {
+        Row: {
+          created_at: string
+          email_hash: string | null
+          id: string
+          ip_hash: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+        }
+        Relationships: []
+      }
       agent_runs: {
         Row: {
           cost_usd: number | null

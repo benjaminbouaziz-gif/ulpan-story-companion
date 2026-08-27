@@ -4,7 +4,7 @@ import { useState } from "react";
 import { PageShell } from "@/components/SiteChrome";
 import { useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
-import { adminLoginAllowed, adminLoginFailed } from "@/lib/admin-auth.functions";
+import { adminSignIn } from "@/lib/admin-auth.functions";
 
 /**
  * La connexion de l'éditeur : deux champs, un bouton. Le message d'erreur est
@@ -26,8 +26,7 @@ export const Route = createFileRoute("/admin_/connexion")({
 function AdminSignIn() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const allowed = useServerFn(adminLoginAllowed);
-  const failed = useServerFn(adminLoginFailed);
+  const signIn = useServerFn(adminSignIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,17 +37,16 @@ function AdminSignIn() {
     setBusy(true);
     setError(null);
     try {
-      const gate = await allowed({ data: { email } });
-      if (!gate.allowed) {
-        setError(t("admin.tooManyAttempts"));
+      const result = await signIn({ data: { email: email.trim(), password } });
+      if (!result.ok) {
+        setError(t(result.reason === "throttled" ? "admin.tooManyAttempts" : "admin.signInError"));
         return;
       }
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
       });
-      if (signInError) {
-        await failed({ data: { email } });
+      if (sessionError) {
         setError(t("admin.signInError"));
         return;
       }
