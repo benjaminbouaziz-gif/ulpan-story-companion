@@ -4,7 +4,6 @@ import { adminMe } from "@/lib/admin-spread.functions";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, type ReactNode } from "react";
 
 /**
  * L'ATELIER — poste de pilotage interne, séparé du site public.
@@ -110,25 +109,4 @@ function AtelierShell() {
       </div>
     </div>
   );
-}
-
-/** Une salle : son titre, une phrase, et le mot « vide » tant qu'elle l'est. */
-export function Room({ titleKey, descKey, children }: { titleKey: DictKey; descKey: DictKey; children?: ReactNode }) {
-  const { t } = useI18n();
-  return (
-    <section className="max-w-[900px]">
-      <h1 className="font-latin text-[24px]">{t(titleKey)}</h1>
-      <p className="mt-2 text-[14px]">{t(descKey)}</p>
-      <div className="border-line mt-6 border-t pt-4 text-[14px]">
-        {children ?? <p>{t("atelier.empty")}</p>}
-      </div>
-    </section>
-  );
-}
-
-/** Évite l'affichage avant hydratation dans les salles qui liront la base. */
-export function useHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
-  return hydrated;
 }
