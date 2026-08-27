@@ -103,22 +103,26 @@ function PromptsRoom() {
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
-                <th className={cell}>{t("atelier.prompts.col.step")}</th>
                 <th className={cell}>{t("atelier.prompts.col.name")}</th>
+                <th className={cell}>{t("atelier.prompts.col.model")}</th>
+                <th className={cell}>{t("atelier.prompts.col.webSearch")}</th>
                 <th className={cell}>{t("atelier.prompts.col.active")}</th>
-                <th className={cell}>{t("atelier.prompts.col.lastVersion")}</th>
-                <th className={cell}>{t("atelier.prompts.col.count")}</th>
+                <th className={cell}>{t("atelier.prompts.col.lastModified")}</th>
                 <th className={cell} />
               </tr>
             </thead>
             <tbody>
               {(list.data ?? []).map((p) => (
                 <tr key={p.id}>
-                  <td className={cell}>{p.stepLabelFr}</td>
                   <td className={cell}>{p.name}</td>
+                  <td className={cell}>{p.activeModel ?? t("atelier.none")}</td>
+                  <td className={cell}>
+                    {p.activeWebSearch
+                      ? t("atelier.prompts.webSearchOn")
+                      : t("atelier.prompts.webSearchOff")}
+                  </td>
                   <td className={cell}>{p.activeVersion ?? t("atelier.none")}</td>
                   <td className={cell}>{fmt(p.lastVersionAt)}</td>
-                  <td className={cell}>{p.versionsCount}</td>
                   <td className={cell}>
                     <button
                       type="button"
