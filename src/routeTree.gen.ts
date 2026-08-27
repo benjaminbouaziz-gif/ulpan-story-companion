@@ -23,7 +23,6 @@ import { Route as AdminChiffresRouteImport } from './routes/admin.chiffres'
 import { Route as AdminCompteRouteImport } from './routes/admin.compte'
 import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
-import { Route as AdminConnexionRouteImport } from './routes/admin_.connexion'
 import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
 import { Route as AtelierCollectionsRouteImport } from './routes/atelier.collections'
 import { Route as AtelierJournalRouteImport } from './routes/atelier.journal'
@@ -113,11 +112,6 @@ const AdminPagesRoute = AdminPagesRouteImport.update({
   id: '/pages',
   path: '/pages',
   getParentRoute: () => AdminRoute,
-} as any)
-const AdminConnexionRoute = AdminConnexionRouteImport.update({
-  id: '/admin_/connexion',
-  path: '/admin/connexion',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AtelierIndexRoute = AtelierIndexRouteImport.update({
   id: '/',
@@ -229,7 +223,6 @@ export interface FileRoutesByFullPath {
   '/admin/compte': typeof AdminCompteRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
-  '/admin/connexion': typeof AdminConnexionRoute
   '/atelier/collections': typeof AtelierCollectionsRoute
   '/atelier/journal': typeof AtelierJournalRoute
   '/atelier/lecteurs': typeof AtelierLecteursRoute
@@ -263,7 +256,6 @@ export interface FileRoutesByTo {
   '/admin/compte': typeof AdminCompteRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
-  '/admin/connexion': typeof AdminConnexionRoute
   '/atelier/collections': typeof AtelierCollectionsRoute
   '/atelier/journal': typeof AtelierJournalRoute
   '/atelier/lecteurs': typeof AtelierLecteursRoute
@@ -300,7 +292,6 @@ export interface FileRoutesById {
   '/admin/compte': typeof AdminCompteRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
-  '/admin_/connexion': typeof AdminConnexionRoute
   '/atelier/collections': typeof AtelierCollectionsRoute
   '/atelier/journal': typeof AtelierJournalRoute
   '/atelier/lecteurs': typeof AtelierLecteursRoute
@@ -338,7 +329,6 @@ export interface FileRouteTypes {
     | '/admin/compte'
     | '/admin/extraits'
     | '/admin/pages'
-    | '/admin/connexion'
     | '/atelier/collections'
     | '/atelier/journal'
     | '/atelier/lecteurs'
@@ -372,7 +362,6 @@ export interface FileRouteTypes {
     | '/admin/compte'
     | '/admin/extraits'
     | '/admin/pages'
-    | '/admin/connexion'
     | '/atelier/collections'
     | '/atelier/journal'
     | '/atelier/lecteurs'
@@ -408,7 +397,6 @@ export interface FileRouteTypes {
     | '/admin/compte'
     | '/admin/extraits'
     | '/admin/pages'
-    | '/admin_/connexion'
     | '/atelier/collections'
     | '/atelier/journal'
     | '/atelier/lecteurs'
@@ -441,7 +429,6 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
-  AdminConnexionRoute: typeof AdminConnexionRoute
   AtelierConnexionRoute: typeof AtelierConnexionRoute
   BQr_codeRoute: typeof BQr_codeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
@@ -552,13 +539,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/pages'
       preLoaderRoute: typeof AdminPagesRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/admin_/connexion': {
-      id: '/admin_/connexion'
-      path: '/admin/connexion'
-      fullPath: '/admin/connexion'
-      preLoaderRoute: typeof AdminConnexionRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/atelier/': {
       id: '/atelier/'
@@ -753,7 +733,6 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
-  AdminConnexionRoute: AdminConnexionRoute,
   AtelierConnexionRoute: AtelierConnexionRoute,
   BQr_codeRoute: BQr_codeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
