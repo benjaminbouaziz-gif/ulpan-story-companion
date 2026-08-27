@@ -144,7 +144,7 @@ export function lirePointsATrancher(markdown: string): LectureDesPoints {
 async function ecrireMarqueur(
   ctx: EditorContext,
   stepId: string,
-  snapshot: Record<string, unknown>,
+  snapshot: { ok: boolean; at: string; points?: number },
 ): Promise<void> {
   const admin = await getAdminClient(ctx);
   await admin.from("content_versions").insert({
