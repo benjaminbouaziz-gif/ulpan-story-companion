@@ -32,12 +32,24 @@ export type AppelResultat = {
 /** Assez haut pour laisser passer un document entier (plan complet, annexes). */
 const MAX_TOKENS = 32000;
 const MODEL_TOTAL_TIMEOUT_MS = 12 * 60 * 1000;
+/**
+ * Silence UTILE. Attention au piège : Anthropic envoie des `ping` de courtoisie
+ * toutes les quelques secondes. Si l'on remet le compteur à zéro dès que des
+ * OCTETS arrivent, un modèle bloqué qui ne fait que pinguer n'est jamais coupé :
+ * le garde-fou existe mais ne protège de rien. Ici seuls les événements qui font
+ * AVANCER la réponse (début de message, texte, fin de bloc, fin de message)
+ * réarment le délai. Les pings et les lignes vides ne comptent pas.
+ */
 const MODEL_IDLE_TIMEOUT_MS = 90 * 1000;
+/** Attente maximale des EN-TÊTES : avant eux, aucun flux n'existe à surveiller. */
+const MODEL_CONNECT_TIMEOUT_MS = 60 * 1000;
 
-function timeoutMessage(model: string, kind: "total" | "idle"): string {
-  return kind === "idle"
-    ? `Appel interrompu : aucune donnée reçue du modèle ${model} pendant ${MODEL_IDLE_TIMEOUT_MS / 1000} s.`
-    : `Appel interrompu : délai maximal de ${MODEL_TOTAL_TIMEOUT_MS / 60000} min dépassé pour ${model}.`;
+function timeoutMessage(model: string, kind: "total" | "idle" | "connect"): string {
+  if (kind === "idle")
+    return `Appel interrompu : le modèle ${model} n'a rien fait avancer pendant ${MODEL_IDLE_TIMEOUT_MS / 1000} s (les pings de maintien ne comptent pas).`;
+  if (kind === "connect")
+    return `Appel interrompu : le fournisseur n'a pas répondu (aucun en-tête) en ${MODEL_CONNECT_TIMEOUT_MS / 1000} s pour ${model}.`;
+  return `Appel interrompu : délai maximal de ${MODEL_TOTAL_TIMEOUT_MS / 60000} min dépassé pour ${model}.`;
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
