@@ -24,6 +24,15 @@ import { Route as AdminCompteRouteImport } from './routes/admin.compte'
 import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminConnexionRouteImport } from './routes/admin_.connexion'
+import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
+import { Route as AtelierCollectionsRouteImport } from './routes/atelier.collections'
+import { Route as AtelierJournalRouteImport } from './routes/atelier.journal'
+import { Route as AtelierLecteursRouteImport } from './routes/atelier.lecteurs'
+import { Route as AtelierLivresRouteImport } from './routes/atelier.livres'
+import { Route as AtelierMesureRouteImport } from './routes/atelier.mesure'
+import { Route as AtelierPromptsRouteImport } from './routes/atelier.prompts'
+import { Route as AtelierReglagesRouteImport } from './routes/atelier.reglages'
+import { Route as AtelierRobotsRouteImport } from './routes/atelier.robots'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -108,6 +117,51 @@ const AdminConnexionRoute = AdminConnexionRouteImport.update({
   path: '/admin/connexion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtelierIndexRoute = AtelierIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierCollectionsRoute = AtelierCollectionsRouteImport.update({
+  id: '/collections',
+  path: '/collections',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierJournalRoute = AtelierJournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierLecteursRoute = AtelierLecteursRouteImport.update({
+  id: '/lecteurs',
+  path: '/lecteurs',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierLivresRoute = AtelierLivresRouteImport.update({
+  id: '/livres',
+  path: '/livres',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierMesureRoute = AtelierMesureRouteImport.update({
+  id: '/mesure',
+  path: '/mesure',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierPromptsRoute = AtelierPromptsRouteImport.update({
+  id: '/prompts',
+  path: '/prompts',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierReglagesRoute = AtelierReglagesRouteImport.update({
+  id: '/reglages',
+  path: '/reglages',
+  getParentRoute: () => AtelierRoute,
+} as any)
+const AtelierRobotsRoute = AtelierRobotsRouteImport.update({
+  id: '/robots',
+  path: '/robots',
+  getParentRoute: () => AtelierRoute,
+} as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
   path: '/b/$qr_code',
@@ -153,7 +207,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activation': typeof ActivationRoute
   '/admin': typeof AdminRouteWithChildren
-  '/atelier': typeof AtelierRoute
+  '/atelier': typeof AtelierRouteWithChildren
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
@@ -164,11 +218,20 @@ export interface FileRoutesByFullPath {
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/connexion': typeof AdminConnexionRoute
+  '/atelier/collections': typeof AtelierCollectionsRoute
+  '/atelier/journal': typeof AtelierJournalRoute
+  '/atelier/lecteurs': typeof AtelierLecteursRoute
+  '/atelier/livres': typeof AtelierLivresRoute
+  '/atelier/mesure': typeof AtelierMesureRoute
+  '/atelier/prompts': typeof AtelierPromptsRoute
+  '/atelier/reglages': typeof AtelierReglagesRoute
+  '/atelier/robots': typeof AtelierRobotsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/atelier/': typeof AtelierIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -177,7 +240,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activation': typeof ActivationRoute
-  '/atelier': typeof AtelierRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
@@ -188,11 +250,20 @@ export interface FileRoutesByTo {
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/connexion': typeof AdminConnexionRoute
+  '/atelier/collections': typeof AtelierCollectionsRoute
+  '/atelier/journal': typeof AtelierJournalRoute
+  '/atelier/lecteurs': typeof AtelierLecteursRoute
+  '/atelier/livres': typeof AtelierLivresRoute
+  '/atelier/mesure': typeof AtelierMesureRoute
+  '/atelier/prompts': typeof AtelierPromptsRoute
+  '/atelier/reglages': typeof AtelierReglagesRoute
+  '/atelier/robots': typeof AtelierRobotsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/atelier': typeof AtelierIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -203,7 +274,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activation': typeof ActivationRoute
   '/admin': typeof AdminRouteWithChildren
-  '/atelier': typeof AtelierRoute
+  '/atelier': typeof AtelierRouteWithChildren
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
@@ -214,11 +285,20 @@ export interface FileRoutesById {
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin_/connexion': typeof AdminConnexionRoute
+  '/atelier/collections': typeof AtelierCollectionsRoute
+  '/atelier/journal': typeof AtelierJournalRoute
+  '/atelier/lecteurs': typeof AtelierLecteursRoute
+  '/atelier/livres': typeof AtelierLivresRoute
+  '/atelier/mesure': typeof AtelierMesureRoute
+  '/atelier/prompts': typeof AtelierPromptsRoute
+  '/atelier/reglages': typeof AtelierReglagesRoute
+  '/atelier/robots': typeof AtelierRobotsRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/atelier/': typeof AtelierIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -241,11 +321,20 @@ export interface FileRouteTypes {
     | '/admin/extraits'
     | '/admin/pages'
     | '/admin/connexion'
+    | '/atelier/collections'
+    | '/atelier/journal'
+    | '/atelier/lecteurs'
+    | '/atelier/livres'
+    | '/atelier/mesure'
+    | '/atelier/prompts'
+    | '/atelier/reglages'
+    | '/atelier/robots'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
     | '/admin/'
+    | '/atelier/'
     | '/collections/'
     | '/compagnon/'
     | '/lovable/email/auth/preview'
@@ -254,7 +343,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/activation'
-    | '/atelier'
     | '/confidentialite'
     | '/connexion'
     | '/contact'
@@ -265,11 +353,20 @@ export interface FileRouteTypes {
     | '/admin/extraits'
     | '/admin/pages'
     | '/admin/connexion'
+    | '/atelier/collections'
+    | '/atelier/journal'
+    | '/atelier/lecteurs'
+    | '/atelier/livres'
+    | '/atelier/mesure'
+    | '/atelier/prompts'
+    | '/atelier/reglages'
+    | '/atelier/robots'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
     | '/admin'
+    | '/atelier'
     | '/collections'
     | '/compagnon'
     | '/lovable/email/auth/preview'
@@ -290,11 +387,20 @@ export interface FileRouteTypes {
     | '/admin/extraits'
     | '/admin/pages'
     | '/admin_/connexion'
+    | '/atelier/collections'
+    | '/atelier/journal'
+    | '/atelier/lecteurs'
+    | '/atelier/livres'
+    | '/atelier/mesure'
+    | '/atelier/prompts'
+    | '/atelier/reglages'
+    | '/atelier/robots'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
     | '/livres/$slug'
     | '/admin/'
+    | '/atelier/'
     | '/collections/'
     | '/compagnon/'
     | '/lovable/email/auth/preview'
@@ -305,7 +411,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivationRoute: typeof ActivationRoute
   AdminRoute: typeof AdminRouteWithChildren
-  AtelierRoute: typeof AtelierRoute
+  AtelierRoute: typeof AtelierRouteWithChildren
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ConnexionRoute: typeof ConnexionRoute
   ContactRoute: typeof ContactRoute
@@ -429,6 +535,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConnexionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atelier/': {
+      id: '/atelier/'
+      path: '/'
+      fullPath: '/atelier/'
+      preLoaderRoute: typeof AtelierIndexRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/collections': {
+      id: '/atelier/collections'
+      path: '/collections'
+      fullPath: '/atelier/collections'
+      preLoaderRoute: typeof AtelierCollectionsRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/journal': {
+      id: '/atelier/journal'
+      path: '/journal'
+      fullPath: '/atelier/journal'
+      preLoaderRoute: typeof AtelierJournalRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/lecteurs': {
+      id: '/atelier/lecteurs'
+      path: '/lecteurs'
+      fullPath: '/atelier/lecteurs'
+      preLoaderRoute: typeof AtelierLecteursRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/livres': {
+      id: '/atelier/livres'
+      path: '/livres'
+      fullPath: '/atelier/livres'
+      preLoaderRoute: typeof AtelierLivresRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/mesure': {
+      id: '/atelier/mesure'
+      path: '/mesure'
+      fullPath: '/atelier/mesure'
+      preLoaderRoute: typeof AtelierMesureRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/prompts': {
+      id: '/atelier/prompts'
+      path: '/prompts'
+      fullPath: '/atelier/prompts'
+      preLoaderRoute: typeof AtelierPromptsRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/reglages': {
+      id: '/atelier/reglages'
+      path: '/reglages'
+      fullPath: '/atelier/reglages'
+      preLoaderRoute: typeof AtelierReglagesRouteImport
+      parentRoute: typeof AtelierRoute
+    }
+    '/atelier/robots': {
+      id: '/atelier/robots'
+      path: '/robots'
+      fullPath: '/atelier/robots'
+      preLoaderRoute: typeof AtelierRobotsRouteImport
+      parentRoute: typeof AtelierRoute
+    }
     '/b/$qr_code': {
       id: '/b/$qr_code'
       path: '/b/$qr_code'
@@ -506,11 +675,38 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AtelierRouteChildren {
+  AtelierCollectionsRoute: typeof AtelierCollectionsRoute
+  AtelierJournalRoute: typeof AtelierJournalRoute
+  AtelierLecteursRoute: typeof AtelierLecteursRoute
+  AtelierLivresRoute: typeof AtelierLivresRoute
+  AtelierMesureRoute: typeof AtelierMesureRoute
+  AtelierPromptsRoute: typeof AtelierPromptsRoute
+  AtelierReglagesRoute: typeof AtelierReglagesRoute
+  AtelierRobotsRoute: typeof AtelierRobotsRoute
+  AtelierIndexRoute: typeof AtelierIndexRoute
+}
+
+const AtelierRouteChildren: AtelierRouteChildren = {
+  AtelierCollectionsRoute: AtelierCollectionsRoute,
+  AtelierJournalRoute: AtelierJournalRoute,
+  AtelierLecteursRoute: AtelierLecteursRoute,
+  AtelierLivresRoute: AtelierLivresRoute,
+  AtelierMesureRoute: AtelierMesureRoute,
+  AtelierPromptsRoute: AtelierPromptsRoute,
+  AtelierReglagesRoute: AtelierReglagesRoute,
+  AtelierRobotsRoute: AtelierRobotsRoute,
+  AtelierIndexRoute: AtelierIndexRoute,
+}
+
+const AtelierRouteWithChildren =
+  AtelierRoute._addFileChildren(AtelierRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivationRoute: ActivationRoute,
   AdminRoute: AdminRouteWithChildren,
-  AtelierRoute: AtelierRoute,
+  AtelierRoute: AtelierRouteWithChildren,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ConnexionRoute: ConnexionRoute,
   ContactRoute: ContactRoute,
