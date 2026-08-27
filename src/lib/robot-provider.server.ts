@@ -22,9 +22,15 @@ export type AppelResultat = {
   text: string;
   modelUsed: string;
   costUsd: number | null;
+  /** Jetons produits, tels que déclarés par le fournisseur. */
+  outputTokens: number | null;
+  inputTokens: number | null;
+  /** Vrai si la réponse s'est arrêtée sur le plafond de longueur. */
+  truncated: boolean;
 };
 
-const MAX_TOKENS = 8000;
+/** Assez haut pour laisser passer un document entier (plan complet, annexes). */
+const MAX_TOKENS = 32000;
 
 export function fournisseurDuModele(model: string): Fournisseur | null {
   const m = model.trim().toLowerCase();
@@ -99,13 +105,22 @@ async function appelAnthropic(
   if (!res.ok) throw new Error(texteErreur(res.status, await res.text()));
   const json = (await res.json()) as {
     model?: string;
+    stop_reason?: string;
+    usage?: { input_tokens?: number; output_tokens?: number };
     content?: { type: string; text?: string }[];
   };
   const text = (json.content ?? [])
     .filter((b) => b.type === "text" && typeof b.text === "string")
     .map((b) => b.text as string)
     .join("\n");
-  return { text, modelUsed: json.model ?? model, costUsd: null };
+  return {
+    text,
+    modelUsed: json.model ?? model,
+    costUsd: null,
+    outputTokens: json.usage?.output_tokens ?? null,
+    inputTokens: json.usage?.input_tokens ?? null,
+    truncated: json.stop_reason === "max_tokens",
+  };
 }
 
 async function appelGoogle(
@@ -132,13 +147,21 @@ async function appelGoogle(
   if (!res.ok) throw new Error(texteErreur(res.status, await res.text()));
   const json = (await res.json()) as {
     modelVersion?: string;
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+    candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[];
   };
   const text = (json.candidates?.[0]?.content?.parts ?? [])
     .map((p) => p.text ?? "")
     .join("")
     .trim();
-  return { text, modelUsed: json.modelVersion ?? model, costUsd: null };
+  return {
+    text,
+    modelUsed: json.modelVersion ?? model,
+    costUsd: null,
+    outputTokens: json.usageMetadata?.candidatesTokenCount ?? null,
+    inputTokens: json.usageMetadata?.promptTokenCount ?? null,
+    truncated: json.candidates?.[0]?.finishReason === "MAX_TOKENS",
+  };
 }
 
 async function appelLovable(model: string, system: string, user: string): Promise<AppelResultat> {
@@ -153,6 +176,7 @@ async function appelLovable(model: string, system: string, user: string): Promis
     },
     body: JSON.stringify({
       model,
+      max_tokens: MAX_TOKENS,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -162,12 +186,16 @@ async function appelLovable(model: string, system: string, user: string): Promis
   if (!res.ok) throw new Error(texteErreur(res.status, await res.text()));
   const json = (await res.json()) as {
     model?: string;
-    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+    choices?: { finish_reason?: string; message?: { content?: string } }[];
   };
   return {
     text: json.choices?.[0]?.message?.content ?? "",
     modelUsed: json.model ?? model,
     costUsd: null,
+    outputTokens: json.usage?.completion_tokens ?? null,
+    inputTokens: json.usage?.prompt_tokens ?? null,
+    truncated: json.choices?.[0]?.finish_reason === "length",
   };
 }
 
