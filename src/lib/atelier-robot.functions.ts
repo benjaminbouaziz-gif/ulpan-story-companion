@@ -543,8 +543,8 @@ export type RobotRunLine = {
 export const listRobotRuns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<RobotRunLine[]> => {
-    await assertEditor(context);
-    const admin = getAdminClient();
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
     const { data: runs } = await admin
       .from("agent_runs")
       .select(
