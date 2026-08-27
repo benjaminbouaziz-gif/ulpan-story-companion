@@ -435,18 +435,8 @@ function PromptDossier({ promptId }: { promptId: string }) {
         </table>
       )}
 
-      <h3 className="mt-8 text-[14px] font-medium">{t("atelier.prompts.activations")}</h3>
-      {data.activations.length === 0 ? (
-        <p className="mt-2 text-[13px]">{t("atelier.prompts.noActivations")}</p>
-      ) : (
-        <ul className="mt-2 text-[13px]">
-          {data.activations.map((a) => (
-            <li key={a.id} className="border-line border-b py-1">
-              {t("atelier.prompts.version")} {a.version} — {fmt(a.createdAt)}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Le registre des activations reste alimenté en base (trace pour le journal),
+          mais il n'encombre plus cet écran. */}
     </div>
   );
 }
