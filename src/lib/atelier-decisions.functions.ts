@@ -28,6 +28,10 @@ export type DecisionRow = {
   stale: boolean;
   createdAt: string;
   decidedAt: string | null;
+  /** Renseigné = décision mise de côté : hors de ma vue, hors des robots. */
+  archivedAt: string | null;
+  /** La version du livrable qui l'avait produite, pour savoir d'où elle venait. */
+  archivedFromVersion: number | null;
 };
 
 type Brut = {
@@ -42,6 +46,8 @@ type Brut = {
   stale: boolean;
   created_at: string;
   decided_at: string | null;
+  archived_at: string | null;
+  archived_from_version: number | null;
 };
 
 function mapRow(r: Brut, labels: Map<string, string>): DecisionRow {
@@ -58,11 +64,14 @@ function mapRow(r: Brut, labels: Map<string, string>): DecisionRow {
     stale: r.stale,
     createdAt: r.created_at,
     decidedAt: r.decided_at,
+    archivedAt: r.archived_at,
+    archivedFromVersion: r.archived_from_version,
   };
 }
 
 const SELECT =
-  "id, book_id, book_step_id, sort_order, question, contexte, decision, status, stale, created_at, decided_at";
+  "id, book_id, book_step_id, sort_order, question, contexte, decision, status, stale, created_at, decided_at, archived_at, archived_from_version";
+
 
 /** Les décisions d'une étape, plus l'état de la dernière lecture automatique. */
 export const stepDecisions = createServerFn({ method: "GET" })
