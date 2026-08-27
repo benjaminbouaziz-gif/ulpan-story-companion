@@ -1,13 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertEditor } from "./admin-spread.server";
+import { assertEditor } from "./editor-context.server";
+import { getAdminClient } from "./supabase-admin.server";
 
 /**
  * Lecture seule du squelette de fabrication. Ces tables n'ont AUCUN accès
- * client : tout passe ici, et la première ligne de chaque handler vérifie le
- * rôle en base (assertEditor). Aucun chiffre n'est écrit en dur : tout est
- * compté au moment de l'appel.
+ * client : tout passe ici, et le client de service ne s'obtient qu'avec un
+ * EditorContext, produit uniquement par assertEditor (rôle lu en base).
+ * Aucun chiffre n'est écrit en dur : tout est compté au moment de l'appel.
  */
 
 export type AtelierBookRow = {
@@ -25,16 +26,16 @@ export type AtelierBookRow = {
 export const atelierBooks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AtelierBookRow[]> => {
-    await assertEditor(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
 
     const [books, collections, steps] = await Promise.all([
-      supabaseAdmin
+      admin
         .from("books")
         .select("id, slug, title_fr, status, collection_id, current_step_code")
         .order("tome_no", { ascending: true }),
-      supabaseAdmin.from("collections").select("id, name_fr"),
-      supabaseAdmin.from("book_steps").select("book_id, step_code, label_fr, status"),
+      admin.from("collections").select("id, name_fr"),
+      admin.from("book_steps").select("book_id, step_code, label_fr, status"),
     ]);
 
     const names = new Map((collections.data ?? []).map((c) => [c.id, c.name_fr]));
@@ -66,20 +67,23 @@ export type AtelierStepRow = {
   species: string;
   status: string;
   awaiting: string | null;
+  lang: string;
+  note: string | null;
 };
 
 export const atelierBookChain = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ bookId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }): Promise<AtelierStepRow[]> => {
-    await assertEditor(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
 
-    const { data: rows } = await supabaseAdmin
+    const { data: rows } = await admin
       .from("book_steps")
-      .select("id, rank, step_code, label_fr, label_en, species, status, awaiting")
+      .select("id, rank, step_code, label_fr, label_en, species, status, awaiting, lang, note")
       .eq("book_id", data.bookId)
-      .order("rank", { ascending: true });
+      .order("rank", { ascending: true })
+      .order("lang", { ascending: true });
 
     return (rows ?? []).map((r) => ({
       id: r.id,
@@ -90,5 +94,7 @@ export const atelierBookChain = createServerFn({ method: "GET" })
       species: r.species,
       status: r.status,
       awaiting: r.awaiting ?? null,
+      lang: r.lang,
+      note: r.note ?? null,
     }));
   });
