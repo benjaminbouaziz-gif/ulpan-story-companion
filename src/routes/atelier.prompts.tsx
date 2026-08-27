@@ -310,10 +310,12 @@ function PromptDossier({ promptId }: { promptId: string }) {
                 className={`${field} ${mono} mt-1`}
               />
             </label>
+            {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.changeNote")}
               <input value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mt-1`} />
             </label>
+            {missing.note ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.note")}</p> : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.model")}
               <input value={model} onChange={(e) => setModel(e.target.value)} className={`${field} mt-1`} />
