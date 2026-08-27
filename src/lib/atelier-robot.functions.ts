@@ -466,7 +466,10 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
     }
 
 
+    if (!result) throw new Error("Le lancement n'a rien produit.");
+
     // 3) Le dépôt : octets d'abord, ligne ensuite (comme tout artefact).
+
     const fileName = `plan-v${artifactVersion}.md`;
     const storagePath = artifactPath({
       bookId: step.book_id,
