@@ -101,6 +101,34 @@ export const stepDossier = createServerFn({ method: "GET" })
       });
     }
 
+    /**
+     * BRIQUE 7 — le journal de l'étape porte aussi mes changements d'avis :
+     * chaque modification d'une décision a écrit son état d'AVANT.
+     */
+    const { data: decRows } = await admin
+      .from("content_versions")
+      .select("id, snapshot, created_at")
+      .eq("entity", "book_decision")
+      .eq("snapshot->>bookStepId", data.bookStepId)
+      .order("created_at", { ascending: false });
+    const decisionChanges = (decRows ?? []).map((r) => {
+      const snap = (r.snapshot ?? {}) as {
+        action?: string;
+        question?: string;
+        avant?: { question?: string; decision?: string | null; status?: string };
+      };
+      const avant = snap.avant;
+      const before = avant
+        ? [avant.question, avant.status, avant.decision].filter(Boolean).join(" · ")
+        : (snap.question ?? null);
+      return {
+        id: r.id,
+        at: r.created_at,
+        action: snap.action ?? "modification",
+        before: before || null,
+      };
+    });
+
     let situation: StepSituation | null = null;
     if (step.data) {
       const { data: book } = await admin
@@ -125,6 +153,7 @@ export const stepDossier = createServerFn({ method: "GET" })
     return {
       situation,
       ficheChanges,
+      decisionChanges,
       artifacts: (arts.data ?? []).map((a) => ({
         id: a.id,
         type: a.type,
