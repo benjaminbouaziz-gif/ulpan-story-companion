@@ -313,6 +313,8 @@ export type Database = {
       }
       book_decisions: {
         Row: {
+          archived_at: string | null
+          archived_from_version: number | null
           book_id: string
           book_step_id: string | null
           contexte: string | null
@@ -329,6 +331,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          archived_from_version?: number | null
           book_id: string
           book_step_id?: string | null
           contexte?: string | null
@@ -345,6 +349,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          archived_from_version?: number | null
           book_id?: string
           book_step_id?: string | null
           contexte?: string | null
