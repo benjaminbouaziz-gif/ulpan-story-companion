@@ -507,6 +507,9 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         duration_ms: Date.now() - startedAt,
         input_chars: version.content.length + matiere.length,
         output_chars: result.text.length,
+        output_tokens: result.outputTokens,
+        input_tokens: result.inputTokens,
+        truncated: false,
         fields: 1,
       })
       .eq("id", run.id);
