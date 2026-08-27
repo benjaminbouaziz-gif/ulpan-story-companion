@@ -284,10 +284,17 @@ export const updateAtelierBookFiche = createServerFn({ method: "POST" })
       .maybeSingle();
     const planValidated = plan?.status === "valide" || plan?.status === "valide_hors_crm";
 
-    const patch: Record<string, string | null> = {};
+    type FichePatch = {
+      work_summary_fr?: string | null;
+      source_material_fr?: string | null;
+      book_constraints_fr?: string | null;
+      intent_note_fr?: string | null;
+      qr_code?: string;
+    };
+    const patch: FichePatch = {};
     const changed: string[] = [];
 
-    const matiere: [string, string | undefined, string | null][] = [
+    const matiere: [keyof FichePatch, string | undefined, string | null][] = [
       ["work_summary_fr", data.workSummaryFr, book.work_summary_fr],
       ["source_material_fr", data.sourceMaterialFr, book.source_material_fr],
       ["book_constraints_fr", data.bookConstraintsFr, book.book_constraints_fr],
@@ -300,7 +307,7 @@ export const updateAtelierBookFiche = createServerFn({ method: "POST" })
       if (planValidated) {
         throw new Error("Le plan est validé : la matière du livre est gelée.");
       }
-      patch[column] = value;
+      (patch as Record<string, string | null>)[column] = value;
       changed.push(column);
     }
 
@@ -309,7 +316,7 @@ export const updateAtelierBookFiche = createServerFn({ method: "POST" })
         throw new Error("Le code QR est réservé : il est définitif.");
       }
       await assertQrLibre(admin, data.qrCode, book.id);
-      patch['qr_code'] = data.qrCode;
+      patch.qr_code = data.qrCode;
       changed.push("qr_code");
     }
 
@@ -321,7 +328,7 @@ export const updateAtelierBookFiche = createServerFn({ method: "POST" })
     await admin.from("content_versions").insert({
       entity: FICHE_ENTITY,
       entity_id: book.id,
-      snapshot: { fields: changed, values: patch },
+      snapshot: { fields: changed, values: patch as Record<string, string | null> },
       created_by: editor.userId,
     });
 
