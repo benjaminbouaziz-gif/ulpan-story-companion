@@ -113,7 +113,7 @@ export const atelierQueue = createServerFn({ method: "GET" })
       labelFr: s.label_fr,
       status: s.status,
       awaiting: s.awaiting ?? null,
-      since: s.updated_at ?? null,
+      since: s.awaiting_since ?? null,
       note: s.note ?? null,
       robotName: lastRun.get(s.id)?.robot ?? null,
       errorSummary: lastRun.get(s.id)?.error ?? null,
