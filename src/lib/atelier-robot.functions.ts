@@ -430,6 +430,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       (book.source_material_fr ?? "").trim().length > 0
         ? `Matière documentaire :\n${book.source_material_fr}`
         : null,
+      blocDecisions,
       previousPlan ? `Plan précédent :\n${previousPlan}` : null,
       reason ? `Motif de révision de l'éditeur :\n${reason}` : null,
     ]
