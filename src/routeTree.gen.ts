@@ -40,6 +40,7 @@ import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as CompagnonIndexRouteImport } from './routes/compagnon.index'
 import { Route as CompagnonBook_slugRouteImport } from './routes/compagnon.$book_slug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
+import { Route as ApiPublicDiagRobotRouteImport } from './routes/api/public/diag-robot'
 import { Route as AtelierEtapeIdRouteImport } from './routes/atelier.etape.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -199,6 +200,11 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
   path: '/livres/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDiagRobotRoute = ApiPublicDiagRobotRouteImport.update({
+  id: '/api/public/diag-robot',
+  path: '/api/public/diag-robot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AtelierEtapeIdRoute = AtelierEtapeIdRouteImport.update({
   id: '/etape/$id',
   path: '/etape/$id',
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/atelier/': typeof AtelierIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
+  '/api/public/diag-robot': typeof ApiPublicDiagRobotRoute
   '/atelier/etape/$id': typeof AtelierEtapeIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/atelier': typeof AtelierIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
+  '/api/public/diag-robot': typeof ApiPublicDiagRobotRoute
   '/atelier/etape/$id': typeof AtelierEtapeIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/atelier/': typeof AtelierIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
+  '/api/public/diag-robot': typeof ApiPublicDiagRobotRoute
   '/atelier/etape/$id': typeof AtelierEtapeIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/atelier/'
     | '/collections/'
     | '/compagnon/'
+    | '/api/public/diag-robot'
     | '/atelier/etape/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/atelier'
     | '/collections'
     | '/compagnon'
+    | '/api/public/diag-robot'
     | '/atelier/etape/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/atelier/'
     | '/collections/'
     | '/compagnon/'
+    | '/api/public/diag-robot'
     | '/atelier/etape/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -448,6 +460,7 @@ export interface RootRouteChildren {
   LivresSlugRoute: typeof LivresSlugRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   CompagnonIndexRoute: typeof CompagnonIndexRoute
+  ApiPublicDiagRobotRoute: typeof ApiPublicDiagRobotRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -671,6 +684,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivresSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/diag-robot': {
+      id: '/api/public/diag-robot'
+      path: '/api/public/diag-robot'
+      fullPath: '/api/public/diag-robot'
+      preLoaderRoute: typeof ApiPublicDiagRobotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/atelier/etape/$id': {
       id: '/atelier/etape/$id'
       path: '/etape/$id'
@@ -761,6 +781,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivresSlugRoute: LivresSlugRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   CompagnonIndexRoute: CompagnonIndexRoute,
+  ApiPublicDiagRobotRoute: ApiPublicDiagRobotRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
