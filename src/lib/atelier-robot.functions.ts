@@ -437,6 +437,8 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         user: matiere,
       });
       if (result.text.trim().length === 0) throw new Error("Le modèle a répondu sans contenu.");
+      // Un livrable coupé qui passe pour complet est pire qu'un échec.
+      if (result.truncated) throw new Error("la réponse a été coupée : plafond de longueur atteint");
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       await admin
@@ -445,11 +447,15 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
           status: "echoue",
           ok: false,
           // Je dois savoir à qui on a parlé même quand ça a raté.
-          model_used: model,
+          model_used: result?.modelUsed ?? model,
           error: message.slice(0, 2000),
           error_summary: message.slice(0, 300),
           duration_ms: Date.now() - startedAt,
           input_chars: version.content.length + matiere.length,
+          output_chars: result?.text.length ?? 0,
+          output_tokens: result?.outputTokens ?? null,
+          input_tokens: result?.inputTokens ?? null,
+          truncated: result?.truncated ?? false,
         })
         .eq("id", run.id);
       await admin
@@ -458,6 +464,7 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
         .eq("id", step.id);
       throw new Error(message);
     }
+
 
     // 3) Le dépôt : octets d'abord, ligne ensuite (comme tout artefact).
     const fileName = `plan-v${artifactVersion}.md`;
