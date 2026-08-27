@@ -175,7 +175,7 @@ export const planRobotState = createServerFn({ method: "GET" })
           .maybeSingle(),
         admin
           .from("agent_runs")
-          .select("status, model_used, duration_ms, error_summary, created_at, robot_name")
+          .select("status, model, model_used, duration_ms, error_summary, created_at, robot_name")
           .eq("book_step_id", step.id)
           .order("created_at", { ascending: false }),
         admin
@@ -249,6 +249,10 @@ export const planRobotState = createServerFn({ method: "GET" })
       keyConfigured,
       summaryFilled,
       running,
+      runningSince: enCours?.created_at ?? null,
+      runningRobot: enCours?.robot_name ?? null,
+      runningModel: enCours?.model ?? enCours?.model_used ?? null,
+      runningStale,
       hasPrevious: (arts ?? []).length > 0,
       inRevision: step.status === "en_revision",
       lastReason: revs?.[0]?.comment ?? null,
