@@ -55,7 +55,9 @@ export function PlanRobotPanel({
     onMutate: () => {
       setError(null);
       setNotice(null);
+      setStartedAt(new Date().toISOString());
     },
+
     onSuccess: () => setError(null),
     onError: (e: Error) => setError(e.message),
     // Que le lancement aboutisse ou échoue, tout l'atelier se relit.
