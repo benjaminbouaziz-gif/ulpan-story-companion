@@ -102,7 +102,7 @@ function BooksRoom() {
                 <tr>
                   <th className={cell}>{t("atelier.books.col.rank")}</th>
                   <th className={cell}>{t("atelier.books.col.label")}</th>
-                  <th className={cell}>{t("atelier.books.col.lang")}</th>
+                  
                   <th className={cell}>{t("atelier.books.col.species")}</th>
                   <th className={cell}>{t("atelier.books.col.status")}</th>
                   <th className={cell}>{t("atelier.books.col.awaiting")}</th>
