@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
@@ -43,7 +43,6 @@ function sizeKo(bytes: number | null): string {
 
 export function StepDossier({ bookStepId }: { bookStepId: string }) {
   const { t } = useI18n();
-  const qc = useQueryClient();
   const navigate = useNavigate();
   const fetchDossier = useServerFn(stepDossier);
   const sign = useServerFn(artifactSignedUrl);
