@@ -16,6 +16,16 @@ import { useQueryClient } from "@tanstack/react-query";
  *     révision avec commentaire », qui relance l'étape. Jamais un simple
  *     oui/non sans commentaire.
  *
+ * DOCTRINE D'INTERFACE DE L'ATELIER — vaut pour toutes les briques à venir :
+ *  - L'atelier est un poste de pilotage, pas une vitrine : tableaux denses,
+ *    texte petit mais lisible, information au pixel utile.
+ *  - On lit un statut en toutes lettres, jamais par une couleur seule.
+ *  - Un état vide se dit en français, jamais par un squelette animé ni une
+ *    illustration.
+ *  - Aucun chiffre affiché qui ne soit lu en base au moment de l'affichage.
+ *  - Toute action destructrice ou irréversible demande une confirmation qui
+ *    nomme précisément ce qui va se passer.
+ *
  * La porte : le rôle est lu EN BASE par une fonction serveur (adminMe, sous
  * requireSupabaseAuth), jamais annoncé par le client.
  */
