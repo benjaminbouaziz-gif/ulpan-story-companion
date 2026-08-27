@@ -82,6 +82,7 @@ function PromptsRoom() {
       setNewModel("");
       setNewWebSearch(false);
       setError(null);
+      setMissing({});
       await qc.invalidateQueries({ queryKey: ["atelier", "prompts"] });
       setOpenId(res.promptId);
     },
