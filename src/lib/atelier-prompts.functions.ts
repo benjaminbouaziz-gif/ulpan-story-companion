@@ -29,6 +29,8 @@ export type PromptListRow = {
   rank: number;
   name: string;
   activeVersion: number | null;
+  activeModel: string | null;
+  activeWebSearch: boolean;
   lastVersionAt: string | null;
   versionsCount: number;
 };
@@ -84,7 +86,7 @@ export const atelierPrompts = createServerFn({ method: "GET" })
     const [{ data: prompts }, { data: templates }, { data: versions }] = await Promise.all([
       admin.from("prompts").select("id, step_code, name, active_version_id"),
       admin.from("step_templates").select("code, label_fr, rank"),
-      admin.from("prompt_versions").select("id, prompt_id, version, created_at"),
+      admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
     ]);
 
     const tpl = new Map((templates ?? []).map((t) => [t.code, t]));
@@ -102,6 +104,8 @@ export const atelierPrompts = createServerFn({ method: "GET" })
         rank: tpl.get(p.step_code)?.rank ?? 999,
         name: p.name,
         activeVersion: active?.version ?? null,
+        activeModel: active?.model ?? null,
+        activeWebSearch: active?.web_search ?? false,
         lastVersionAt: last?.created_at ?? null,
         versionsCount: mine.length,
       };

@@ -103,22 +103,26 @@ function PromptsRoom() {
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
-                <th className={cell}>{t("atelier.prompts.col.step")}</th>
                 <th className={cell}>{t("atelier.prompts.col.name")}</th>
+                <th className={cell}>{t("atelier.prompts.col.model")}</th>
+                <th className={cell}>{t("atelier.prompts.col.webSearch")}</th>
                 <th className={cell}>{t("atelier.prompts.col.active")}</th>
-                <th className={cell}>{t("atelier.prompts.col.lastVersion")}</th>
-                <th className={cell}>{t("atelier.prompts.col.count")}</th>
+                <th className={cell}>{t("atelier.prompts.col.lastModified")}</th>
                 <th className={cell} />
               </tr>
             </thead>
             <tbody>
               {(list.data ?? []).map((p) => (
                 <tr key={p.id}>
-                  <td className={cell}>{p.stepLabelFr}</td>
                   <td className={cell}>{p.name}</td>
+                  <td className={cell}>{p.activeModel ?? t("atelier.none")}</td>
+                  <td className={cell}>
+                    {p.activeWebSearch
+                      ? t("atelier.prompts.webSearchOn")
+                      : t("atelier.prompts.webSearchOff")}
+                  </td>
                   <td className={cell}>{p.activeVersion ?? t("atelier.none")}</td>
                   <td className={cell}>{fmt(p.lastVersionAt)}</td>
-                  <td className={cell}>{p.versionsCount}</td>
                   <td className={cell}>
                     <button
                       type="button"
@@ -277,9 +281,8 @@ function PromptDossier({ promptId }: { promptId: string }) {
 
   return (
     <div className="border-line mt-10 border-t pt-6">
-      <h2 className="font-latin text-[18px]">
-        {data.prompt.name} — {data.prompt.stepLabelFr}
-      </h2>
+      <h2 className="font-latin text-[18px]">{data.prompt.name}</h2>
+      <p className="mt-1 text-[13px] opacity-80">{data.prompt.stepLabelFr}</p>
 
       <h3 className="mt-6 text-[14px] font-medium">
         {t("atelier.prompts.activeVersion")}{" "}
@@ -414,7 +417,6 @@ function PromptDossier({ promptId }: { promptId: string }) {
             <tr>
               <th className={cell}>{t("atelier.prompts.version")}</th>
               <th className={cell}>{t("atelier.queue.col.book")}</th>
-              <th className={cell}>{t("atelier.queue.col.step")}</th>
               <th className={cell}>{t("atelier.prompts.col.artifact")}</th>
               <th className={cell}>{t("atelier.prompts.col.date")}</th>
             </tr>
@@ -424,7 +426,6 @@ function PromptDossier({ promptId }: { promptId: string }) {
               <tr key={`${p.versionId}-${i}`}>
                 <td className={cell}>{data.versions.find((v) => v.id === p.versionId)?.version ?? "—"}</td>
                 <td className={cell}>{p.bookTitle}</td>
-                <td className={cell}>{p.stepLabelFr}</td>
                 <td className={cell}>
                   {p.type} v{p.version}
                 </td>
