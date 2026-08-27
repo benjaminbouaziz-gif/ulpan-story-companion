@@ -50,7 +50,7 @@ function AdminAccount() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/admin/connexion", replace: true });
+    navigate({ to: "/atelier/connexion", replace: true });
   }
 
   return (

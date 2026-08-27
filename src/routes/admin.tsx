@@ -13,7 +13,7 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/admin/connexion" });
+    if (error || !data.user) throw redirect({ to: "/atelier/connexion" });
     try {
       const me = await adminMe();
       return { isEditor: me.isEditor };
