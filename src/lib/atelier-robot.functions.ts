@@ -29,9 +29,6 @@ import {
  *  - aucun artefact n'est créé quand l'appel échoue.
  */
 
-export const ROBOT_PLAN = "plan";
-export const PLAN_STEP_CODE = "plan";
-export const PLAFOND_PAR_JOUR = 20;
 
 export const ROBOT_PLAN = "plan";
 export const PLAN_STEP_CODE = "plan";
