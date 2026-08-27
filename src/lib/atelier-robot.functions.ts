@@ -381,8 +381,10 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
     }
 
     // 1) La ligne de lancement d'abord : c'est elle qui interdit le second clic.
-    const idempotencyKey = `plan:${step.id}:v${artifactVersion}${data.withReason ? ":revision" : ""}`;
+    //    La clé nomme LA TENTATIVE — étape + horodatage — et non la version
+    //    d'artefact à venir : un échec ne consomme plus la clé d'après.
     const startedAt = Date.now();
+    const idempotencyKey = `plan:${step.id}:${new Date(startedAt).toISOString()}${data.withReason ? ":revision" : ""}`;
     const { data: run, error: runErr } = await admin
       .from("agent_runs")
       .insert({
@@ -403,7 +405,12 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (runErr || !run) {
-      throw new Error("Un lancement est déjà en cours sur cette étape.");
+      // « Déjà en cours » ne se dit que si c'est VRAIMENT le cas : l'index
+      //  partiel sur (book_step_id) où status = 'en_cours' l'a refusé. Sinon,
+      //  l'erreur de la base remonte telle quelle.
+      if (violeIndex(runErr, "agent_runs_un_seul_en_cours_par_etape"))
+        throw new Error("Un lancement est déjà en cours sur cette étape.");
+      throw new Error(texteErreurBase("Le lancement n'a pas pu être enregistré", runErr));
     }
 
     await admin
