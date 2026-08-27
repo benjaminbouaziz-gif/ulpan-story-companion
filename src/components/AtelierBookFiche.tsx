@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { reviewStep } from "@/lib/atelier-artifacts.functions";
@@ -488,17 +487,6 @@ export function BookFiche({ bookId }: { bookId: string }) {
         </div>
       ) : null}
 
-      {data.ficheStepId ? (
-        <p className="mt-2">
-          <Link
-            to="/atelier/etape/$id"
-            params={{ id: data.ficheStepId }}
-            className="border-b border-current"
-          >
-            {t("atelier.fiche.openStep")}
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }
