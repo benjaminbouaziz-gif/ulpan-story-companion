@@ -19,8 +19,10 @@ import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminChiffresRouteImport } from './routes/admin.chiffres'
+import { Route as AdminCompteRouteImport } from './routes/admin.compte'
 import { Route as AdminExtraitsRouteImport } from './routes/admin.extraits'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
+import { Route as AdminConnexionRouteImport } from './routes/admin_.connexion'
 import { Route as BQr_codeRouteImport } from './routes/b.$qr_code'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
@@ -80,6 +82,11 @@ const AdminChiffresRoute = AdminChiffresRouteImport.update({
   path: '/chiffres',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCompteRoute = AdminCompteRouteImport.update({
+  id: '/compte',
+  path: '/compte',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExtraitsRoute = AdminExtraitsRouteImport.update({
   id: '/extraits',
   path: '/extraits',
@@ -89,6 +96,11 @@ const AdminPagesRoute = AdminPagesRouteImport.update({
   id: '/pages',
   path: '/pages',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminConnexionRoute = AdminConnexionRouteImport.update({
+  id: '/admin_/connexion',
+  path: '/admin/connexion',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BQr_codeRoute = BQr_codeRouteImport.update({
   id: '/b/$qr_code',
@@ -141,8 +153,10 @@ export interface FileRoutesByFullPath {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/admin/chiffres': typeof AdminChiffresRoute
+  '/admin/compte': typeof AdminCompteRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/connexion': typeof AdminConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -162,8 +176,10 @@ export interface FileRoutesByTo {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/admin/chiffres': typeof AdminChiffresRoute
+  '/admin/compte': typeof AdminCompteRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/connexion': typeof AdminConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -185,8 +201,10 @@ export interface FileRoutesById {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methode': typeof MethodeRoute
   '/admin/chiffres': typeof AdminChiffresRoute
+  '/admin/compte': typeof AdminCompteRoute
   '/admin/extraits': typeof AdminExtraitsRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin_/connexion': typeof AdminConnexionRoute
   '/b/$qr_code': typeof BQr_codeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/compagnon/$book_slug': typeof CompagnonBook_slugRoute
@@ -209,8 +227,10 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/methode'
     | '/admin/chiffres'
+    | '/admin/compte'
     | '/admin/extraits'
     | '/admin/pages'
+    | '/admin/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -230,8 +250,10 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/methode'
     | '/admin/chiffres'
+    | '/admin/compte'
     | '/admin/extraits'
     | '/admin/pages'
+    | '/admin/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -252,8 +274,10 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/methode'
     | '/admin/chiffres'
+    | '/admin/compte'
     | '/admin/extraits'
     | '/admin/pages'
+    | '/admin_/connexion'
     | '/b/$qr_code'
     | '/collections/$slug'
     | '/compagnon/$book_slug'
@@ -274,6 +298,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodeRoute: typeof MethodeRoute
+  AdminConnexionRoute: typeof AdminConnexionRoute
   BQr_codeRoute: typeof BQr_codeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   CompagnonBook_slugRoute: typeof CompagnonBook_slugRoute
@@ -356,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminChiffresRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/compte': {
+      id: '/admin/compte'
+      path: '/compte'
+      fullPath: '/admin/compte'
+      preLoaderRoute: typeof AdminCompteRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/extraits': {
       id: '/admin/extraits'
       path: '/extraits'
@@ -369,6 +401,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/pages'
       preLoaderRoute: typeof AdminPagesRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin_/connexion': {
+      id: '/admin_/connexion'
+      path: '/admin/connexion'
+      fullPath: '/admin/connexion'
+      preLoaderRoute: typeof AdminConnexionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/b/$qr_code': {
       id: '/b/$qr_code'
@@ -431,6 +470,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminChiffresRoute: typeof AdminChiffresRoute
+  AdminCompteRoute: typeof AdminCompteRoute
   AdminExtraitsRoute: typeof AdminExtraitsRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -438,6 +478,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminChiffresRoute: AdminChiffresRoute,
+  AdminCompteRoute: AdminCompteRoute,
   AdminExtraitsRoute: AdminExtraitsRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -454,6 +495,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodeRoute: MethodeRoute,
+  AdminConnexionRoute: AdminConnexionRoute,
   BQr_codeRoute: BQr_codeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   CompagnonBook_slugRoute: CompagnonBook_slugRoute,
