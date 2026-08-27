@@ -676,7 +676,7 @@ const en: Record<DictKey, string> = {
   "atelier.robot.relaunch": "Run again with my reason",
   "atelier.robot.fresh": "Start from scratch",
   "atelier.robot.freshConfirm":
-    "Run again ignoring the previous plan? It stays available in the versions.",
+    "Run again ignoring the previous plan? It stays available in the versions, and the {n} decisions of this step will be archived.",
   "atelier.robot.running": "The robot is working. This step reopens once it has filed its plan.",
   "atelier.robot.blocked": "What is missing before running:",
   "atelier.robot.quota": "Runs today: {used} of {cap}.",
