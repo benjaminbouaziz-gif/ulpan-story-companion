@@ -180,11 +180,15 @@ export async function synchroniserDecisions(
     at: new Date().toISOString(),
   });
 
+  // Les décisions ARCHIVÉES sont hors jeu : une question identique repart
+  // ouverte, elle n'est jamais rattachée à un plan abandonné.
   const { data: existantes } = await admin
     .from("book_decisions")
     .select("id, question_key, stale, sort_order")
     .eq("book_id", args.bookId)
-    .eq("book_step_id", args.bookStepId);
+    .eq("book_step_id", args.bookStepId)
+    .is("archived_at", null);
+
 
   const parCle = new Map((existantes ?? []).map((d) => [d.question_key, d]));
   const clesVues = new Set<string>();
@@ -239,10 +243,12 @@ export async function blocDecisionsPourRobot(
   bookId: string,
 ): Promise<string | null> {
   const admin = await getAdminClient(ctx);
+  // Une décision archivée ne part JAMAIS, quel que soit son statut.
   const { data } = await admin
     .from("book_decisions")
     .select("question, decision, status, sort_order, created_at")
     .eq("book_id", bookId)
+    .is("archived_at", null)
     .in("status", ["tranchee", "ecartee"])
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
@@ -264,4 +270,27 @@ export async function blocDecisionsPourRobot(
     "DÉCISIONS DE L'ÉDITEUR — elles font foi, elles ne se rediscutent pas :",
     ...lignes.map((l, i) => `${i + 1}. ${l}`),
   ].join("\n");
+}
+
+/**
+ * L'ARCHIVAGE — appelé UNIQUEMENT par « Repartir de zéro ». Les questions
+ * issues du plan abandonné sont mises de côté : ni modifiées, ni supprimées.
+ * On note au passage la version d'artefact qui les avait produites, pour
+ * qu'on sache toujours de quel plan elles venaient.
+ */
+export async function archiverDecisionsDeLEtape(
+  ctx: EditorContext,
+  args: { bookStepId: string; fromVersion: number | null },
+): Promise<number> {
+  const admin = await getAdminClient(ctx);
+  const { data } = await admin
+    .from("book_decisions")
+    .update({
+      archived_at: new Date().toISOString(),
+      archived_from_version: args.fromVersion,
+    })
+    .eq("book_step_id", args.bookStepId)
+    .is("archived_at", null)
+    .select("id");
+  return (data ?? []).length;
 }

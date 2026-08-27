@@ -5,7 +5,11 @@ import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { artifactPath, ARTIFACT_BUCKET } from "./artifact-path";
 import { sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
-import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
+import {
+  archiverDecisionsDeLEtape,
+  blocDecisionsPourRobot,
+  synchroniserDecisions,
+} from "./decisions.server";
 import { texteErreurBase, violeIndex } from "./db-error";
 import {
   appelerModele,
@@ -58,6 +62,8 @@ export type PlanRobotState = {
   /** Vrai quand ce lancement traîne au-delà du délai d'abandon. */
   runningStale: boolean;
   hasPrevious: boolean;
+  /** Décisions vivantes de l'étape : ce que « Repartir de zéro » archivera. */
+  liveDecisions: number;
   inRevision: boolean;
   lastReason: string | null;
   runsToday: number;
@@ -213,6 +219,14 @@ export const planRobotState = createServerFn({ method: "GET" })
       .eq("robot_name", ROBOT_PLAN)
       .gte("created_at", debutDeJournee());
 
+    // Ce que « Repartir de zéro » mettra de côté : on le NOMME au bouton.
+    const { count: liveDecisions } = await admin
+      .from("book_decisions")
+      .select("id", { count: "exact", head: true })
+      .eq("book_step_id", step.id)
+      .is("archived_at", null);
+
+
     const model = version?.model ?? null;
     const summaryFilled = (book?.work_summary_fr ?? "").trim().length > 0;
     const keyConfigured = model ? cleConfiguree(model) : false;
@@ -257,6 +271,7 @@ export const planRobotState = createServerFn({ method: "GET" })
       runningModel: enCours?.model ?? enCours?.model_used ?? null,
       runningStale,
       hasPrevious: (arts ?? []).length > 0,
+      liveDecisions: liveDecisions ?? 0,
       inRevision: step.status === "en_revision",
       lastReason: revs?.[0]?.comment ?? null,
       runsToday: runsToday ?? 0,
@@ -431,6 +446,20 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
       .from("book_steps")
       .update({ status: "en_cours", awaiting: "robot", updated_at: new Date().toISOString() })
       .eq("id", step.id);
+
+    /**
+     * REPARTIR DE ZÉRO — les questions du plan abandonné n'ont plus d'objet :
+     * elles sont archivées AVANT l'appel, avec la version du plan qui les
+     * avait produites. Rien n'est détruit ; le nouveau livrable créera ses
+     * propres décisions, à neuf. Une relance avec motif ne touche à rien.
+     */
+    if (fromScratch) {
+      await archiverDecisionsDeLEtape(editor, {
+        bookStepId: step.id,
+        fromVersion: lastArt?.[0]?.version ?? null,
+      });
+    }
+
 
     /**
      * BRIQUE 7 — mes arbitrages partent avec CHAQUE appel, après les données du

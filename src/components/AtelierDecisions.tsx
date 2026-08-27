@@ -160,6 +160,60 @@ function DecisionLine({ row, onDone }: { row: DecisionRow; onDone: () => void })
   );
 }
 
+/**
+ * LES DÉCISIONS ARCHIVÉES. Une ligne discrète, repliée par défaut, qui se
+ * déplie en lecture seule : la version du plan d'origine et ce que j'avais
+ * répondu. S'il n'y en a aucune, la ligne n'apparaît pas.
+ */
+function ArchivedDecisions({ rows }: { rows: DecisionRow[] }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  if (rows.length === 0) return null;
+
+  const versions = [
+    ...new Set(
+      rows.map((r) => (r.archivedFromVersion === null ? t("atelier.none") : `v${r.archivedFromVersion}`)),
+    ),
+  ].join(", ");
+
+  return (
+    <div className="mt-5">
+      <button
+        type="button"
+        className="border-b border-current opacity-70"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {t("atelier.dec.archivedLine").replace("{n}", String(rows.length)).replace("{v}", versions)}
+      </button>
+      {open ? (
+        <table className="mt-2 w-full border-collapse">
+          <thead>
+            <tr>
+              <th className={cell}>{t("atelier.dec.archivedFrom")}</th>
+              <th className={cell}>{t("atelier.dec.question")}</th>
+              <th className={cell}>{t("atelier.dec.myDecision")}</th>
+              <th className={cell}>{t("atelier.dec.status")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className={cell}>
+                  {r.archivedFromVersion === null ? t("atelier.none") : `v${r.archivedFromVersion}`}
+                </td>
+                <td className={cell}>{r.question}</td>
+                <td className={cell}>{r.decision ?? "—"}</td>
+                <td className={cell}>{t(`atelier.dec.status.${r.status}` as DictKey)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
+    </div>
+  );
+}
+
+
 /** Le bloc « Décisions à prendre », sous le livrable courant. */
 export function StepDecisions({ bookStepId }: { bookStepId: string }) {
   const { t } = useI18n();
@@ -191,7 +245,10 @@ export function StepDecisions({ bookStepId }: { bookStepId: string }) {
     onError: (e: Error) => setMessage(e.message),
   });
 
-  const rows = q.data?.decisions ?? [];
+  const toutes = q.data?.decisions ?? [];
+  // Une décision archivée sort de ma vue : elle ne compte pas, elle attend en bas.
+  const rows = toutes.filter((r) => r.archivedAt === null);
+  const archivees = toutes.filter((r) => r.archivedAt !== null);
   const vives = rows.filter((r) => !r.stale);
   const perimees = rows.filter((r) => r.stale);
   const tranchees = rows.filter((r) => r.status !== "ouverte").length;
@@ -215,6 +272,9 @@ export function StepDecisions({ bookStepId }: { bookStepId: string }) {
       {[...vives, ...perimees].map((row) => (
         <DecisionLine key={row.id} row={row} onDone={invalidate} />
       ))}
+
+      <ArchivedDecisions rows={archivees} />
+
 
       <div className="mt-4">
         {adding ? (
@@ -274,7 +334,9 @@ export function BookDecisions({ bookId }: { bookId: string }) {
     queryKey: ["atelier", "decisions", "book", bookId],
     queryFn: () => fetchAll({ data: { bookId } }),
   });
-  const rows = q.data ?? [];
+  const toutes = q.data ?? [];
+  const rows = toutes.filter((r) => r.archivedAt === null);
+  const archivees = toutes.filter((r) => r.archivedAt !== null);
 
   return (
     <div className="mt-8 text-[13px]">
@@ -308,6 +370,8 @@ export function BookDecisions({ bookId }: { bookId: string }) {
           </tbody>
         </table>
       )}
+      <ArchivedDecisions rows={archivees} />
+
     </div>
   );
 }
