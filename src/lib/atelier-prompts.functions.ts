@@ -226,7 +226,7 @@ export const createPrompt = createServerFn({ method: "POST" })
       .select("code, species")
       .eq("code", data.stepCode)
       .maybeSingle();
-    if (!tpl || tpl.species !== "llm") throw new Error("Étape sans prompt");
+    if (!tpl || tpl.species !== "llm") throw new Error("L’étape choisie ne peut pas recevoir de prompt.");
 
     // Code unique, dérivé de l'étape.
     const { data: siblings } = await admin.from("prompts").select("code").like("code", `${tpl.code}%`);
@@ -256,7 +256,7 @@ export const createPrompt = createServerFn({ method: "POST" })
           "Un prompt actif existe déjà pour cette étape. Ouvre-le et publie une nouvelle version plutôt que d'en créer un second.",
         );
       }
-      throw new Error(error?.message ?? "Création refusée");
+      throw new Error("L’enregistrement du prompt a été refusé par le serveur.");
     }
 
     const { data: version, error: vErr } = await admin
@@ -271,16 +271,18 @@ export const createPrompt = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (vErr || !version) throw new Error("Version refusée");
+    if (vErr || !version) throw new Error("La première version du prompt n’a pas pu être enregistrée.");
 
-    await admin.from("prompts").update({ active_version_id: version.id }).eq("id", prompt.id);
-    await admin.from("prompt_activations").insert({
+    const { error: activeError } = await admin.from("prompts").update({ active_version_id: version.id }).eq("id", prompt.id);
+    if (activeError) throw new Error("Le prompt a été créé, mais sa version n’a pas pu être activée.");
+    const { error: activationError } = await admin.from("prompt_activations").insert({
       prompt_id: prompt.id,
       prompt_version_id: version.id,
       version: 1,
       reason: "création",
       created_by: editor.userId,
     });
+    if (activationError) throw new Error("Le prompt a été créé, mais son activation n’a pas pu être enregistrée.");
 
     return { promptId: prompt.id };
   });
@@ -324,16 +326,21 @@ export const publishPromptVersion = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error || !inserted) throw new Error(error?.message ?? "Version refusée");
+    if (error || !inserted) throw new Error("La nouvelle version a été refusée par le serveur.");
 
-    await admin.from("prompts").update({ active_version_id: inserted.id }).eq("id", data.promptId);
-    await admin.from("prompt_activations").insert({
+    const { error: activeError } = await admin
+      .from("prompts")
+      .update({ active_version_id: inserted.id })
+      .eq("id", data.promptId);
+    if (activeError) throw new Error("La version a été créée, mais elle n’a pas pu être activée.");
+    const { error: activationError } = await admin.from("prompt_activations").insert({
       prompt_id: data.promptId,
       prompt_version_id: inserted.id,
       version,
       reason: "publication",
       created_by: editor.userId,
     });
+    if (activationError) throw new Error("La version a été créée, mais son activation n’a pas pu être enregistrée.");
 
     return { version };
   });
