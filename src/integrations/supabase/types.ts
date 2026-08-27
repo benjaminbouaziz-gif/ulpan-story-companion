@@ -879,6 +879,36 @@ export type Database = {
           },
         ]
       }
+      maintenance_log: {
+        Row: {
+          author: string | null
+          id: string
+          occurred_at: string
+          old_value: Json
+          operation: string
+          row_id: string | null
+          table_name: string
+        }
+        Insert: {
+          author?: string | null
+          id?: string
+          occurred_at?: string
+          old_value: Json
+          operation: string
+          row_id?: string | null
+          table_name: string
+        }
+        Update: {
+          author?: string | null
+          id?: string
+          occurred_at?: string
+          old_value?: Json
+          operation?: string
+          row_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       page_blocks: {
         Row: {
           block_kind: string
