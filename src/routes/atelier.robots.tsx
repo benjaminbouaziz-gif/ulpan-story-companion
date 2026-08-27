@@ -26,6 +26,7 @@ function RunsTable() {
           <th className="py-1 pr-3 font-normal opacity-70">Livre</th>
           <th className="py-1 pr-3 font-normal opacity-70">Robot</th>
           <th className="py-1 pr-3 font-normal opacity-70">Modèle</th>
+          <th className="py-1 pr-3 font-normal opacity-70">Mode</th>
           <th className="py-1 pr-3 font-normal opacity-70">Statut</th>
           <th className="py-1 pr-3 font-normal opacity-70">Durée</th>
           <th className="py-1 pr-3 font-normal opacity-70">Jetons produits</th>
@@ -38,6 +39,15 @@ function RunsTable() {
             <td className="py-1 pr-3">{r.bookTitle ?? "—"}</td>
             <td className="py-1 pr-3">{r.robot ?? "—"}</td>
             <td className="py-1 pr-3">{r.model ?? "—"}</td>
+            <td className="py-1 pr-3">
+              {r.mode === "avec_precedent"
+                ? "avec le livrable précédent"
+                : r.mode === "sans_precedent"
+                  ? "reparti de zéro"
+                  : r.mode === "initial"
+                    ? "premier lancement"
+                    : "—"}
+            </td>
             <td className="py-1 pr-3">
               {r.status ?? "—"}
               {r.truncated ? " · coupé" : ""}

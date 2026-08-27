@@ -41,7 +41,14 @@ export function PlanRobotPanel({
   const running = s?.running ?? false;
 
   const run = useMutation({
-    mutationFn: (withReason: boolean) => launch({ data: { bookStepId, withReason } }),
+    mutationFn: (mode: "avec_precedent" | "sans_precedent" | null) =>
+      launch({
+        data: {
+          bookStepId,
+          withReason: mode === "avec_precedent",
+          ...(mode ? { mode } : {}),
+        },
+      }),
     onSuccess: async () => {
       setError(null);
       setNotice(null);
@@ -153,10 +160,25 @@ export function PlanRobotPanel({
           type="button"
           className="border-line border px-2 py-0.5 disabled:opacity-40"
           disabled={blocked}
-          onClick={() => run.mutate(relaunch)}
+          onClick={() => run.mutate(relaunch ? "avec_precedent" : null)}
         >
           {relaunch ? t("atelier.robot.relaunch") : t("atelier.robot.launch")}
         </button>
+
+        {/* Repartir de zéro : le prompt actif, les données du livre et mes
+            décisions tranchées — rien du livrable précédent. */}
+        {s.hasPrevious ? (
+          <button
+            type="button"
+            className="border-line border px-2 py-0.5 disabled:opacity-40"
+            disabled={blocked}
+            onClick={() => {
+              if (window.confirm(t("atelier.robot.freshConfirm"))) run.mutate("sans_precedent");
+            }}
+          >
+            {t("atelier.robot.fresh")}
+          </button>
+        ) : null}
 
         {s.runningStale ? (
           <button
