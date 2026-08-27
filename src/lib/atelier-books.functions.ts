@@ -35,7 +35,7 @@ export const atelierBooks = createServerFn({ method: "GET" })
         .select("id, slug, title_fr, status, collection_id, current_step_code")
         .order("tome_no", { ascending: true }),
       admin.from("collections").select("id, name_fr"),
-      admin.from("book_steps").select("book_id, step_code, label_fr, status"),
+      admin.from("book_steps").select("book_id, step_code, label_fr, status, lang").in("lang", ["shared", "fr"]),
     ]);
 
     const names = new Map((collections.data ?? []).map((c) => [c.id, c.name_fr]));
