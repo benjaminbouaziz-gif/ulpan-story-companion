@@ -10,7 +10,9 @@ import {
   lirePlanChapitres,
   mesurerChapitre,
   MOTS_MAX,
+  MOTS_MAX_DUR,
   MOTS_MIN,
+  MOTS_MIN_DUR,
   type ChapitrePlan,
   type MesureChapitre,
 } from "./recit-calibrage";
@@ -95,6 +97,8 @@ export type ContexteRecit = {
   missing: string[];
   motsMin: number;
   motsMax: number;
+  motsMinDur: number;
+  motsMaxDur: number;
 };
 
 type Prepare = {
