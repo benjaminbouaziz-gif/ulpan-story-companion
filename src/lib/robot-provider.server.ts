@@ -256,23 +256,34 @@ async function appelGoogle(
 async function appelLovable(model: string, system: string, user: string): Promise<AppelResultat> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("La clé LOVABLE_API_KEY n'est pas configurée.");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "Lovable-API-Key": key,
-      "X-Lovable-AIG-SDK": "fetch",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: MAX_TOKENS,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(texteErreur(res.status, await res.text()));
+  const url = "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const t0 = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "Lovable-API-Key": key,
+        "X-Lovable-AIG-SDK": "fetch",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: MAX_TOKENS,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      }),
+    });
+  } catch (e) {
+    throw new Error(texteErreurReseau(e, { url, model, elapsedMs: Date.now() - t0 }));
+  }
+  if (!res.ok)
+    throw new Error(
+      texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
+    );
+
   const json = (await res.json()) as {
     model?: string;
     usage?: { prompt_tokens?: number; completion_tokens?: number };
