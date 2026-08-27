@@ -178,15 +178,18 @@ export function mesurerChapitre(
   const brutes = decouperPages(markdown);
   const pages: MesurePage[] = brutes.map((p) => {
     const words = compterMots(p.texte);
+    const nonVide = p.texte.trim().length > 0;
     return {
       pageNo: p.pageNo,
       words,
-      empty: p.texte.trim().length === 0,
-      ok: words >= MOTS_MIN && words <= MOTS_MAX && p.texte.trim().length > 0,
+      empty: !nonVide,
+      ok: words >= MOTS_MIN && words <= MOTS_MAX && nonVide,
+      acceptable: words >= MOTS_MIN_DUR && words <= MOTS_MAX_DUR && nonVide,
     };
   });
 
   const problems: string[] = [];
+  const warnings: string[] = [];
   if (pages.length === 0)
     problems.push("Aucune page trouvée : le rendu ne contient aucune ligne « ### Page N ».");
   if (pages.length !== attendu.pages)
@@ -212,16 +215,22 @@ export function mesurerChapitre(
       problems.push(`La page ${p.pageNo} est vide.`);
       continue;
     }
-    if (p.words < MOTS_MIN)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — sous le plancher de ${MOTS_MIN}.`);
+    // Hors de l'élargie 160–215 : bloquant. Hors de 165–210 seulement : signalé.
+    if (p.words < MOTS_MIN_DUR)
+      problems.push(`Page ${p.pageNo} : ${p.words} mots — sous le plancher bloquant de ${MOTS_MIN_DUR}.`);
+    else if (p.words > MOTS_MAX_DUR)
+      problems.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`);
+    else if (p.words < MOTS_MIN)
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots — sous la fourchette visée de ${MOTS_MIN} (dans l'élargie).`);
     else if (p.words > MOTS_MAX)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus du plafond de ${MOTS_MAX}.`);
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus de la fourchette visée de ${MOTS_MAX} (dans l'élargie).`);
   }
 
   return {
     ok: problems.length === 0,
     pages,
     problems,
+    warnings,
     totalWords: pages.reduce((n, p) => n + p.words, 0),
   };
 }
