@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
-import { adminLoginAllowed, adminLoginFailed } from "@/lib/admin-auth.functions";
+import { adminSignIn } from "@/lib/admin-auth.functions";
 
 /**
  * La porte de l'atelier : deux champs, un bouton. Le message d'erreur est le
