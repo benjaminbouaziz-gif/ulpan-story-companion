@@ -331,8 +331,14 @@ function PromptDossier({ promptId }: { promptId: string }) {
               <button
                 type="button"
                 className={button}
-                disabled={!content.trim() || !note.trim() || publishMut.isPending}
-                onClick={() => publishMut.mutate()}
+                disabled={publishMut.isPending}
+                onClick={() => {
+                  const m = { content: !content.trim(), note: !note.trim() };
+                  setMissing(m);
+                  setError(null);
+                  if (m.content || m.note) return;
+                  publishMut.mutate();
+                }}
               >
                 {t("atelier.prompts.publish")}
               </button>
