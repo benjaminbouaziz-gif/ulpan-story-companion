@@ -18,6 +18,15 @@
 
 export type Fournisseur = "anthropic" | "google" | "lovable";
 
+/**
+ * Signal de vie du flux, remonté dès le premier événement utile : il permet
+ * d'inscrire le modèle réellement employé sans attendre la fin de la réponse.
+ */
+export type Progression = (info: {
+  phase: "premier_evenement";
+  modelUsed: string;
+}) => void | Promise<void>;
+
 export type AppelResultat = {
   text: string;
   modelUsed: string;
