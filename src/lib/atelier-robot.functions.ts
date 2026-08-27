@@ -213,7 +213,11 @@ export const planRobotState = createServerFn({ method: "GET" })
     const model = version?.model ?? null;
     const summaryFilled = (book?.work_summary_fr ?? "").trim().length > 0;
     const keyConfigured = model ? cleConfiguree(model) : false;
-    const running = (runs ?? []).some((r) => r.status === "en_cours");
+    const enCours = (runs ?? []).find((r) => r.status === "en_cours") ?? null;
+    const running = enCours !== null;
+    const runningStale =
+      enCours !== null && Date.now() - new Date(enCours.created_at).getTime() > DELAI_ABANDON_MS;
+
 
     const missing: string[] = [];
     if (!isPlanStep) missing.push("Ce robot ne travaille que sur l'étape « Plan de chapitres ».");
