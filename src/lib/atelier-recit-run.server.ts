@@ -121,14 +121,23 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
   if (step.step_code !== REDACTION_STEP_CODE)
     missing.push("Ce robot ne travaille que sur l'étape « Rédaction du récit ».");
 
-  // 1) Le plan validé du livre : c'est lui qui fixe les pages de chaque chapitre.
-  const { data: planStep } = await admin
+  /**
+   * 1) Le plan validé du livre : c'est lui qui fixe les pages de chaque
+   * chapitre. Le plan est souvent porté par une étape de langue « shared »
+   * alors que la rédaction est en « fr » : on prend l'étape de MÊME langue si
+   * elle existe, sinon l'étape partagée. Filtrer sur la langue seule ferait
+   * dire à l'écran que le livre n'a pas de plan — ce serait faux.
+   */
+  const { data: planSteps } = await admin
     .from("book_steps")
-    .select("id, status, label_fr")
+    .select("id, status, label_fr, lang")
     .eq("book_id", step.book_id)
-    .eq("lang", step.lang)
-    .eq("step_code", PLAN_STEP_CODE)
-    .maybeSingle();
+    .eq("step_code", PLAN_STEP_CODE);
+  const planStep =
+    (planSteps ?? []).find((p) => p.lang === step.lang) ??
+    (planSteps ?? []).find((p) => p.lang === "shared") ??
+    (planSteps ?? [])[0] ??
+    null;
 
   let planText: string | null = null;
   if (!planStep) missing.push("Ce livre n'a pas d'étape « Plan de chapitres ».");
