@@ -222,15 +222,19 @@ export function mesurerChapitre(
       problems.push(`La page ${p.pageNo} est vide.`);
       continue;
     }
-    // Hors de l'élargie 160–215 : bloquant. Hors de 165–210 seulement : signalé.
+    // Sous 130 ou au-dessus de 210 : bloquant. Entre les deux : au plus signalé.
     if (p.words < MOTS_MIN_DUR)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — sous le plancher bloquant de ${MOTS_MIN_DUR}.`);
+      problems.push(
+        `Page ${p.pageNo} : cible du plan ${cible} mots, mesuré ${p.words} — sous le plancher bloquant de ${MOTS_MIN_DUR}.`,
+      );
     else if (p.words > MOTS_MAX_DUR)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`);
-    else if (p.words < MOTS_MIN)
-      warnings.push(`Page ${p.pageNo} : ${p.words} mots — sous la fourchette visée de ${MOTS_MIN} (dans l'élargie).`);
+      problems.push(
+        `Page ${p.pageNo} : cible du plan ${cible} mots, mesuré ${p.words} — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`,
+      );
+    else if (p.words < cible)
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible}.`);
     else if (p.words > MOTS_MAX)
-      warnings.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus de la fourchette visée de ${MOTS_MAX} (dans l'élargie).`);
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible} — au-dessus de la fourchette visée.`);
   }
 
   return {
