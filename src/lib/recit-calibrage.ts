@@ -180,8 +180,9 @@ export function decouperPages(markdown: string): PageBrute[] {
 
 export function mesurerChapitre(
   markdown: string,
-  attendu: { chapterNo: number; firstPage: number; pages: number },
+  attendu: { chapterNo: number; firstPage: number; pages: number; cibleMots?: number },
 ): MesureChapitre {
+  const cible = attendu.cibleMots ?? MOTS_CIBLE;
   const brutes = decouperPages(markdown);
   const pages: MesurePage[] = brutes.map((p) => {
     const words = compterMots(p.texte);
