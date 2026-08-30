@@ -17,9 +17,16 @@
 export const MOTS_MIN = 165;
 export const MOTS_MAX = 210;
 
-/** La fourchette BLOQUANTE : hors d'elle, le lancement échoue et rien n'est déposé. */
-export const MOTS_MIN_DUR = 160;
-export const MOTS_MAX_DUR = 215;
+/** La CIBLE de mots par page servant de repère dans les signalements. */
+export const MOTS_CIBLE = 170;
+
+/**
+ * Les bornes BLOQUANTES : hors d'elles, le lancement échoue et rien n'est déposé.
+ * Le plancher est bas (130) car certaines pages sont structurellement courtes ;
+ * le plafond reste celui de la maquette (210) : au-delà, la page déborde.
+ */
+export const MOTS_MIN_DUR = 130;
+export const MOTS_MAX_DUR = 210;
 
 const MOT = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
 
