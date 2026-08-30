@@ -144,6 +144,8 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
     null;
 
   let planText: string | null = null;
+  let planVersion: number | null = null;
+
   if (!planStep) missing.push("Ce livre n'a pas d'étape « Plan de chapitres ».");
   else if (planStep.status !== "valide" && planStep.status !== "valide_hors_crm")
     missing.push("Le plan de chapitres n'est pas validé : la rédaction attend un plan arrêté.");
