@@ -80,6 +80,8 @@ export type ContexteRecit = {
   webSearch: boolean;
   keyConfigured: boolean;
   planReady: boolean;
+  /** La version du plan actuellement en vigueur pour cette étape. */
+  planVersion: number | null;
   planProblems: string[];
   chapitres: ChapitrePlan[];
   totalPages: number;
@@ -109,6 +111,7 @@ export type ContexteRecit = {
 type Prepare = {
   step: { id: string; book_id: string; step_code: string; lang: string; status: string };
   planText: string | null;
+  planVersion: number | null;
   plan: ReturnType<typeof lirePlanChapitres>;
   prompt: { id: string; name: string } | null;
   version: { id: string; version: number; content: string; model: string; web_search: boolean } | null;
@@ -219,6 +222,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
   return {
     step,
     planText,
+    planVersion,
     plan,
     prompt: prompt ? { id: prompt.id, name: prompt.name } : null,
     version,
@@ -340,6 +344,7 @@ export async function etatRecit(editor: EditorContext, bookStepId: string): Prom
     webSearch: prepare.version?.web_search ?? false,
     keyConfigured: prepare.version ? cleConfiguree(prepare.version.model) : false,
     planReady: prepare.plan.ok,
+    planVersion: prepare.planVersion,
     planProblems: prepare.plan.problems,
     chapitres: prepare.plan.chapitres,
     totalPages: prepare.plan.totalPages,
@@ -600,6 +605,7 @@ export async function executerChapitre(
         book_step_id: step.id,
         type: "chapitre",
         chapter_no: chapterNo,
+        plan_version: prepare.planVersion,
         version: artifactVersion,
         storage_path: storagePath,
         checksum,
