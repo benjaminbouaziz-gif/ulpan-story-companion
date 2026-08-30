@@ -180,6 +180,7 @@ export type Database = {
           created_by: string | null
           id: string
           origin: string
+          plan_version: number | null
           prompt_version_id: string | null
           robot_run_id: string | null
           size_bytes: number | null
@@ -195,6 +196,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           origin: string
+          plan_version?: number | null
           prompt_version_id?: string | null
           robot_run_id?: string | null
           size_bytes?: number | null
@@ -210,6 +212,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           origin?: string
+          plan_version?: number | null
           prompt_version_id?: string | null
           robot_run_id?: string | null
           size_bytes?: number | null
