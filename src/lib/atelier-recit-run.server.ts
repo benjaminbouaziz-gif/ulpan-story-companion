@@ -61,9 +61,14 @@ export type ChapitreEcrit = {
   version: number;
   storagePath: string;
   createdAt: string;
+  /** La version du plan qui a produit ce chapitre, si elle est connue. */
+  planVersion: number | null;
+  /** La version du prompt de rédaction qui a produit ce chapitre. */
+  promptVersion: number | null;
   /** La dernière mesure connue de ce chapitre, si elle existe. */
   mesure: { ok: boolean; pages: { pageNo: number; words: number; ok: boolean }[]; problems: string[] } | null;
 };
+
 
 export type ContexteRecit = {
   stepCode: string;
@@ -75,6 +80,8 @@ export type ContexteRecit = {
   webSearch: boolean;
   keyConfigured: boolean;
   planReady: boolean;
+  /** La version du plan actuellement en vigueur pour cette étape. */
+  planVersion: number | null;
   planProblems: string[];
   chapitres: ChapitrePlan[];
   totalPages: number;
@@ -104,6 +111,7 @@ export type ContexteRecit = {
 type Prepare = {
   step: { id: string; book_id: string; step_code: string; lang: string; status: string };
   planText: string | null;
+  planVersion: number | null;
   plan: ReturnType<typeof lirePlanChapitres>;
   prompt: { id: string; name: string } | null;
   version: { id: string; version: number; content: string; model: string; web_search: boolean } | null;
@@ -144,6 +152,8 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
     null;
 
   let planText: string | null = null;
+  let planVersion: number | null = null;
+
   if (!planStep) missing.push("Ce livre n'a pas d'étape « Plan de chapitres ».");
   else if (planStep.status !== "valide" && planStep.status !== "valide_hors_crm")
     missing.push("Le plan de chapitres n'est pas validé : la rédaction attend un plan arrêté.");
@@ -158,6 +168,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
     const path = arts?.[0]?.storage_path;
     if (!path) missing.push("Aucun plan n'est déposé sur l'étape « Plan de chapitres ».");
     else {
+      planVersion = arts?.[0]?.version ?? null;
       try {
         planText = (await downloadArtifactText(editor, path)).text;
       } catch (e) {
@@ -165,6 +176,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
       }
     }
   }
+
 
   const plan = lirePlanChapitres(planText ?? "");
   if (planText !== null && !plan.ok) missing.push(...plan.problems);
@@ -210,6 +222,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
   return {
     step,
     planText,
+    planVersion,
     plan,
     prompt: prompt ? { id: prompt.id, name: prompt.name } : null,
     version,
@@ -222,7 +235,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
 async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<ChapitreEcrit[]> {
   const { data: arts } = await admin
     .from("artifacts")
-    .select("id, chapter_no, version, storage_path, created_at")
+    .select("id, chapter_no, version, storage_path, created_at, plan_version, prompt_version_id")
     .eq("book_step_id", stepId)
     .eq("type", "chapitre")
     .order("chapter_no", { ascending: true })
@@ -233,6 +246,17 @@ async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<Chapit
     const n = a.chapter_no;
     if (n === null) continue;
     if (!derniers.has(n)) derniers.set(n, a);
+  }
+
+  // Les versions de prompt citées par ces livrables, lues d'un seul coup.
+  const promptVersionIds = [...new Set([...derniers.values()].map((a) => a.prompt_version_id).filter((v): v is string => !!v))];
+  const versionsDePrompt = new Map<string, number>();
+  if (promptVersionIds.length > 0) {
+    const { data: pvs } = await admin
+      .from("prompt_versions")
+      .select("id, version")
+      .in("id", promptVersionIds);
+    for (const pv of pvs ?? []) versionsDePrompt.set(pv.id, pv.version);
   }
 
   const { data: mesures } = await admin
@@ -254,6 +278,8 @@ async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<Chapit
         version: a.version,
         storagePath: a.storage_path,
         createdAt: a.created_at,
+        planVersion: a.plan_version ?? null,
+        promptVersion: a.prompt_version_id ? versionsDePrompt.get(a.prompt_version_id) ?? null : null,
         mesure: m
           ? {
               ok: m.ok,
@@ -263,6 +289,7 @@ async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<Chapit
           : null,
       };
     });
+
 }
 
 /** L'état complet de l'étape de rédaction : ce qui est écrit, ce qui reste. */
@@ -317,6 +344,7 @@ export async function etatRecit(editor: EditorContext, bookStepId: string): Prom
     webSearch: prepare.version?.web_search ?? false,
     keyConfigured: prepare.version ? cleConfiguree(prepare.version.model) : false,
     planReady: prepare.plan.ok,
+    planVersion: prepare.planVersion,
     planProblems: prepare.plan.problems,
     chapitres: prepare.plan.chapitres,
     totalPages: prepare.plan.totalPages,
@@ -577,6 +605,7 @@ export async function executerChapitre(
         book_step_id: step.id,
         type: "chapitre",
         chapter_no: chapterNo,
+        plan_version: prepare.planVersion,
         version: artifactVersion,
         storage_path: storagePath,
         checksum,
@@ -663,6 +692,49 @@ export async function ecrireChapitresRestants(
         ok: true,
         message:
           `Chapitre ${cible} écrit (v${r.artifactVersion}) : ${r.mesure.pages.length} page(s), ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.` +
+          (r.mesure.warnings.length > 0 ? ` Signalement : ${r.mesure.warnings.join(" · ")}` : ""),
+      });
+    } catch (e) {
+      maillons.push({
+        chapterNo: cible,
+        ok: false,
+        message: `Arrêt au chapitre ${cible} : ${e instanceof Error ? e.message : String(e)}`,
+      });
+      return maillons;
+    }
+  }
+  return maillons;
+}
+
+/**
+ * TOUT RÉÉCRIRE DEPUIS LE DÉBUT. Chaque chapitre déjà écrit est repris, du plus
+ * petit numéro au plus grand, et chacun DÉPOSE UNE NOUVELLE VERSION : aucune
+ * version précédente n'est touchée ni supprimée, elles restent consultables et
+ * téléchargeables dans le dossier de l'étape. On s'arrête au premier échec.
+ */
+export async function reecrireTousLesChapitres(
+  editor: EditorContext,
+  bookStepId: string,
+  reason?: string,
+): Promise<MaillonChapitre[]> {
+  const depart = await etatRecit(editor, bookStepId);
+  if (!depart) throw new Error("Étape introuvable.");
+  const cibles = depart.ecrits.map((e) => e.chapterNo).sort((a, b) => a - b);
+  if (cibles.length === 0) throw new Error("Aucun chapitre n'est encore écrit : il n'y a rien à réécrire.");
+
+  const maillons: MaillonChapitre[] = [];
+  for (const cible of cibles) {
+    try {
+      const r = await executerChapitre(editor, {
+        bookStepId,
+        chapterNo: cible,
+        ...(reason ? { reason } : {}),
+      });
+      maillons.push({
+        chapterNo: cible,
+        ok: true,
+        message:
+          `Chapitre ${cible} réécrit (nouvelle version v${r.artifactVersion}, les précédentes sont conservées) : ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.` +
           (r.mesure.warnings.length > 0 ? ` Signalement : ${r.mesure.warnings.join(" · ")}` : ""),
       });
     } catch (e) {

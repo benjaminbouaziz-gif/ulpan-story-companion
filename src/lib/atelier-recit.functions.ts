@@ -7,6 +7,7 @@ import {
   ecrireChapitresRestants,
   etatRecit,
   executerChapitre,
+  reecrireTousLesChapitres,
   type ContexteRecit,
   type MaillonChapitre,
   type ResultatChapitre,
@@ -57,4 +58,19 @@ export const assembleRecit = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<{ version: number; pages: number }> => {
     const editor = await assertEditor(context.supabase, context.userId);
     return assemblerLeRecit(editor, data.bookStepId);
+  });
+
+export const rewriteAllChapters = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        bookStepId: z.string().uuid(),
+        reason: z.string().trim().min(1).max(4000).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }): Promise<MaillonChapitre[]> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    return reecrireTousLesChapitres(editor, data.bookStepId, data.reason);
   });
