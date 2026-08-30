@@ -17,9 +17,16 @@
 export const MOTS_MIN = 165;
 export const MOTS_MAX = 210;
 
-/** La fourchette BLOQUANTE : hors d'elle, le lancement échoue et rien n'est déposé. */
-export const MOTS_MIN_DUR = 160;
-export const MOTS_MAX_DUR = 215;
+/** La CIBLE de mots par page servant de repère dans les signalements. */
+export const MOTS_CIBLE = 170;
+
+/**
+ * Les bornes BLOQUANTES : hors d'elles, le lancement échoue et rien n'est déposé.
+ * Le plancher est bas (130) car certaines pages sont structurellement courtes ;
+ * le plafond reste celui de la maquette (210) : au-delà, la page déborde.
+ */
+export const MOTS_MIN_DUR = 130;
+export const MOTS_MAX_DUR = 210;
 
 const MOT = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
 
@@ -130,7 +137,7 @@ export type MesurePage = {
   words: number;
   /** Dans la fourchette visée 165–210 et non vide. */
   ok: boolean;
-  /** Dans l'élargie 160–215 : le dépôt reste possible. */
+  /** Dans les bornes bloquantes 130–210 : le dépôt reste possible. */
   acceptable: boolean;
   empty: boolean;
 };
@@ -173,8 +180,9 @@ export function decouperPages(markdown: string): PageBrute[] {
 
 export function mesurerChapitre(
   markdown: string,
-  attendu: { chapterNo: number; firstPage: number; pages: number },
+  attendu: { chapterNo: number; firstPage: number; pages: number; cibleMots?: number },
 ): MesureChapitre {
+  const cible = attendu.cibleMots ?? MOTS_CIBLE;
   const brutes = decouperPages(markdown);
   const pages: MesurePage[] = brutes.map((p) => {
     const words = compterMots(p.texte);
@@ -215,15 +223,19 @@ export function mesurerChapitre(
       problems.push(`La page ${p.pageNo} est vide.`);
       continue;
     }
-    // Hors de l'élargie 160–215 : bloquant. Hors de 165–210 seulement : signalé.
+    // Sous 130 ou au-dessus de 210 : bloquant. Entre les deux : au plus signalé.
     if (p.words < MOTS_MIN_DUR)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — sous le plancher bloquant de ${MOTS_MIN_DUR}.`);
+      problems.push(
+        `Page ${p.pageNo} : cible du plan ${cible} mots, mesuré ${p.words} — sous le plancher bloquant de ${MOTS_MIN_DUR}.`,
+      );
     else if (p.words > MOTS_MAX_DUR)
-      problems.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`);
-    else if (p.words < MOTS_MIN)
-      warnings.push(`Page ${p.pageNo} : ${p.words} mots — sous la fourchette visée de ${MOTS_MIN} (dans l'élargie).`);
+      problems.push(
+        `Page ${p.pageNo} : cible du plan ${cible} mots, mesuré ${p.words} — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`,
+      );
+    else if (p.words < cible)
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible}.`);
     else if (p.words > MOTS_MAX)
-      warnings.push(`Page ${p.pageNo} : ${p.words} mots — au-dessus de la fourchette visée de ${MOTS_MAX} (dans l'élargie).`);
+      warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible} — au-dessus de la fourchette visée.`);
   }
 
   return {
