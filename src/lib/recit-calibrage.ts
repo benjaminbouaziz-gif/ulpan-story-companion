@@ -137,7 +137,7 @@ export type MesurePage = {
   words: number;
   /** Dans la fourchette visée 165–210 et non vide. */
   ok: boolean;
-  /** Dans l'élargie 160–215 : le dépôt reste possible. */
+  /** Dans les bornes bloquantes 130–210 : le dépôt reste possible. */
   acceptable: boolean;
   empty: boolean;
 };
