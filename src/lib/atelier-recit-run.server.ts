@@ -231,7 +231,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
 async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<ChapitreEcrit[]> {
   const { data: arts } = await admin
     .from("artifacts")
-    .select("id, chapter_no, version, storage_path, created_at")
+    .select("id, chapter_no, version, storage_path, created_at, plan_version, prompt_version_id")
     .eq("book_step_id", stepId)
     .eq("type", "chapitre")
     .order("chapter_no", { ascending: true })
@@ -242,6 +242,17 @@ async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<Chapit
     const n = a.chapter_no;
     if (n === null) continue;
     if (!derniers.has(n)) derniers.set(n, a);
+  }
+
+  // Les versions de prompt citées par ces livrables, lues d'un seul coup.
+  const promptVersionIds = [...new Set([...derniers.values()].map((a) => a.prompt_version_id).filter((v): v is string => !!v))];
+  const versionsDePrompt = new Map<string, number>();
+  if (promptVersionIds.length > 0) {
+    const { data: pvs } = await admin
+      .from("prompt_versions")
+      .select("id, version")
+      .in("id", promptVersionIds);
+    for (const pv of pvs ?? []) versionsDePrompt.set(pv.id, pv.version);
   }
 
   const { data: mesures } = await admin
@@ -263,6 +274,8 @@ async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<Chapit
         version: a.version,
         storagePath: a.storage_path,
         createdAt: a.created_at,
+        planVersion: a.plan_version ?? null,
+        promptVersion: a.prompt_version_id ? versionsDePrompt.get(a.prompt_version_id) ?? null : null,
         mesure: m
           ? {
               ok: m.ok,
@@ -272,6 +285,7 @@ async function lireChapitresEcrits(admin: Admin, stepId: string): Promise<Chapit
           : null,
       };
     });
+
 }
 
 /** L'état complet de l'étape de rédaction : ce qui est écrit, ce qui reste. */
