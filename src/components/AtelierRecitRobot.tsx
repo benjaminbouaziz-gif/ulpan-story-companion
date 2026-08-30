@@ -7,6 +7,7 @@ import { cancelPlanRun } from "@/lib/atelier-robot.functions";
 import {
   assembleRecit,
   recitState,
+  rewriteAllChapters,
   writeChapter,
   writeRemainingChapters,
 } from "@/lib/atelier-recit.functions";
@@ -31,6 +32,7 @@ export function RecitRobotPanel({
   const fetchState = useServerFn(recitState);
   const write = useServerFn(writeChapter);
   const writeAll = useServerFn(writeRemainingChapters);
+  const rewriteAll = useServerFn(rewriteAllChapters);
   const assemble = useServerFn(assembleRecit);
   const cancel = useServerFn(cancelPlanRun);
   const refreshAtelier = useAtelierRefresh();
@@ -91,6 +93,19 @@ export function RecitRobotPanel({
     onSettled: finir,
   });
 
+  const toutReecrire = useMutation({
+    mutationFn: () => rewriteAll({ data: { bookStepId } }),
+    onMutate: () => {
+      setError(null);
+      setNotice(null);
+      setLignes([]);
+      setStartedAt(new Date().toISOString());
+    },
+    onSuccess: (maillons) => setLignes(maillons.map((m) => m.message)),
+    onError: (e: Error) => setError(e.message),
+    onSettled: finir,
+  });
+
   const assembler = useMutation({
     mutationFn: () => assemble({ data: { bookStepId } }),
     onMutate: () => {
@@ -114,7 +129,7 @@ export function RecitRobotPanel({
   });
 
   const enTravail =
-    (s?.running ?? false) || unChapitre.isPending || tousLesRestants.isPending || assembler.isPending;
+    (s?.running ?? false) || unChapitre.isPending || tousLesRestants.isPending || toutReecrire.isPending || assembler.isPending;
 
   useEffect(() => {
     if (!enTravail) return;
@@ -205,6 +220,7 @@ export function RecitRobotPanel({
             <th className={cell}>Pages du plan</th>
             <th className={cell}>Mesure réelle</th>
             <th className={cell}>État</th>
+            <th className={cell}>Plan / prompt</th>
             <th className={cell}>Réécriture</th>
           </tr>
         </thead>
@@ -230,6 +246,28 @@ export function RecitRobotPanel({
                 </td>
                 <td className={cell}>
                   {e ? `écrit · version ${e.version}` : "à écrire"}
+                </td>
+                <td className={cell}>
+                  {e ? (
+                    <>
+                      <span>
+                        écrit avec le plan {e.planVersion === null ? "?" : `v${e.planVersion}`} · prompt{" "}
+                        {e.promptVersion === null ? "?" : `v${e.promptVersion}`}
+                      </span>
+                      {e.planVersion !== null && s.planVersion !== null && e.planVersion !== s.planVersion ? (
+                        <span className="block">
+                          plan actuel v{s.planVersion} — chapitre périmé
+                        </span>
+                      ) : null}
+                      {e.promptVersion !== null && s.promptVersion !== null && e.promptVersion !== s.promptVersion ? (
+                        <span className="block">
+                          prompt actuel v{s.promptVersion} — chapitre périmé
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className={cell}>
                   {e ? (
