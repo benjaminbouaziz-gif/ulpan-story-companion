@@ -387,6 +387,35 @@ export function RecitRobotPanel({
               setError("Un lancement est déjà en cours sur cette étape.");
               return;
             }
+            if (s.missing.length > 0) {
+              setError(s.missing.join(" · "));
+              return;
+            }
+            if (s.ecrits.length === 0) {
+              setError("Aucun chapitre n'est encore écrit : il n'y a rien à réécrire.");
+              return;
+            }
+            if (
+              window.confirm(
+                `Réécrire les ${s.ecrits.length} chapitres déjà écrits ? Les versions actuelles seront conservées.`,
+              )
+            )
+              toutReecrire.mutate();
+          }}
+        >
+          Tout réécrire depuis le début
+        </Button>
+
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (enTravail) {
+              setError("Un lancement est déjà en cours sur cette étape.");
+              return;
+            }
             if (restants > 0) {
               setError(
                 `Il reste ${restants} chapitre(s) à écrire : l'assemblage exige les ${s.chapitres.length} chapitres.`,
