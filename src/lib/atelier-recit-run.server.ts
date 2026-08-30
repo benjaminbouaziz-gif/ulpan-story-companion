@@ -61,9 +61,14 @@ export type ChapitreEcrit = {
   version: number;
   storagePath: string;
   createdAt: string;
+  /** La version du plan qui a produit ce chapitre, si elle est connue. */
+  planVersion: number | null;
+  /** La version du prompt de rédaction qui a produit ce chapitre. */
+  promptVersion: number | null;
   /** La dernière mesure connue de ce chapitre, si elle existe. */
   mesure: { ok: boolean; pages: { pageNo: number; words: number; ok: boolean }[]; problems: string[] } | null;
 };
+
 
 export type ContexteRecit = {
   stepCode: string;
