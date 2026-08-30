@@ -706,6 +706,49 @@ export async function ecrireChapitresRestants(
   return maillons;
 }
 
+/**
+ * TOUT RÉÉCRIRE DEPUIS LE DÉBUT. Chaque chapitre déjà écrit est repris, du plus
+ * petit numéro au plus grand, et chacun DÉPOSE UNE NOUVELLE VERSION : aucune
+ * version précédente n'est touchée ni supprimée, elles restent consultables et
+ * téléchargeables dans le dossier de l'étape. On s'arrête au premier échec.
+ */
+export async function reecrireTousLesChapitres(
+  editor: EditorContext,
+  bookStepId: string,
+  reason?: string,
+): Promise<MaillonChapitre[]> {
+  const depart = await etatRecit(editor, bookStepId);
+  if (!depart) throw new Error("Étape introuvable.");
+  const cibles = depart.ecrits.map((e) => e.chapterNo).sort((a, b) => a - b);
+  if (cibles.length === 0) throw new Error("Aucun chapitre n'est encore écrit : il n'y a rien à réécrire.");
+
+  const maillons: MaillonChapitre[] = [];
+  for (const cible of cibles) {
+    try {
+      const r = await executerChapitre(editor, {
+        bookStepId,
+        chapterNo: cible,
+        ...(reason ? { reason } : {}),
+      });
+      maillons.push({
+        chapterNo: cible,
+        ok: true,
+        message:
+          `Chapitre ${cible} réécrit (nouvelle version v${r.artifactVersion}, les précédentes sont conservées) : ${r.mesure.pages.map((p) => `p.${p.pageNo} ${p.words} mots`).join(" · ")}.` +
+          (r.mesure.warnings.length > 0 ? ` Signalement : ${r.mesure.warnings.join(" · ")}` : ""),
+      });
+    } catch (e) {
+      maillons.push({
+        chapterNo: cible,
+        ok: false,
+        message: `Arrêt au chapitre ${cible} : ${e instanceof Error ? e.message : String(e)}`,
+      });
+      return maillons;
+    }
+  }
+  return maillons;
+}
+
 /* ------------------------------------------------------------------ */
 /* L'ASSEMBLAGE DU RÉCIT                                               */
 /* ------------------------------------------------------------------ */
