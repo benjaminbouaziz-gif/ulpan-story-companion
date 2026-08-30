@@ -158,6 +158,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
     const path = arts?.[0]?.storage_path;
     if (!path) missing.push("Aucun plan n'est déposé sur l'étape « Plan de chapitres ».");
     else {
+      planVersion = arts?.[0]?.version ?? null;
       try {
         planText = (await downloadArtifactText(editor, path)).text;
       } catch (e) {
@@ -165,6 +166,7 @@ async function preparer(editor: EditorContext, bookStepId: string): Promise<Prep
       }
     }
   }
+
 
   const plan = lirePlanChapitres(planText ?? "");
   if (planText !== null && !plan.ok) missing.push(...plan.problems);
