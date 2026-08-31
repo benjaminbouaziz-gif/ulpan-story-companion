@@ -521,7 +521,7 @@ export function lireReglesEcrites(texte: string, codesMecaniques: string[] = [])
       courant = null;
       return;
     }
-    const normPortee = famille === "" ? "" : portee.toLowerCase();
+    const normPortee = portee.toLowerCase();
     if (normPortee !== "bloquant" && normPortee !== "simple") {
       problemes.push(`Ligne ${numero} : troisième champ « ${portee} » — attendu « bloquant » ou « simple ».`);
       courant = null;
