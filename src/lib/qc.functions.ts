@@ -8,6 +8,9 @@ import {
   controleActif,
   FAMILLES,
   lirePolitique,
+  lirePromptRegles,
+  lireReglesEcrites,
+  CODE_REGLES,
   NOM_FAMILLE,
   type Famille,
   type Strategie,
@@ -252,6 +255,74 @@ export const deleteQcCriterion = createServerFn({ method: "POST" })
     if (error) throw new Error(texteErreurBase("Le critère n'a pas pu être retiré", error));
     return { ok: true };
   });
+
+/* ------------------------------------------------------------------ */
+/* LES RÈGLES JUGÉES — ÉCRITES DANS LEUR PROMPT, LUES ICI              */
+/* ------------------------------------------------------------------ */
+
+export type QcReglesRow = {
+  stepCode: string;
+  stepLabel: string;
+  promptId: string | null;
+  promptCode: string;
+  promptName: string | null;
+  version: number | null;
+  codes: string[];
+  erreur: string | null;
+};
+
+/** Une étape par ligne : quel prompt, quelle version, quelles règles lues. */
+export const qcRegles = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<QcReglesRow[]> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const etapes: { stepCode: string; stepLabel: string }[] = [
+      { stepCode: "plan", stepLabel: "Plan de chapitres" },
+      { stepCode: "redaction", stepLabel: "Récit" },
+    ];
+    const { data: criteres } = await admin
+      .from("qc_criteria")
+      .select("code, species, is_active, grid_id, qc_grids!inner(step_code)");
+    const lignes: QcReglesRow[] = [];
+    for (const e of etapes) {
+      const mecaniques = (criteres ?? [])
+        .filter(
+          (c) =>
+            c.is_active &&
+            c.species === "mecanique" &&
+            (c as unknown as { qc_grids?: { step_code?: string } }).qc_grids?.step_code === e.stepCode,
+        )
+        .map((c) => c.code);
+      try {
+        const p = await lirePromptRegles(editor, e.stepCode);
+        const lu = lireReglesEcrites(p.content, mecaniques);
+        lignes.push({
+          stepCode: e.stepCode,
+          stepLabel: e.stepLabel,
+          promptId: p.promptId,
+          promptCode: p.code,
+          promptName: p.name,
+          version: p.version,
+          codes: lu.criteres.map((c) => c.code),
+          erreur: lu.problemes.length > 0 ? lu.problemes.join(" ") : null,
+        });
+      } catch (err) {
+        lignes.push({
+          stepCode: e.stepCode,
+          stepLabel: e.stepLabel,
+          promptId: null,
+          promptCode: CODE_REGLES[e.stepCode] ?? "",
+          promptName: null,
+          version: null,
+          codes: [],
+          erreur: err instanceof Error ? err.message : "Règles illisibles.",
+        });
+      }
+    }
+    return lignes;
+  });
+
 
 /* ------------------------------------------------------------------ */
 /* LA STRATÉGIE, ÉTAPE PAR ÉTAPE (FICHE DU LIVRE)                      */
