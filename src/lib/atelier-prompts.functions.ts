@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { texteErreurBase } from "./db-error";
+import { modeleConnu } from "./modeles";
 
 /**
  * BRIQUE 4 — LA BIBLIOTHÈQUE DE PROMPTS.
