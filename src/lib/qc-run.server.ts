@@ -870,10 +870,13 @@ export async function corrigerDepuisRapport(
   const grille = await lireGrille(editor, { gridId: rapport.grid_id, stepCode: step.step_code });
   if (!grille) throw new Error("Grille de critères introuvable.");
 
-  const { data: verdicts } = await admin
+  const { data: verdicts, error: errVerdicts } = await admin
     .from("qc_verdicts")
     .select("criterion_id, criterion_code, label, family, is_blocking, species, verdict, location, explanation")
     .eq("report_id", rapport.id);
+  // Une lecture muette donnerait « rien à corriger » : on préfère l'erreur.
+  if (errVerdicts)
+    throw new Error(texteErreurBase("Les verdicts de ce rapport n'ont pas pu être lus", errVerdicts));
 
   const tour: Tour = {
     reportId: rapport.id,
@@ -911,7 +914,7 @@ export async function forcerValidation(
     .eq("id", args.reportId)
     .maybeSingle();
   if (!rapport) throw new Error("Rapport de contrôle introuvable.");
-  await admin
+  const { error } = await admin
     .from("qc_reports")
     .update({
       status: "force_valide",
@@ -919,4 +922,5 @@ export async function forcerValidation(
       message: `Validation forcée par l'éditeur : ${args.comment}`,
     })
     .eq("id", rapport.id);
+  if (error) throw new Error(texteErreurBase("La validation forcée n'a pas pu être écrite", error));
 }
