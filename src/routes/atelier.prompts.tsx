@@ -221,9 +221,16 @@ function PromptsRoom() {
                 />
               </label>
               {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
+              {/* Deux modèles, pas un champ libre : on ne peut pas se tromper de nom. */}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
-                <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
+                <select value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`}>
+                  {MODELES.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
               <label className="mt-3 flex items-center gap-2 text-[13px]">
