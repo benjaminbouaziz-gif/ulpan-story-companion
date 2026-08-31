@@ -409,6 +409,13 @@ export async function executerControlePlan(
   const correctif =
     mode === "A" ? null : exigerPrompt(await promptDuRole(editor, "plan", "redaction_corrective"), "Rédaction corrective");
 
+  // La grille active EST le prompt des règles : on la lit, on ne la réécrit pas.
+  const grille = lireGrille(regles.content);
+  const attendusDuModele = criteresDuModele(grille).length;
+  if (attendusDuModele === 0)
+    throw new Error("La grille de contrôle ne porte aucun point à soumettre au modèle.");
+
+
   const { data: controle, error: cErr } = await admin
     .from("plan_control_runs")
     .insert({
@@ -467,8 +474,18 @@ export async function executerControlePlan(
     });
     modelControleurUsed = res.modelUsed;
     rapportBrut = res.text;
+    // LA RÉPONSE BRUTE EST CONSERVÉE AVANT TOUT PARSING : un contrôle non
+    // exploitable reste consultable mot pour mot.
+    await deposerReponseBrute(editor, {
+      step,
+      runId: runControleur,
+      texte: rapportBrut,
+      promptVersionId: regles.versionId,
+      planVersion: planRef.version,
+    });
     if (rapportBrut.trim().length === 0) throw new Error("Le contrôleur a répondu sans contenu.");
-    rapport = lireRapport(rapportBrut);
+    rapport = lireRapport(rapportBrut, grille, planV1);
+
     await admin
       .from("agent_runs")
       .update({
