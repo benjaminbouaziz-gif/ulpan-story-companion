@@ -289,6 +289,22 @@ function PromptDossier({ promptId }: { promptId: string }) {
     onError: (e: Error) => setError(e.message),
   });
 
+  const freezeMut = useMutation({
+    mutationFn: (frozen: boolean) => freeze({ data: { promptId, frozen } }),
+    onSuccess: refresh,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: () => remove({ data: { promptId } }),
+    onSuccess: async () => {
+      onDeleted();
+      await refresh();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+
   if (dossier.isLoading) return <p className="mt-8 text-[14px]">{t("atelier.loading")}</p>;
   const data = dossier.data;
   if (!data?.prompt) return <p className="mt-8 text-[14px]">{t("atelier.prompts.notFound")}</p>;
