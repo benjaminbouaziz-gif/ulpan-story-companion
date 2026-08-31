@@ -117,6 +117,8 @@ export type ControleRunRow = {
   createdAt: string;
   planV2ArtifactId: string | null;
   reportArtifactId: string | null;
+  /** Nombre de points attendus du modèle (les mesurés par le code exclus). */
+  attendus: number | null;
 };
 
 export type ControleEtat = {
@@ -133,6 +135,8 @@ export type ControleEtat = {
   running: boolean;
   runningPhase: string | null;
   runs: ControleRunRow[];
+  /** La réponse BRUTE du dernier contrôleur, avant tout parsing. */
+  reponseBrute: string | null;
 };
 
 export const planControlState = createServerFn({ method: "GET" })
@@ -158,6 +162,7 @@ export const planControlState = createServerFn({ method: "GET" })
       planVersion: null,
       planTexte: null,
       planV2Texte: null,
+      reponseBrute: null,
       running: false,
       runningPhase: null,
       runs: [],
@@ -193,7 +198,7 @@ export const planControlState = createServerFn({ method: "GET" })
     const { data: runs } = await admin
       .from("plan_control_runs")
       .select(
-        "id, mode, status, phase, plan_version, verdicts, notes, propositions, moyenne, controleur_model_used, redacteur_model_used, duration_ms, error, created_at, plan_v2_artifact_id, report_artifact_id",
+        "id, mode, status, phase, plan_version, verdicts, notes, propositions, moyenne, controleur_model_used, redacteur_model_used, duration_ms, error, created_at, plan_v2_artifact_id, report_artifact_id, controleur_run_id",
       )
       .eq("book_step_id", step.id)
       .order("created_at", { ascending: false })
@@ -250,6 +255,7 @@ export const planControlState = createServerFn({ method: "GET" })
         createdAt: r.created_at,
         planV2ArtifactId: r.plan_v2_artifact_id ?? null,
         reportArtifactId: r.report_artifact_id ?? null,
+        attendus: ((r.notes as Notes | null)?.total ?? null) === null ? null : null,
       })),
     };
   });
