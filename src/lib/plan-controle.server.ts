@@ -5,6 +5,15 @@ import { downloadArtifactText, sha256Hex, uploadArtifactBytes } from "./atelier-
 import { texteErreurBase } from "./db-error";
 import { appelerModele, cleConfiguree, secretDuModele } from "./robot-provider.server";
 import { MODELE_IDS, promptVide, type ModeControle } from "./atelier-models";
+import {
+  criteresDuCode,
+  criteresDuModele,
+  famillesDeLaGrille,
+  lireGrille,
+  type CritereGrille,
+} from "./plan-grille";
+import { mesurerCritere } from "./plan-mesures";
+
 
 /**
  * LA BRIQUE « CONTRÔLE DU PLAN ».
