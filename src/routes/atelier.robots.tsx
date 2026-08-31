@@ -58,7 +58,18 @@ function RunsTable() {
                     ? "déclenché par une validation"
                     : r.mode === "initial"
                       ? "premier lancement"
-                      : "—"}
+                      : r.mode === "controle"
+                        ? "contrôle qualité"
+                        : r.mode === "correction"
+                          ? "correction après contrôle"
+                          : "—"}
+            </td>
+            <td className="py-1 pr-3 whitespace-nowrap">
+              {r.batchCurrent !== null
+                ? r.mode === "controle"
+                  ? `tour ${r.batchCurrent}${r.batchTotal ? ` sur ${r.batchTotal}` : ""}`
+                  : `${r.batchCurrent}${r.batchTotal ? ` sur ${r.batchTotal}` : ""}`
+                : "—"}
             </td>
             <td className="py-1 pr-3">
               {r.status ?? "—"}
@@ -69,6 +80,9 @@ function RunsTable() {
             </td>
             <td className="py-1 pr-3">
               {r.durationMs !== null ? `${Math.round(r.durationMs / 1000)} s` : "—"}
+            </td>
+            <td className="py-1 pr-3">
+              {r.inputTokens !== null ? r.inputTokens.toLocaleString("fr-FR") : "—"}
             </td>
             <td className="py-1 pr-3">
               {r.outputTokens !== null ? r.outputTokens.toLocaleString("fr-FR") : "—"}
