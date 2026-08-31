@@ -407,11 +407,13 @@ export async function executerControlePlan(
     lang: step.lang,
     type: "rapport_controle",
     version: rapportVersion,
+    // Un chemin par exécution : la relance ne retombe jamais sur un objet déjà écrit.
+    runId: runControleur,
     fileName: `rapport-controle-v${rapportVersion}.json`,
   });
   const rapportBytes = new TextEncoder().encode(JSON.stringify(rapport, null, 2)).buffer as ArrayBuffer;
   await uploadArtifactBytes(editor, rapportPath, rapportBytes, "application/json; charset=utf-8");
-  const { data: rapportArt } = await admin
+  const { data: rapportArt, error: rErr } = await admin
     .from("artifacts")
     .insert({
       book_step_id: step.id,
@@ -428,6 +430,10 @@ export async function executerControlePlan(
     })
     .select("id")
     .single();
+  // Un refus d'enregistrement n'est plus silencieux : sinon le fichier reste
+  // orphelin dans le stockage et le compteur de version ne bouge pas.
+  if (rErr) return await echouer(texteErreurBase("Dépôt du rapport de contrôle refusé", rErr));
+
 
   await admin
     .from("plan_control_runs")
@@ -482,8 +488,10 @@ export async function executerControlePlan(
         lang: step.lang,
         type: "plan",
         version: planV2Version,
+        runId: runRedacteur,
         fileName: `plan-v${planV2Version}.md`,
       });
+
       const planBytes = new TextEncoder().encode(res.text).buffer as ArrayBuffer;
       await uploadArtifactBytes(editor, planPath, planBytes, "text/markdown; charset=utf-8");
       const { data: planArt, error: pErr } = await admin

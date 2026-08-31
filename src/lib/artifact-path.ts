@@ -46,6 +46,12 @@ export function artifactPath(input: {
   type: string;
   version: number;
   fileName: string;
+  /**
+   * Identifiant de l'exécution qui dépose le fichier. Présent, il rend le
+   * chemin UNIQUE par lancement : deux exécutions successives ne peuvent plus
+   * viser le même objet, même si la première a échoué en cours de route.
+   */
+  runId?: string | null;
 }): string {
   return [
     "books",
@@ -54,8 +60,10 @@ export function artifactPath(input: {
     input.lang,
     input.type,
     `v${input.version}`,
+    ...(input.runId ? [safeFileName(input.runId)] : []),
     safeFileName(input.fileName),
   ].join("/");
+
 }
 
 /** Le nom lisible d'un artefact, sans exposer tout le chemin. */
