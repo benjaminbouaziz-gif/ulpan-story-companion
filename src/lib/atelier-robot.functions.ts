@@ -337,11 +337,15 @@ export type RobotRunLine = {
   model: string | null;
   status: string | null;
   durationMs: number | null;
+  inputTokens: number | null;
   outputTokens: number | null;
   costUsd: number | null;
   truncated: boolean;
   errorSummary: string | null;
   mode: string | null;
+  /** Le tour du contrôle, ou le chapitre du lot : batch_current sur batch_total. */
+  batchCurrent: number | null;
+  batchTotal: number | null;
 };
 
 /** L'historique des lancements, pour la salle Robots. Rien de décoratif. */
