@@ -5,6 +5,15 @@ import { downloadArtifactText, sha256Hex, uploadArtifactBytes } from "./atelier-
 import { texteErreurBase } from "./db-error";
 import { appelerModele, cleConfiguree, secretDuModele } from "./robot-provider.server";
 import { MODELE_IDS, promptVide, type ModeControle } from "./atelier-models";
+import {
+  criteresDuCode,
+  criteresDuModele,
+  famillesDeLaGrille,
+  lireGrille,
+  type CritereGrille,
+} from "./plan-grille";
+import { mesurerCritere } from "./plan-mesures";
+
 
 /**
  * LA BRIQUE « CONTRÔLE DU PLAN ».
@@ -28,37 +37,60 @@ import { MODELE_IDS, promptVide, type ModeControle } from "./atelier-models";
 
 export const CONTROLE_STEP_CODE = "plan";
 
-export type Verdicts = {
-  structure: boolean;
-  progression: boolean;
-  methode: boolean;
-  coherence_recit: boolean;
+/**
+ * LE CONTRAT DE SORTIE — celui du prompt, et lui seul :
+ *   {"verdicts":[{"code","verdict","location","explanation","proposition"}]}
+ * Le modèle ne donne AUCUNE note : les notes sont calculées ici.
+ */
+
+export type VerdictLigne = {
+  code: string;
+  question: string;
+  famille: string;
+  bloquant: boolean;
+  /** « modele » pour les 35 points jugés, « code » pour les points mesurés. */
+  source: "modele" | "code";
+  verdict: "valide" | "echoue";
+  location: string;
+  explanation: string;
+  proposition: string;
+};
+
+export type NoteFamille = {
+  famille: string;
+  total: number;
+  valides: number;
+  /** Proportion de points valides, en pourcentage à une décimale. */
+  note: number;
+  bloquantsEchoues: number;
 };
 
 export type Notes = {
-  structure: number | null;
-  progression: number | null;
-  methode: number | null;
-  coherence_recit: number | null;
-  moyenne: number | null;
-};
-
-export type Proposition = {
-  chapitre: number | null;
-  defaut: string;
-  regle_violee: string;
-  correction: string;
-  gravite: "majeure" | "mineure";
+  familles: NoteFamille[];
+  total: number;
+  valides: number;
+  bloquantsEchoues: number;
+  moyenne: number;
 };
 
 export type RapportControle = {
-  verdicts: Verdicts;
+  verdicts: VerdictLigne[];
   notes: Notes;
-  propositions: Proposition[];
+  /** Une entrée par point échoué : c'est là que vivent les propositions. */
+  propositions: VerdictLigne[];
+  attendus: number;
 };
 
+/** L'échec de lecture porte toujours ce nom : jamais « rien relevé ». */
+export class ControleNonExploitable extends Error {
+  constructor(raison: string) {
+    super(`Contrôle non exploitable : ${raison}`);
+    this.name = "ControleNonExploitable";
+  }
+}
+
 /* ------------------------------------------------------------------ */
-/* LECTURE DU RAPPORT — robuste, jamais fatale pour l'écran            */
+/* LECTURE DU RAPPORT — stricte : un contrôle douteux est un échec     */
 /* ------------------------------------------------------------------ */
 
 /** Enlève les clôtures ```json que les modèles ajoutent malgré la consigne. */
@@ -75,70 +107,151 @@ function nettoyerJson(brut: string): string {
   return t;
 }
 
-function nombreOuNull(v: unknown): number | null {
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
+function texte(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
 }
 
-function booleen(v: unknown): boolean {
-  return v === true;
+function pourcent(valides: number, total: number): number {
+  return total === 0 ? 0 : Math.round((valides / total) * 1000) / 10;
+}
+
+/** Les notes, calculées à partir des verdicts. Jamais fournies par le modèle. */
+export function calculerNotes(verdicts: VerdictLigne[], familles: string[]): Notes {
+  const parFamille = familles.map((famille) => {
+    const lot = verdicts.filter((v) => v.famille === famille);
+    const valides = lot.filter((v) => v.verdict === "valide").length;
+    return {
+      famille,
+      total: lot.length,
+      valides,
+      note: pourcent(valides, lot.length),
+      bloquantsEchoues: lot.filter((v) => v.bloquant && v.verdict === "echoue").length,
+    };
+  });
+  const valides = verdicts.filter((v) => v.verdict === "valide").length;
+  return {
+    familles: parFamille,
+    total: verdicts.length,
+    valides,
+    bloquantsEchoues: verdicts.filter((v) => v.bloquant && v.verdict === "echoue").length,
+    moyenne: pourcent(valides, verdicts.length),
+  };
 }
 
 /**
- * Lit le rapport. En cas de JSON invalide, l'erreur est explicite : elle est
- * inscrite au journal et l'exécution est marquée en échec — l'écran ne casse
- * jamais et le texte brut n'est pas perdu (il reste dans le livrable déposé).
+ * Lit la réponse du modèle contre la grille active, puis ajoute les points
+ * mesurés par le code. Toute anomalie de forme est fatale : nombre d'entrées
+ * incorrect, code inconnu, point manquant, verdict illisible.
  */
-export function lireRapport(brut: string): RapportControle {
+export function lireRapport(brut: string, grille: CritereGrille[], plan: string): RapportControle {
+  const attendus = criteresDuModele(grille);
+  const mesures = criteresDuCode(grille);
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(nettoyerJson(brut));
   } catch (e) {
-    throw new Error(
-      `Le rapport du contrôleur n'est pas un JSON valide : ${e instanceof Error ? e.message : String(e)}. Début de la réponse : ${brut.replace(/\s+/g, " ").slice(0, 300)}`,
+    throw new ControleNonExploitable(
+      `la réponse n'est pas un JSON valide (${e instanceof Error ? e.message : String(e)}). Début : ${brut
+        .replace(/\s+/g, " ")
+        .slice(0, 300)}`,
     );
   }
-  if (typeof parsed !== "object" || parsed === null)
-    throw new Error("Le rapport du contrôleur n'est pas un objet JSON.");
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+    throw new ControleNonExploitable("la réponse n'est pas un objet JSON.");
 
-  const o = parsed as Record<string, unknown>;
-  const v = (o["verdicts"] ?? {}) as Record<string, unknown>;
-  const n = (o["notes"] ?? {}) as Record<string, unknown>;
-  const propsBrutes = Array.isArray(o["propositions"]) ? (o["propositions"] as unknown[]) : [];
+  const brutVerdicts = (parsed as Record<string, unknown>)["verdicts"];
+  if (!Array.isArray(brutVerdicts))
+    throw new ControleNonExploitable("la clé « verdicts » manque ou n'est pas un tableau.");
 
-  const notes: Notes = {
-    structure: nombreOuNull(n["structure"]),
-    progression: nombreOuNull(n["progression"]),
-    methode: nombreOuNull(n["methode"]),
-    coherence_recit: nombreOuNull(n["coherence_recit"]),
-    moyenne: nombreOuNull(n["moyenne"]),
-  };
-  if (notes.moyenne === null) {
-    const q = [notes.structure, notes.progression, notes.methode, notes.coherence_recit].filter(
-      (x): x is number => x !== null,
-    );
-    notes.moyenne = q.length > 0 ? Math.round((q.reduce((a, b) => a + b, 0) / q.length) * 100) / 100 : null;
+  const codesAttendus = new Set(attendus.map((c) => c.code));
+  const codesMesures = new Set(mesures.map((c) => c.code));
+  const vus = new Map<string, { verdict: "valide" | "echoue"; location: string; explanation: string; proposition: string }>();
+  const inconnus: string[] = [];
+
+  for (const entree of brutVerdicts) {
+    if (typeof entree !== "object" || entree === null)
+      throw new ControleNonExploitable("une entrée du tableau « verdicts » n'est pas un objet.");
+    const r = entree as Record<string, unknown>;
+    const code = texte(r["code"]);
+    // Le modèle peut malgré tout renvoyer les points mesurés par le code :
+    // on les ignore, sans erreur.
+    if (codesMesures.has(code)) continue;
+    if (!codesAttendus.has(code)) {
+      inconnus.push(code || "(sans code)");
+      continue;
+    }
+    const verdictBrut = texte(r["verdict"]).toLowerCase();
+    if (verdictBrut !== "valide" && verdictBrut !== "echoue")
+      throw new ControleNonExploitable(`le verdict du point « ${code} » est illisible : « ${texte(r["verdict"])} ».`);
+    if (vus.has(code)) throw new ControleNonExploitable(`le point « ${code} » revient deux fois dans la réponse.`);
+    vus.set(code, {
+      verdict: verdictBrut,
+      location: texte(r["location"]),
+      explanation: texte(r["explanation"]),
+      proposition: texte(r["proposition"]),
+    });
   }
+
+  if (inconnus.length > 0)
+    throw new ControleNonExploitable(
+      `${inconnus.length} code(s) inconnu(s) de la grille : ${[...new Set(inconnus)].slice(0, 8).join(", ")}.`,
+    );
+
+  const manquants = attendus.filter((c) => !vus.has(c.code)).map((c) => c.code);
+  if (manquants.length > 0)
+    throw new ControleNonExploitable(
+      `${vus.size} verdict(s) reçus pour ${attendus.length} attendus ; manquants : ${manquants.slice(0, 8).join(", ")}${
+        manquants.length > 8 ? "…" : ""
+      }.`,
+    );
+
+  const duModele: VerdictLigne[] = attendus.map((c) => {
+    const v = vus.get(c.code)!;
+    return {
+      code: c.code,
+      question: c.question,
+      famille: c.famille,
+      bloquant: c.bloquant,
+      source: "modele",
+      verdict: v.verdict,
+      location: v.location,
+      explanation: v.explanation,
+      proposition: v.proposition,
+    };
+  });
+
+  const duCode: VerdictLigne[] = mesures.map((c) => {
+    const m = mesurerCritere(c.code, plan);
+    if (!m)
+      throw new ControleNonExploitable(
+        `le point « ${c.code} » est marqué « mesuré par le code » mais aucune mesure n'existe pour lui.`,
+      );
+    return {
+      code: c.code,
+      question: c.question,
+      famille: c.famille,
+      bloquant: c.bloquant,
+      source: "code",
+      verdict: m.verdict,
+      location: m.location,
+      explanation: m.explanation,
+      proposition: "",
+    };
+  });
+
+  // L'ordre de la grille, points mesurés à leur place.
+  const parCode = new Map<string, VerdictLigne>([...duModele, ...duCode].map((v) => [v.code, v]));
+  const verdicts = grille.map((c) => parCode.get(c.code)!).filter(Boolean);
 
   return {
-    verdicts: {
-      structure: booleen(v["structure"]),
-      progression: booleen(v["progression"]),
-      methode: booleen(v["methode"]),
-      coherence_recit: booleen(v["coherence_recit"]),
-    },
-    notes,
-    propositions: propsBrutes.map((p) => {
-      const r = (p ?? {}) as Record<string, unknown>;
-      return {
-        chapitre: nombreOuNull(r["chapitre"]),
-        defaut: String(r["defaut"] ?? ""),
-        regle_violee: String(r["regle_violee"] ?? ""),
-        correction: String(r["correction"] ?? ""),
-        gravite: r["gravite"] === "mineure" ? "mineure" : "majeure",
-      };
-    }),
+    verdicts,
+    notes: calculerNotes(verdicts, famillesDeLaGrille(grille)),
+    propositions: verdicts.filter((v) => v.verdict === "echoue"),
+    attendus: attendus.length,
   };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* LES PROMPTS DU CONTRÔLE                                             */
@@ -245,6 +358,57 @@ async function inscrireAgentRun(
   return data.id;
 }
 
+/**
+ * LA RÉPONSE BRUTE — déposée telle quelle, avant tout parsing. Un contrôle
+ * illisible garde ainsi sa preuve : on peut relire ce que le modèle a dit.
+ */
+async function deposerReponseBrute(
+  editor: EditorContext,
+  input: {
+    step: { id: string; book_id: string; step_code: string; lang: string };
+    runId: string;
+    texte: string;
+    promptVersionId: string;
+    planVersion: number | null;
+  },
+): Promise<void> {
+  const admin = await getAdminClient(editor);
+  const { data: prec } = await admin
+    .from("artifacts")
+    .select("version")
+    .eq("book_step_id", input.step.id)
+    .eq("type", "reponse_brute")
+    .order("version", { ascending: false })
+    .limit(1);
+  const version = (prec?.[0]?.version ?? 0) + 1;
+  const storagePath = artifactPath({
+    bookId: input.step.book_id,
+    stepCode: input.step.step_code,
+    lang: input.step.lang,
+    type: "reponse_brute",
+    version,
+    runId: input.runId,
+    fileName: `reponse-brute-v${version}.txt`,
+  });
+  const bytes = new TextEncoder().encode(input.texte).buffer as ArrayBuffer;
+  await uploadArtifactBytes(editor, storagePath, bytes, "text/plain; charset=utf-8");
+  const { error } = await admin.from("artifacts").insert({
+    book_step_id: input.step.id,
+    type: "reponse_brute",
+    version,
+    storage_path: storagePath,
+    checksum: await sha256Hex(bytes),
+    size_bytes: bytes.byteLength,
+    origin: "robot",
+    robot_run_id: input.runId,
+    prompt_version_id: input.promptVersionId,
+    plan_version: input.planVersion,
+    created_by: editor.userId,
+  });
+  if (error) throw new Error(texteErreurBase("La réponse brute du modèle n'a pas pu être conservée", error));
+}
+
+
 export async function executerControlePlan(
   editor: EditorContext,
   input: { bookStepId: string; mode?: ModeControle | undefined },
@@ -295,6 +459,13 @@ export async function executerControlePlan(
   const regles = exigerPrompt(await promptDuRole(editor, "plan", "regles_controle"), "Règles de contrôle");
   const correctif =
     mode === "A" ? null : exigerPrompt(await promptDuRole(editor, "plan", "redaction_corrective"), "Rédaction corrective");
+
+  // La grille active EST le prompt des règles : on la lit, on ne la réécrit pas.
+  const grille = lireGrille(regles.content);
+  const attendusDuModele = criteresDuModele(grille).length;
+  if (attendusDuModele === 0)
+    throw new Error("La grille de contrôle ne porte aucun point à soumettre au modèle.");
+
 
   const { data: controle, error: cErr } = await admin
     .from("plan_control_runs")
@@ -354,8 +525,18 @@ export async function executerControlePlan(
     });
     modelControleurUsed = res.modelUsed;
     rapportBrut = res.text;
+    // LA RÉPONSE BRUTE EST CONSERVÉE AVANT TOUT PARSING : un contrôle non
+    // exploitable reste consultable mot pour mot.
+    await deposerReponseBrute(editor, {
+      step,
+      runId: runControleur,
+      texte: rapportBrut,
+      promptVersionId: regles.versionId,
+      planVersion: planRef.version,
+    });
     if (rapportBrut.trim().length === 0) throw new Error("Le contrôleur a répondu sans contenu.");
-    rapport = lireRapport(rapportBrut);
+    rapport = lireRapport(rapportBrut, grille, planV1);
+
     await admin
       .from("agent_runs")
       .update({

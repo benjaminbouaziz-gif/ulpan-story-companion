@@ -10,10 +10,10 @@ import {
   executerControlePlan,
   promptDuRole,
   type Notes,
-  type Proposition,
   type ResultatControle,
-  type Verdicts,
+  type VerdictLigne,
 } from "./plan-controle.server";
+
 import { promptVide, type ModeControle } from "./atelier-models";
 
 /**
@@ -106,9 +106,9 @@ export type ControleRunRow = {
   status: string;
   phase: string | null;
   planVersion: number | null;
-  verdicts: Verdicts | null;
+  verdicts: VerdictLigne[] | null;
   notes: Notes | null;
-  propositions: Proposition[];
+  propositions: VerdictLigne[];
   moyenne: number | null;
   controleurModelUsed: string | null;
   redacteurModelUsed: string | null;
@@ -117,6 +117,8 @@ export type ControleRunRow = {
   createdAt: string;
   planV2ArtifactId: string | null;
   reportArtifactId: string | null;
+  /** Nombre de points attendus du modèle (les mesurés par le code exclus). */
+  attendus: number | null;
 };
 
 export type ControleEtat = {
@@ -133,6 +135,8 @@ export type ControleEtat = {
   running: boolean;
   runningPhase: string | null;
   runs: ControleRunRow[];
+  /** La réponse BRUTE du dernier contrôleur, avant tout parsing. */
+  reponseBrute: string | null;
 };
 
 export const planControlState = createServerFn({ method: "GET" })
@@ -158,6 +162,7 @@ export const planControlState = createServerFn({ method: "GET" })
       planVersion: null,
       planTexte: null,
       planV2Texte: null,
+      reponseBrute: null,
       running: false,
       runningPhase: null,
       runs: [],
@@ -193,7 +198,7 @@ export const planControlState = createServerFn({ method: "GET" })
     const { data: runs } = await admin
       .from("plan_control_runs")
       .select(
-        "id, mode, status, phase, plan_version, verdicts, notes, propositions, moyenne, controleur_model_used, redacteur_model_used, duration_ms, error, created_at, plan_v2_artifact_id, report_artifact_id",
+        "id, mode, status, phase, plan_version, verdicts, notes, propositions, moyenne, controleur_model_used, redacteur_model_used, duration_ms, error, created_at, plan_v2_artifact_id, report_artifact_id, controleur_run_id",
       )
       .eq("book_step_id", step.id)
       .order("created_at", { ascending: false })
@@ -221,7 +226,30 @@ export const planControlState = createServerFn({ method: "GET" })
       planTexte = planTexte ?? null;
     }
 
+    // La réponse brute du dernier contrôleur : conservée avant tout parsing,
+    // consultable même quand le contrôle est non exploitable.
+    let reponseBrute: string | null = null;
+    if (dernier?.controleur_run_id) {
+      const { data: brutes } = await admin
+        .from("artifacts")
+        .select("storage_path")
+        .eq("book_step_id", step.id)
+        .eq("type", "reponse_brute")
+        .eq("robot_run_id", dernier.controleur_run_id)
+        .order("version", { ascending: false })
+        .limit(1);
+      const chemin = brutes?.[0]?.storage_path;
+      if (chemin) {
+        try {
+          reponseBrute = (await downloadArtifactText(editor, chemin)).text;
+        } catch {
+          reponseBrute = null;
+        }
+      }
+    }
+
     return {
+
       isPlanStep: true,
       enabled: reglages?.enabled ?? false,
       mode,
@@ -233,15 +261,16 @@ export const planControlState = createServerFn({ method: "GET" })
       planV2Texte,
       running,
       runningPhase: running ? (dernier?.phase ?? null) : null,
+      reponseBrute,
       runs: (runs ?? []).map((r) => ({
         id: r.id,
         mode: r.mode as ModeControle,
         status: r.status,
         phase: r.phase ?? null,
         planVersion: r.plan_version ?? null,
-        verdicts: (r.verdicts as Verdicts | null) ?? null,
+        verdicts: (r.verdicts as VerdictLigne[] | null) ?? null,
         notes: (r.notes as Notes | null) ?? null,
-        propositions: ((r.propositions as Proposition[] | null) ?? []) as Proposition[],
+        propositions: ((r.propositions as VerdictLigne[] | null) ?? []) as VerdictLigne[],
         moyenne: r.moyenne === null ? null : Number(r.moyenne),
         controleurModelUsed: r.controleur_model_used ?? null,
         redacteurModelUsed: r.redacteur_model_used ?? null,
@@ -250,6 +279,9 @@ export const planControlState = createServerFn({ method: "GET" })
         createdAt: r.created_at,
         planV2ArtifactId: r.plan_v2_artifact_id ?? null,
         reportArtifactId: r.report_artifact_id ?? null,
+        attendus:
+          ((r.verdicts as VerdictLigne[] | null) ?? []).filter((v) => v.source === "modele").length || null,
+
       })),
     };
   });
@@ -416,7 +448,7 @@ export const planControlMeasures = createServerFn({ method: "GET" })
       planVersion: r.plan_version ?? null,
       notes: (r.notes as Notes | null) ?? null,
       moyenne: r.moyenne === null ? null : Number(r.moyenne),
-      propositions: ((r.propositions as Proposition[] | null) ?? []).length,
+      propositions: ((r.propositions as VerdictLigne[] | null) ?? []).length,
       controleurModelUsed: r.controleur_model_used ?? null,
       redacteurModelUsed: r.redacteur_model_used ?? null,
     }));
