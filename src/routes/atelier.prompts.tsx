@@ -232,13 +232,13 @@ function PromptsRoom() {
           )}
         </div>
 
-        {openId ? <PromptDossier promptId={openId} /> : null}
+        {openId ? <PromptDossier promptId={openId} onDeleted={() => setOpenId(null)} /> : null}
       </div>
     </section>
   );
 }
 
-function PromptDossier({ promptId }: { promptId: string }) {
+function PromptDossier({ promptId, onDeleted }: { promptId: string; onDeleted: () => void }) {
   const { t } = useI18n();
   const refreshAtelier = useAtelierRefresh();
   const fetchDossier = useServerFn(promptDossier);
