@@ -358,6 +358,57 @@ async function inscrireAgentRun(
   return data.id;
 }
 
+/**
+ * LA RÉPONSE BRUTE — déposée telle quelle, avant tout parsing. Un contrôle
+ * illisible garde ainsi sa preuve : on peut relire ce que le modèle a dit.
+ */
+async function deposerReponseBrute(
+  editor: EditorContext,
+  input: {
+    step: { id: string; book_id: string; step_code: string; lang: string };
+    runId: string;
+    texte: string;
+    promptVersionId: string;
+    planVersion: number | null;
+  },
+): Promise<void> {
+  const admin = await getAdminClient(editor);
+  const { data: prec } = await admin
+    .from("artifacts")
+    .select("version")
+    .eq("book_step_id", input.step.id)
+    .eq("type", "reponse_brute")
+    .order("version", { ascending: false })
+    .limit(1);
+  const version = (prec?.[0]?.version ?? 0) + 1;
+  const storagePath = artifactPath({
+    bookId: input.step.book_id,
+    stepCode: input.step.step_code,
+    lang: input.step.lang,
+    type: "reponse_brute",
+    version,
+    runId: input.runId,
+    fileName: `reponse-brute-v${version}.txt`,
+  });
+  const bytes = new TextEncoder().encode(input.texte).buffer as ArrayBuffer;
+  await uploadArtifactBytes(editor, storagePath, bytes, "text/plain; charset=utf-8");
+  const { error } = await admin.from("artifacts").insert({
+    book_step_id: input.step.id,
+    type: "reponse_brute",
+    version,
+    storage_path: storagePath,
+    checksum: await sha256Hex(bytes),
+    size_bytes: bytes.byteLength,
+    origin: "robot",
+    robot_run_id: input.runId,
+    prompt_version_id: input.promptVersionId,
+    plan_version: input.planVersion,
+    created_by: editor.userId,
+  });
+  if (error) throw new Error(texteErreurBase("La réponse brute du modèle n'a pas pu être conservée", error));
+}
+
+
 export async function executerControlePlan(
   editor: EditorContext,
   input: { bookStepId: string; mode?: ModeControle | undefined },
