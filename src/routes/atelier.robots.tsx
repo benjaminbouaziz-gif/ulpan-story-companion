@@ -28,10 +28,8 @@ function RunsTable() {
           <th className="py-1 pr-3 font-normal opacity-70">Robot</th>
           <th className="py-1 pr-3 font-normal opacity-70">Modèle</th>
           <th className="py-1 pr-3 font-normal opacity-70">Mode</th>
-          <th className="py-1 pr-3 font-normal opacity-70">Tour / lot</th>
           <th className="py-1 pr-3 font-normal opacity-70">Statut</th>
           <th className="py-1 pr-3 font-normal opacity-70">Durée</th>
-          <th className="py-1 pr-3 font-normal opacity-70">Jetons reçus</th>
           <th className="py-1 pr-3 font-normal opacity-70">Jetons produits</th>
           <th className="py-1 pr-3 font-normal opacity-70">Coût</th>
         </tr>
@@ -58,18 +56,7 @@ function RunsTable() {
                     ? "déclenché par une validation"
                     : r.mode === "initial"
                       ? "premier lancement"
-                      : r.mode === "controle"
-                        ? "contrôle qualité"
-                        : r.mode === "correction"
-                          ? "correction après contrôle"
-                          : "—"}
-            </td>
-            <td className="py-1 pr-3 whitespace-nowrap">
-              {r.batchCurrent !== null
-                ? r.mode === "controle"
-                  ? `tour ${r.batchCurrent}${r.batchTotal ? ` sur ${r.batchTotal}` : ""}`
-                  : `${r.batchCurrent}${r.batchTotal ? ` sur ${r.batchTotal}` : ""}`
-                : "—"}
+                      : "—"}
             </td>
             <td className="py-1 pr-3">
               {r.status ?? "—"}
@@ -80,9 +67,6 @@ function RunsTable() {
             </td>
             <td className="py-1 pr-3">
               {r.durationMs !== null ? `${Math.round(r.durationMs / 1000)} s` : "—"}
-            </td>
-            <td className="py-1 pr-3">
-              {r.inputTokens !== null ? r.inputTokens.toLocaleString("fr-FR") : "—"}
             </td>
             <td className="py-1 pr-3">
               {r.outputTokens !== null ? r.outputTokens.toLocaleString("fr-FR") : "—"}

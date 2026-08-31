@@ -57,8 +57,6 @@ const ROOMS: { to: string; key: DictKey }[] = [
   { to: "/atelier/collections", key: "atelier.room.collections" },
   { to: "/atelier/prompts", key: "atelier.room.prompts" },
   { to: "/atelier/robots", key: "atelier.room.robots" },
-  { to: "/atelier/qualite", key: "atelier.room.quality" },
-
   { to: "/atelier/site", key: "atelier.room.site" },
   { to: "/atelier/lecteurs", key: "atelier.room.readers" },
   { to: "/atelier/mesure", key: "atelier.room.measure" },

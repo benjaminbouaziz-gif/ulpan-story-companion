@@ -12,7 +12,6 @@ import {
   promptDossier,
   publishPromptVersion,
 } from "@/lib/atelier-prompts.functions";
-import { MODELES_ATELIER, modeleConnu } from "@/lib/modeles";
 
 /**
  * LA BIBLIOTHÈQUE DE PROMPTS.
@@ -42,40 +41,6 @@ const button = "border-line rounded-[2px] border px-3 py-1 text-[13px]";
 function fmt(iso: string | null): string {
   return iso ? new Date(iso).toLocaleString("fr-FR") : "—";
 }
-/**
- * LE MODÈLE NE SE TAPE PLUS À LA MAIN : une faute de frappe ne se voyait
- * qu'à l'appel, en échec payé. Un réglage déjà en place qui n'est pas dans la
- * liste reste affiché, suffixé « (hors liste) », pour ne pas s'effacer seul.
- */
-function SelecteurModele({
-  valeur,
-  onChange,
-  className,
-}: {
-  valeur: string;
-  onChange: (v: string) => void;
-  className: string;
-}) {
-  const horsListe = valeur.trim() !== "" && !modeleConnu(valeur.trim());
-  return (
-    <select value={valeur} onChange={(e) => onChange(e.target.value)} className={className}>
-      <option value="">— aucun —</option>
-      {MODELES_ATELIER.map((m) => (
-        <option key={m.id} value={m.id}>
-          {m.libelle}
-        </option>
-      ))}
-      {horsListe ? <option value={valeur}>{`${valeur} (hors liste)`}</option> : null}
-    </select>
-  );
-}
-
-/** La passerelle Lovable ne propose pas la recherche en ligne. */
-function rechercheOuverte(modele: string): boolean {
-  const m = modeleConnu(modele.trim());
-  return m ? m.rechercheEnLigne : modele.trim() !== "";
-}
-
 
 function PromptsRoom() {
   const { t } = useI18n();
@@ -207,21 +172,13 @@ function PromptsRoom() {
               {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
-                <SelecteurModele
-                  valeur={newModel}
-                  onChange={(v) => {
-                    setNewModel(v);
-                    if (!rechercheOuverte(v)) setNewWebSearch(false);
-                  }}
-                  className={`${field} mt-1`}
-                />
+                <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
               </label>
               <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
               <label className="mt-3 flex items-center gap-2 text-[13px]">
                 <input
                   type="checkbox"
-                  checked={newWebSearch && rechercheOuverte(newModel)}
-                  disabled={!rechercheOuverte(newModel)}
+                  checked={newWebSearch}
                   onChange={(e) => setNewWebSearch(e.target.checked)}
                 />
                 {t("atelier.prompts.field.webSearch")}
@@ -364,23 +321,11 @@ function PromptDossier({ promptId }: { promptId: string }) {
             {missing.note ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.note")}</p> : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.model")}
-              <SelecteurModele
-                valeur={model}
-                onChange={(v) => {
-                  setModel(v);
-                  if (!rechercheOuverte(v)) setWebSearch(false);
-                }}
-                className={`${field} mt-1`}
-              />
+              <input value={model} onChange={(e) => setModel(e.target.value)} className={`${field} mt-1`} />
             </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
             <label className="mt-3 flex items-center gap-2 text-[13px]">
-              <input
-                type="checkbox"
-                checked={webSearch && rechercheOuverte(model)}
-                disabled={!rechercheOuverte(model)}
-                onChange={(e) => setWebSearch(e.target.checked)}
-              />
+              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} />
               {t("atelier.prompts.field.webSearch")}
             </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.noteRequired")}</p>

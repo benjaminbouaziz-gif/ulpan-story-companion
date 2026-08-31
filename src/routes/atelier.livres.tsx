@@ -7,7 +7,6 @@ import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { atelierBookChain, atelierBooks } from "@/lib/atelier-books.functions";
 import { BookFiche, NewBookForm } from "@/components/AtelierBookFiche";
-import { BookQcPolicies } from "@/components/AtelierQcPolicies";
 import { BookDecisions } from "@/components/AtelierDecisions";
 
 /**
@@ -172,7 +171,6 @@ function BooksRoom() {
           {/* La fiche ensuite, sous son titre, inchangée. */}
           <div id="fiche-du-livre">
             <BookFiche bookId={openId} />
-            <BookQcPolicies bookId={openId} />
           </div>
         </div>
       ) : null}
