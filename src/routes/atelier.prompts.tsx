@@ -181,18 +181,31 @@ function PromptsRoom() {
           {creating ? (
             <div className="border-line border-t pt-4">
               <h2 className="font-latin text-[16px]">{t("atelier.prompts.new")}</h2>
+              {/* Un prompt se nomme désormais par son étape et son rôle, pas par un code technique. */}
               <label className="mt-3 block text-[13px]">
-                {t("atelier.prompts.field.step")}
-                <select value={newStep} onChange={(e) => setNewStep(e.target.value)} className={`${field} mt-1`}>
+                Étape
+                <select value={newEtape} onChange={(e) => setNewEtape(e.target.value)} className={`${field} mt-1`}>
                   <option value="">{t("atelier.prompts.chooseStep")}</option>
-                  {(steps.data ?? []).map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {s.rank}. {s.labelFr}
+                  {ETAPES.map((e) => (
+                    <option key={e.code} value={e.code}>
+                      {e.label}
                     </option>
                   ))}
                 </select>
               </label>
-              {missing.step ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
+              {missing.etape ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
+              <label className="mt-3 block text-[13px]">
+                Rôle
+                <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className={`${field} mt-1`}>
+                  <option value="">Choisir un rôle</option>
+                  {ROLES.map((r) => (
+                    <option key={r.code} value={r.code}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {missing.role ? <p className="mt-1 text-[13px]">Le rôle du prompt manque.</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.name")}
                 <input value={newName} onChange={(e) => setNewName(e.target.value)} className={`${field} mt-1`} />
