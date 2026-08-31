@@ -99,9 +99,13 @@ function PromptsRoom() {
       <p className="mt-2 text-[14px]">{t("atelier.room.prompts.desc")}</p>
 
       <div className="border-line mt-6 border-t pt-4">
+        <label className="mb-3 flex items-center gap-2 text-[13px]">
+          <input type="checkbox" checked={showFrozen} onChange={(e) => setShowFrozen(e.target.checked)} />
+          {t("atelier.prompts.showFrozen")}
+        </label>
         {list.isLoading ? (
           <p className="text-[14px]">{t("atelier.loading")}</p>
-        ) : (list.data ?? []).length === 0 ? (
+        ) : visibles.length === 0 ? (
           <p className="text-[14px]">{t("atelier.prompts.emptyList")}</p>
         ) : (
           <table className="w-full border-collapse text-[13px]">
@@ -116,9 +120,12 @@ function PromptsRoom() {
               </tr>
             </thead>
             <tbody>
-              {(list.data ?? []).map((p) => (
+              {visibles.map((p) => (
                 <tr key={p.id}>
-                  <td className={cell}>{p.name}</td>
+                  <td className={cell}>
+                    {p.name}
+                    {p.frozenAt ? <span className="ml-2 opacity-70">({t("atelier.prompts.frozenTag")})</span> : null}
+                  </td>
                   <td className={cell}>{p.activeModel ?? t("atelier.none")}</td>
                   <td className={cell}>
                     {p.activeWebSearch
@@ -141,6 +148,7 @@ function PromptsRoom() {
             </tbody>
           </table>
         )}
+
 
         <div className="mt-6">
           {creating ? (
