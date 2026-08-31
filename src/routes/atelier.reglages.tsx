@@ -85,6 +85,8 @@ function SettingsRoom() {
         {state === "error" ? <p className="mt-3 text-[13px]">{t("admin.passwordError")}</p> : null}
         {state === "short" ? <p className="mt-3 text-[13px]">{t("admin.passwordTooShort")}</p> : null}
       </form>
+
+      <ControleReglages />
     </Room>
   );
 }
