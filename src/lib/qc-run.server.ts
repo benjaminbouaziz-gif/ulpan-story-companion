@@ -200,6 +200,8 @@ async function enregistrerRapport(
       target_artifact_id: args.targetArtifactId,
       plan_version: args.planVersion,
       agent_run_id: args.agentRunId,
+      regles_prompt_version_id: args.reglesPromptVersionId ?? null,
+      regles_version: args.reglesVersion ?? null,
       status: args.status,
       passed: args.notes.ok,
       blocking_failed: args.notes.blockingFailed,
