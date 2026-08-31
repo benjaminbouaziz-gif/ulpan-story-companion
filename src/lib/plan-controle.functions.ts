@@ -10,10 +10,10 @@ import {
   executerControlePlan,
   promptDuRole,
   type Notes,
-  type Proposition,
   type ResultatControle,
-  type Verdicts,
+  type VerdictLigne,
 } from "./plan-controle.server";
+
 import { promptVide, type ModeControle } from "./atelier-models";
 
 /**
