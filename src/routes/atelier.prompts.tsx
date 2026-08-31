@@ -41,6 +41,40 @@ const button = "border-line rounded-[2px] border px-3 py-1 text-[13px]";
 function fmt(iso: string | null): string {
   return iso ? new Date(iso).toLocaleString("fr-FR") : "—";
 }
+/**
+ * LE MODÈLE NE SE TAPE PLUS À LA MAIN : une faute de frappe ne se voyait
+ * qu'à l'appel, en échec payé. Un réglage déjà en place qui n'est pas dans la
+ * liste reste affiché, suffixé « (hors liste) », pour ne pas s'effacer seul.
+ */
+function SelecteurModele({
+  valeur,
+  onChange,
+  className,
+}: {
+  valeur: string;
+  onChange: (v: string) => void;
+  className: string;
+}) {
+  const horsListe = valeur.trim() !== "" && !modeleConnu(valeur.trim());
+  return (
+    <select value={valeur} onChange={(e) => onChange(e.target.value)} className={className}>
+      <option value="">— aucun —</option>
+      {MODELES_ATELIER.map((m) => (
+        <option key={m.id} value={m.id}>
+          {m.libelle}
+        </option>
+      ))}
+      {horsListe ? <option value={valeur}>{`${valeur} (hors liste)`}</option> : null}
+    </select>
+  );
+}
+
+/** La passerelle Lovable ne propose pas la recherche en ligne. */
+function rechercheOuverte(modele: string): boolean {
+  const m = modeleConnu(modele.trim());
+  return m ? m.rechercheEnLigne : modele.trim() !== "";
+}
+
 
 function PromptsRoom() {
   const { t } = useI18n();
