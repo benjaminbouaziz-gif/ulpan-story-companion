@@ -37,10 +37,12 @@ Le code est en minuscules, chiffres et tirets bas ; la famille est exactement co
 
 ## Chantier 4 — le contrôleur lit deux prompts
 
-- `lirePromptControleur` ne prend plus de code d'étape : elle lit toujours le prompt `controle`.
-- `lirePromptRegles(editor, stepCode)` lit `regles_plan` pour l'étape plan et `regles_recit` pour la rédaction, et remonte contenu, identifiant de version et numéro de version. Mêmes refus nommés qu'aujourd'hui : pas de version active, pas de modèle, modèle inconnu, clé absente.
+- `lirePromptControleur` ne prend plus de code d'étape : elle lit toujours le prompt `controle`. Les vérifications de modèle, de fournisseur et de clé restent sur elle, et sur elle seule.
+- `lirePromptRegles(editor, stepCode)` fait la correspondance dans le code : étape `plan` → prompt `regles_plan`, étape `redaction` → prompt `regles_recit`. Elle remonte contenu, identifiant de version et numéro de version, et vérifie seulement trois choses : le prompt existe, il a une version active, le contenu n'est pas vide. Un prompt de règles n'est jamais envoyé à un fournisseur : il est recopié dans le message du contrôleur, son modèle reste nul.
 - Dans un tour de contrôle : les mécaniques viennent de la grille (espèce mécanique uniquement), les jugés viennent des règles écrites, la liste envoyée au modèle est bâtie à partir des critères jugés puis suivie du préambule et du texte intégral des règles.
+- Le garde-fou change de sens : le contrôle refuse de tourner seulement s'il n'y a ni mesure active ni règle écrite lisible. Une grille qui ne porte plus que des mesures est un cas normal.
 - L'enregistrement du rapport écrit la version des règles. Sur un verdict jugé, l'identifiant de critère est nul ; code, libellé, famille et caractère bloquant restent écrits en clair — le rapport reste lisible après réécriture des règles.
+
 
 ## Chantier 5 — l'écran Qualité
 
