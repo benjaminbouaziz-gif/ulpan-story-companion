@@ -571,35 +571,48 @@ export async function controlerEtape(
 
       // Pas validé : on corrige, si la stratégie l'autorise.
       if (round >= plafond) {
-        const raison = politique.strategy === "boucle" ? "arrete_plafond" : "a_revoir";
-        const message =
-          politique.strategy === "boucle"
-            ? `Arrêté au tour ${round}, plafond atteint. À revoir manuellement.`
-            : `Un tour de contrôle et une correction : à revoir manuellement (tour ${round}).`;
         if (politique.strategy === "une_fois") {
           const corr = await corriger(editor, { step, tour: dernier, grille });
-          await marquerRapport(admin, dernier.reportId, raison, `${message} ${corr}`);
+          const message = `Un tour de contrôle, une correction, fin (tour ${round}) : à revoir manuellement. ${corr}`;
+          await marquerRapport(admin, dernier.reportId, "a_revoir", message);
           await cloreEtape(admin, step.id);
           return {
             reportId: dernier.reportId,
             rounds: round,
             status: "a_revoir",
-            message: `${message} ${corr}`,
+            message,
             scoreGeneral: dernier.notes.general,
             blockingFailed: dernier.notes.blockingFailed,
           };
         }
-        await marquerRapport(admin, dernier.reportId, raison, message);
+        if (politique.strategy === "boucle") {
+          const message = `Arrêté au tour ${round}, plafond atteint. À revoir manuellement.`;
+          await marquerRapport(admin, dernier.reportId, "arrete_plafond", message);
+          await cloreEtape(admin, step.id);
+          return {
+            reportId: dernier.reportId,
+            rounds: round,
+            status: "arrete_plafond",
+            message,
+            scoreGeneral: dernier.notes.general,
+            blockingFailed: dernier.notes.blockingFailed,
+          };
+        }
+        // Contrôle demandé à la main sur une étape sans stratégie : on juge, on
+        // ne corrige pas. Rien n'est validé d'office.
+        const message = `Contrôle demandé à la main (tour ${round}) : non validé, à revoir manuellement. Aucune correction n'a été lancée.`;
+        await marquerRapport(admin, dernier.reportId, "a_revoir", message);
         await cloreEtape(admin, step.id);
         return {
           reportId: dernier.reportId,
           rounds: round,
-          status: "arrete_plafond",
+          status: "a_revoir",
           message,
           scoreGeneral: dernier.notes.general,
           blockingFailed: dernier.notes.blockingFailed,
         };
       }
+
 
       // STAGNATION : moins d'un point gagné d'un tour au suivant.
       if (scores.length >= 2) {
