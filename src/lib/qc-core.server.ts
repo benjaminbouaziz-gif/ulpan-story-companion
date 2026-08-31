@@ -367,11 +367,13 @@ export type PromptControleur = {
   webSearch: boolean;
 };
 
-/** Le prompt du contrôleur, rangé dans la bibliothèque comme les autres. */
-export async function lirePromptControleur(
-  editor: EditorContext,
-  code: "controle_plan" | "controle_recit",
-): Promise<PromptControleur> {
+/**
+ * LA MÉTHODE DU CONTRÔLEUR — un seul prompt, quelle que soit l'étape.
+ * C'est le SEUL prompt du contrôle qui part chez un fournisseur : les
+ * vérifications de modèle, de fournisseur et de clé sont ici, et ici seulement.
+ */
+export async function lirePromptControleur(editor: EditorContext): Promise<PromptControleur> {
+  const code = "controle";
   const admin = await getAdminClient(editor);
   const { data: prompt } = await admin
     .from("prompts")
@@ -402,6 +404,174 @@ export async function lirePromptControleur(
     webSearch: v.web_search ?? false,
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* LES RÈGLES ÉCRITES — LE CODE NE CONNAÎT QUE LEUR FORME              */
+/* ------------------------------------------------------------------ */
+
+export type PromptRegles = {
+  promptId: string;
+  code: string;
+  name: string;
+  versionId: string;
+  version: number;
+  content: string;
+};
+
+/** Quelle étape du livre lit quel prompt de règles. La correspondance est ici. */
+export const CODE_REGLES: Record<string, string> = {
+  plan: "regles_plan",
+  redaction: "regles_recit",
+};
+
+/**
+ * Un prompt de règles n'est JAMAIS envoyé seul à un fournisseur : il est lu
+ * et recopié dans le message du contrôleur. Donc aucune vérification de
+ * modèle, de fournisseur ni de clé ici — trois vérifications seulement.
+ */
+export async function lirePromptRegles(editor: EditorContext, stepCode: string): Promise<PromptRegles> {
+  const code = CODE_REGLES[stepCode];
+  if (!code) throw new Error(`Aucun prompt de règles n'est prévu pour l'étape « ${stepCode} ».`);
+  const admin = await getAdminClient(editor);
+  const { data: prompt } = await admin
+    .from("prompts")
+    .select("id, name, active_version_id")
+    .eq("code", code)
+    .maybeSingle();
+  if (!prompt) throw new Error(`Il manque le prompt de règles « ${code} » dans la bibliothèque.`);
+  if (!prompt.active_version_id) throw new Error(`Le prompt de règles « ${code} » n'a aucune version active.`);
+  const { data: v } = await admin
+    .from("prompt_versions")
+    .select("id, version, content")
+    .eq("id", prompt.active_version_id)
+    .maybeSingle();
+  if (!v) throw new Error(`Version de prompt introuvable pour « ${code} ».`);
+  if ((v.content ?? "").trim().length === 0)
+    throw new Error(`La version active de « ${code} » est vide : aucune règle à faire juger.`);
+  return {
+    promptId: prompt.id,
+    code,
+    name: prompt.name,
+    versionId: v.id,
+    version: v.version,
+    content: v.content,
+  };
+}
+
+export type ReglesEcrites = {
+  preambule: string;
+  criteres: Critere[];
+  problemes: string[];
+};
+
+const ENTETE_REGLE = /^\[([^\]]*)\](.*)$/;
+
+/**
+ * LA FORME D'UNE DÉCLARATION, PAS SON CONTENU :
+ *
+ *   [code · famille · bloquant] Libellé court
+ *   Le texte de la règle, sur autant de lignes que nécessaire.
+ *
+ * Tout ce qui précède la première déclaration est un préambule : transmis au
+ * contrôleur, mais ne produit aucun verdict.
+ *
+ * Un fichier de règles illisible ne doit JAMAIS se traduire par « aucun
+ * critère jugé, donc tout va bien » : les problèmes remontent, et le contrôle
+ * échoue au lieu de valider.
+ */
+export function lireReglesEcrites(texte: string, codesMecaniques: string[] = []): ReglesEcrites {
+  const lignes = String(texte ?? "").split(/\r?\n/);
+  const problemes: string[] = [];
+  const preambule: string[] = [];
+  const criteres: Critere[] = [];
+  const corps = new Map<string, string[]>();
+  const mecaniques = new Set(codesMecaniques);
+  const vus = new Set<string>();
+  let courant: string | null = null;
+
+  lignes.forEach((ligne, i) => {
+    const m = ENTETE_REGLE.exec(ligne.trim());
+    if (!m) {
+      if (courant === null) preambule.push(ligne);
+      else corps.get(courant)?.push(ligne);
+      return;
+    }
+    const numero = i + 1;
+    const champs = (m[1] ?? "").split("·").map((c) => c.trim());
+    const label = (m[2] ?? "").trim();
+    if (champs.length !== 3) {
+      problemes.push(
+        `Ligne ${numero} : une déclaration porte exactement trois champs séparés par « · » (code · famille · bloquant). Lu : « ${ligne.trim()} ».`,
+      );
+      courant = null;
+      return;
+    }
+    const [code, famille, portee] = champs as [string, string, string];
+    if (!/^[a-z0-9_]+$/.test(code)) {
+      problemes.push(
+        `Ligne ${numero} : code de règle invalide « ${code} » — lettres minuscules, chiffres et tirets bas seulement.`,
+      );
+      courant = null;
+      return;
+    }
+    if (!FAMILLES.includes(famille as Famille)) {
+      problemes.push(
+        `Ligne ${numero} : famille inconnue « ${famille} » — attendu conformite, structure, pedagogie ou langue.`,
+      );
+      courant = null;
+      return;
+    }
+    const normPortee = famille === "" ? "" : portee.toLowerCase();
+    if (normPortee !== "bloquant" && normPortee !== "simple") {
+      problemes.push(`Ligne ${numero} : troisième champ « ${portee} » — attendu « bloquant » ou « simple ».`);
+      courant = null;
+      return;
+    }
+    if (vus.has(code)) {
+      problemes.push(`Ligne ${numero} : le code « ${code} » est déclaré deux fois.`);
+      courant = null;
+      return;
+    }
+    if (mecaniques.has(code)) {
+      problemes.push(
+        `Ligne ${numero} : le code « ${code} » est déjà celui d'une mesure calculée par le code : choisis-en un autre.`,
+      );
+      courant = null;
+      return;
+    }
+    if (label.length === 0) {
+      problemes.push(`Ligne ${numero} : la déclaration « ${code} » n'a pas de libellé après le crochet.`);
+      courant = null;
+      return;
+    }
+    vus.add(code);
+    corps.set(code, []);
+    courant = code;
+    criteres.push({
+      id: null,
+      code,
+      label,
+      question: "",
+      family: famille as Famille,
+      isBlocking: normPortee === "bloquant",
+      species: "juge",
+      mechanicKey: null,
+    });
+  });
+
+  for (const c of criteres) {
+    const texteRegle = (corps.get(c.code) ?? []).join("\n").trim();
+    if (texteRegle.length === 0)
+      problemes.push(`Règle « ${c.code} » : aucune ligne de texte sous sa déclaration.`);
+    c.question = texteRegle;
+  }
+
+  if (criteres.length === 0 && problemes.length === 0)
+    problemes.push("Aucune déclaration de règle trouvée : il faut au moins une ligne « [code · famille · bloquant] Libellé ».");
+
+  return { preambule: preambule.join("\n").trim(), criteres, problemes };
+}
+
 
 export function blocGrille(criteres: Critere[]): string {
   return [
