@@ -357,7 +357,7 @@ export const listRobotRuns = createServerFn({ method: "GET" })
     const { data: runs } = await admin
       .from("agent_runs")
       .select(
-        "id, created_at, robot_name, model, model_used, status, duration_ms, output_tokens, cost_usd, truncated, error_summary, book_step_id, mode",
+        "id, created_at, robot_name, model, model_used, status, duration_ms, input_tokens, output_tokens, cost_usd, truncated, error_summary, book_step_id, mode, batch_current, batch_total",
       )
       .order("created_at", { ascending: false })
       .limit(100);
