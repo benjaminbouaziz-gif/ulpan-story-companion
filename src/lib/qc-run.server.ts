@@ -805,3 +805,80 @@ export async function controleApresFabrication(
     return null;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* LA REPRISE MANUELLE DEPUIS UN RAPPORT                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * « Renvoyer en correction » depuis un rapport existant. Une correction ne se
+ * lance JAMAIS sans rapport de contrôle associé : c'est le rapport qui fournit
+ * les critères échoués et leur localisation.
+ */
+export async function corrigerDepuisRapport(
+  editor: EditorContext,
+  reportId: string,
+): Promise<string> {
+  const admin = await getAdminClient(editor);
+  const { data: rapport } = await admin
+    .from("qc_reports")
+    .select("id, book_step_id, grid_id, chapter_no")
+    .eq("id", reportId)
+    .maybeSingle();
+  if (!rapport) throw new Error("Rapport de contrôle introuvable.");
+  const step = await lireEtape(admin, rapport.book_step_id);
+  if (!step) throw new Error("Étape introuvable.");
+  const politique = await lirePolitique(editor, step.id);
+  const grille = await lireGrille(editor, { gridId: rapport.grid_id, stepCode: step.step_code });
+  if (!grille) throw new Error("Grille de critères introuvable.");
+
+  const { data: verdicts } = await admin
+    .from("qc_verdicts")
+    .select("criterion_id, criterion_code, label, family, is_blocking, species, verdict, location, explanation")
+    .eq("report_id", rapport.id);
+
+  const tour: Tour = {
+    reportId: rapport.id,
+    chapterNo: rapport.chapter_no ?? null,
+    verdicts: (verdicts ?? []).map((v) => ({
+      criterionId: v.criterion_id ?? null,
+      code: v.criterion_code,
+      label: v.label,
+      family: v.family as VerdictCalcule["family"],
+      isBlocking: v.is_blocking,
+      species: (v.species as "juge" | "mecanique") ?? "juge",
+      verdict: v.verdict as "valide" | "echoue",
+      location: v.location ?? null,
+      explanation: v.explanation ?? null,
+    })),
+    notes: calculerNotes([], politique.passThreshold),
+  };
+  if (tour.verdicts.filter((v) => v.verdict === "echoue").length === 0)
+    throw new Error("Ce rapport ne signale aucun critère échoué : il n'y a rien à corriger.");
+
+  const message = await corriger(editor, { step, tour, grille });
+  await cloreEtape(admin, step.id);
+  return message;
+}
+
+/** « Forcer la validation » : décision d'éditeur, écrite en clair sur le rapport. */
+export async function forcerValidation(
+  editor: EditorContext,
+  args: { reportId: string; comment: string },
+): Promise<void> {
+  const admin = await getAdminClient(editor);
+  const { data: rapport } = await admin
+    .from("qc_reports")
+    .select("id, book_step_id")
+    .eq("id", args.reportId)
+    .maybeSingle();
+  if (!rapport) throw new Error("Rapport de contrôle introuvable.");
+  await admin
+    .from("qc_reports")
+    .update({
+      status: "force_valide",
+      stop_reason: "force_valide",
+      message: `Validation forcée par l'éditeur : ${args.comment}`,
+    })
+    .eq("id", rapport.id);
+}
