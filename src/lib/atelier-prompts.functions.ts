@@ -147,7 +147,15 @@ export const promptDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }): Promise<{
-    prompt: { id: string; name: string; stepCode: string; stepLabelFr: string; activeVersionId: string | null } | null;
+    prompt: {
+      id: string;
+      name: string;
+      stepCode: string;
+      stepLabelFr: string;
+      activeVersionId: string | null;
+      frozenAt: string | null;
+      usageCount: number;
+    } | null;
     versions: PromptVersionRow[];
     activations: PromptActivationRow[];
     produced: PromptProducedRow[];
@@ -157,10 +165,11 @@ export const promptDossier = createServerFn({ method: "GET" })
 
     const { data: prompt } = await admin
       .from("prompts")
-      .select("id, name, step_code, active_version_id")
+      .select("id, name, step_code, active_version_id, frozen_at")
       .eq("id", data.promptId)
       .maybeSingle();
     if (!prompt) return { prompt: null, versions: [], activations: [], produced: [] };
+
 
     const [{ data: tpl }, { data: versions }, { data: activations }] = await Promise.all([
       admin.from("step_templates").select("label_fr").eq("code", prompt.step_code).maybeSingle(),
