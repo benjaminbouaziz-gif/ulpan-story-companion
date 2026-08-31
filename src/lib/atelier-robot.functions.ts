@@ -387,10 +387,13 @@ export const listRobotRuns = createServerFn({ method: "GET" })
       model: r.model_used ?? r.model,
       status: r.status,
       durationMs: r.duration_ms,
+      inputTokens: r.input_tokens,
       outputTokens: r.output_tokens,
       costUsd: r.cost_usd === null || r.cost_usd === undefined ? null : Number(r.cost_usd),
       truncated: r.truncated ?? false,
       errorSummary: r.error_summary,
       mode: r.mode ?? null,
+      batchCurrent: r.batch_current ?? null,
+      batchTotal: r.batch_total ?? null,
     }));
   });
