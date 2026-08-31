@@ -1461,6 +1461,409 @@ export type Database = {
           },
         ]
       }
+      qc_corrections: {
+        Row: {
+          agent_run_id: string | null
+          artifact_id: string | null
+          book_step_id: string
+          chapter_no: number | null
+          created_at: string
+          id: string
+          message: string | null
+          ok: boolean
+          packet_chars: number | null
+          report_id: string
+        }
+        Insert: {
+          agent_run_id?: string | null
+          artifact_id?: string | null
+          book_step_id: string
+          chapter_no?: number | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          ok?: boolean
+          packet_chars?: number | null
+          report_id: string
+        }
+        Update: {
+          agent_run_id?: string | null
+          artifact_id?: string | null
+          book_step_id?: string
+          chapter_no?: number | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          ok?: boolean
+          packet_chars?: number | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qc_corrections_agent_run_id_fkey"
+            columns: ["agent_run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_corrections_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_corrections_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_corrections_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "qc_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qc_criteria: {
+        Row: {
+          code: string
+          created_at: string
+          family: string
+          grid_id: string
+          id: string
+          is_active: boolean
+          is_blocking: boolean
+          label: string
+          mechanic_key: string | null
+          question: string
+          sort_order: number
+          species: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          family: string
+          grid_id: string
+          id?: string
+          is_active?: boolean
+          is_blocking?: boolean
+          label: string
+          mechanic_key?: string | null
+          question: string
+          sort_order?: number
+          species?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          family?: string
+          grid_id?: string
+          id?: string
+          is_active?: boolean
+          is_blocking?: boolean
+          label?: string
+          mechanic_key?: string | null
+          question?: string
+          sort_order?: number
+          species?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qc_criteria_grid_id_fkey"
+            columns: ["grid_id"]
+            isOneToOne: false
+            referencedRelation: "qc_grids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qc_grids: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          step_code: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          step_code: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          step_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      qc_reports: {
+        Row: {
+          agent_run_id: string | null
+          blocking_failed: number
+          book_step_id: string
+          chapter_no: number | null
+          created_at: string
+          created_by: string | null
+          criteria_passed: number
+          criteria_total: number
+          duration_ms: number | null
+          grid_id: string | null
+          id: string
+          message: string | null
+          model_used: string | null
+          passed: boolean
+          plan_version: number | null
+          regles_prompt_version_id: string | null
+          regles_version: number | null
+          round: number
+          score_conformite: number | null
+          score_general: number | null
+          score_langue: number | null
+          score_pedagogie: number | null
+          score_structure: number | null
+          status: string
+          stop_reason: string | null
+          target_artifact_id: string | null
+        }
+        Insert: {
+          agent_run_id?: string | null
+          blocking_failed?: number
+          book_step_id: string
+          chapter_no?: number | null
+          created_at?: string
+          created_by?: string | null
+          criteria_passed?: number
+          criteria_total?: number
+          duration_ms?: number | null
+          grid_id?: string | null
+          id?: string
+          message?: string | null
+          model_used?: string | null
+          passed?: boolean
+          plan_version?: number | null
+          regles_prompt_version_id?: string | null
+          regles_version?: number | null
+          round?: number
+          score_conformite?: number | null
+          score_general?: number | null
+          score_langue?: number | null
+          score_pedagogie?: number | null
+          score_structure?: number | null
+          status?: string
+          stop_reason?: string | null
+          target_artifact_id?: string | null
+        }
+        Update: {
+          agent_run_id?: string | null
+          blocking_failed?: number
+          book_step_id?: string
+          chapter_no?: number | null
+          created_at?: string
+          created_by?: string | null
+          criteria_passed?: number
+          criteria_total?: number
+          duration_ms?: number | null
+          grid_id?: string | null
+          id?: string
+          message?: string | null
+          model_used?: string | null
+          passed?: boolean
+          plan_version?: number | null
+          regles_prompt_version_id?: string | null
+          regles_version?: number | null
+          round?: number
+          score_conformite?: number | null
+          score_general?: number | null
+          score_langue?: number | null
+          score_pedagogie?: number | null
+          score_structure?: number | null
+          status?: string
+          stop_reason?: string | null
+          target_artifact_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qc_reports_agent_run_id_fkey"
+            columns: ["agent_run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_reports_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: false
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_reports_grid_id_fkey"
+            columns: ["grid_id"]
+            isOneToOne: false
+            referencedRelation: "qc_grids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_reports_regles_prompt_version_id_fkey"
+            columns: ["regles_prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_reports_target_artifact_id_fkey"
+            columns: ["target_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qc_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      qc_step_policies: {
+        Row: {
+          book_step_id: string
+          created_at: string
+          grid_id: string | null
+          id: string
+          max_rounds: number
+          pass_threshold: number
+          strategy: string
+          updated_at: string
+        }
+        Insert: {
+          book_step_id: string
+          created_at?: string
+          grid_id?: string | null
+          id?: string
+          max_rounds?: number
+          pass_threshold?: number
+          strategy?: string
+          updated_at?: string
+        }
+        Update: {
+          book_step_id?: string
+          created_at?: string
+          grid_id?: string | null
+          id?: string
+          max_rounds?: number
+          pass_threshold?: number
+          strategy?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qc_step_policies_book_step_id_fkey"
+            columns: ["book_step_id"]
+            isOneToOne: true
+            referencedRelation: "book_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_step_policies_grid_id_fkey"
+            columns: ["grid_id"]
+            isOneToOne: false
+            referencedRelation: "qc_grids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qc_verdicts: {
+        Row: {
+          created_at: string
+          criterion_code: string
+          criterion_id: string | null
+          explanation: string | null
+          family: string
+          id: string
+          is_blocking: boolean
+          label: string
+          location: string | null
+          report_id: string
+          species: string
+          verdict: string
+        }
+        Insert: {
+          created_at?: string
+          criterion_code: string
+          criterion_id?: string | null
+          explanation?: string | null
+          family: string
+          id?: string
+          is_blocking?: boolean
+          label: string
+          location?: string | null
+          report_id: string
+          species?: string
+          verdict: string
+        }
+        Update: {
+          created_at?: string
+          criterion_code?: string
+          criterion_id?: string | null
+          explanation?: string | null
+          family?: string
+          id?: string
+          is_blocking?: boolean
+          label?: string
+          location?: string | null
+          report_id?: string
+          species?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qc_verdicts_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "qc_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_verdicts_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "qc_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           answer: Json
