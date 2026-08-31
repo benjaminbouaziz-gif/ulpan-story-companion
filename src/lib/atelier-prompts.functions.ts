@@ -221,6 +221,10 @@ export const createPrompt = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
+    // À la création il n'y a aucun réglage en place à préserver : la liste vaut.
+    if (data.model && !modeleConnu(data.model))
+      throw new Error(`Modèle hors liste de l'atelier : « ${data.model} ».`);
+
     // L'étape ne vient jamais de la saisie : elle doit être une étape 'llm'.
     const { data: tpl } = await admin
       .from("step_templates")
@@ -310,13 +314,19 @@ export const publishPromptVersion = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
+    // LE REFUS « HORS LISTE » NE CASSE PAS UN RÉGLAGE EN PLACE : il ne
+    // s'applique que si le modèle soumis DIFFÈRE de celui déjà enregistré.
     const { data: last } = await admin
       .from("prompt_versions")
-      .select("version")
+      .select("version, model")
       .eq("prompt_id", data.promptId)
       .order("version", { ascending: false })
       .limit(1);
     const version = (last?.[0]?.version ?? 0) + 1;
+    const modeleSoumis = data.model ?? null;
+    const modeleEnPlace = last?.[0]?.model ?? null;
+    if (modeleSoumis !== null && modeleSoumis !== modeleEnPlace && !modeleConnu(modeleSoumis))
+      throw new Error(`Modèle hors liste de l'atelier : « ${modeleSoumis} ».`);
 
     const { data: inserted, error } = await admin
       .from("prompt_versions")
