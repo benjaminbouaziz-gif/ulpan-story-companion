@@ -179,6 +179,8 @@ async function enregistrerRapport(
     targetArtifactId: string | null;
     planVersion: number | null;
     agentRunId: string | null;
+    reglesPromptVersionId?: string | null;
+    reglesVersion?: number | null;
     status: string;
     stopReason: string | null;
     message: string | null;
