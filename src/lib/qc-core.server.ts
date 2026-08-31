@@ -106,7 +106,10 @@ async function avecDelai<T>(promise: Promise<T>, ms: number, message: string): P
 /** Sur off, la chaîne se comporte exactement comme avant la brique 9. */
 export async function controleActif(editor: EditorContext): Promise<boolean> {
   const admin = await getAdminClient(editor);
-  const { data } = await admin.from("qc_settings").select("enabled").eq("id", true).maybeSingle();
+  const { data, error } = await admin.from("qc_settings").select("enabled").eq("id", true).maybeSingle();
+  // Une lecture muette passerait pour « interrupteur à l'arrêt » : on préfère
+  // l'erreur, sinon le contrôle se saute tout seul en silence.
+  if (error) throw new Error(`L'interrupteur du contrôle qualité n'a pas pu être lu : ${error.message}`);
   return data?.enabled === true;
 }
 
