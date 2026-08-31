@@ -771,7 +771,7 @@ async function corriger(
       }
     }
 
-    await admin.from("qc_corrections").insert({
+    const { error: errCorr } = await admin.from("qc_corrections").insert({
       report_id: args.tour.reportId,
       book_step_id: args.step.id,
       chapter_no: chapterNo,
@@ -780,6 +780,7 @@ async function corriger(
       message,
       ...(nouvelle !== null ? {} : {}),
     });
+    if (errCorr) throw new Error(texteErreurBase("La correction n'a pas pu être journalisée", errCorr));
     return message;
   }
 
@@ -791,13 +792,16 @@ async function corriger(
     blocEchecs(args.tour.verdicts),
   ].join("\n\n");
 
-  await admin.from("reviews").insert({
+  const { error: errRev } = await admin.from("reviews").insert({
     book_step_id: args.step.id,
     decision: "revision_demandee",
     comment: paquet,
-    artifact_id: args.tour.reportId ? null : null,
+    artifact_id: null,
     author: editor.userId,
   });
+  // Sans motif écrit, le robot corrigerait à l'aveugle : on n'y va pas.
+  if (errRev)
+    throw new Error(texteErreurBase("Le motif de révision n'a pas pu être écrit : aucune correction lancée", errRev));
 
   let message = "";
   let ok = false;
@@ -808,7 +812,7 @@ async function corriger(
   } catch (e) {
     message = `Correction du plan refusée : ${e instanceof Error ? e.message : String(e)}`;
   }
-  await admin.from("qc_corrections").insert({
+  const { error: errCorrPlan } = await admin.from("qc_corrections").insert({
     report_id: args.tour.reportId,
     book_step_id: args.step.id,
     chapter_no: null,
@@ -816,6 +820,8 @@ async function corriger(
     ok,
     message,
   });
+  if (errCorrPlan)
+    throw new Error(texteErreurBase("La correction n'a pas pu être journalisée", errCorrPlan));
   return message;
 }
 
