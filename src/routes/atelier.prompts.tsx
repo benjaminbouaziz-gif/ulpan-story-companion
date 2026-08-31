@@ -9,9 +9,12 @@ import {
   atelierPromptSteps,
   atelierPrompts,
   createPrompt,
+  deletePrompt,
+  freezePrompt,
   promptDossier,
   publishPromptVersion,
 } from "@/lib/atelier-prompts.functions";
+
 
 /**
  * LA BIBLIOTHÈQUE DE PROMPTS.
@@ -46,6 +49,8 @@ function PromptsRoom() {
   const { t } = useI18n();
   const refreshAtelier = useAtelierRefresh();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [showFrozen, setShowFrozen] = useState(false);
+
 
   const fetchList = useServerFn(atelierPrompts);
   const fetchSteps = useServerFn(atelierPromptSteps);
@@ -90,15 +95,23 @@ function PromptsRoom() {
     onError: (e: Error) => setError(e.message || "L’enregistrement du prompt a échoué."),
   });
 
+  // Les prompts figés ne s'affichent que si on les demande.
+  const visibles = (list.data ?? []).filter((p) => showFrozen || !p.frozenAt);
+
+
   return (
     <section className="max-w-[1000px]">
       <h1 className="font-latin text-[24px]">{t("atelier.room.prompts")}</h1>
       <p className="mt-2 text-[14px]">{t("atelier.room.prompts.desc")}</p>
 
       <div className="border-line mt-6 border-t pt-4">
+        <label className="mb-3 flex items-center gap-2 text-[13px]">
+          <input type="checkbox" checked={showFrozen} onChange={(e) => setShowFrozen(e.target.checked)} />
+          {t("atelier.prompts.showFrozen")}
+        </label>
         {list.isLoading ? (
           <p className="text-[14px]">{t("atelier.loading")}</p>
-        ) : (list.data ?? []).length === 0 ? (
+        ) : visibles.length === 0 ? (
           <p className="text-[14px]">{t("atelier.prompts.emptyList")}</p>
         ) : (
           <table className="w-full border-collapse text-[13px]">
@@ -113,9 +126,12 @@ function PromptsRoom() {
               </tr>
             </thead>
             <tbody>
-              {(list.data ?? []).map((p) => (
+              {visibles.map((p) => (
                 <tr key={p.id}>
-                  <td className={cell}>{p.name}</td>
+                  <td className={cell}>
+                    {p.name}
+                    {p.frozenAt ? <span className="ml-2 opacity-70">({t("atelier.prompts.frozenTag")})</span> : null}
+                  </td>
                   <td className={cell}>{p.activeModel ?? t("atelier.none")}</td>
                   <td className={cell}>
                     {p.activeWebSearch
@@ -138,6 +154,7 @@ function PromptsRoom() {
             </tbody>
           </table>
         )}
+
 
         <div className="mt-6">
           {creating ? (
@@ -215,13 +232,13 @@ function PromptsRoom() {
           )}
         </div>
 
-        {openId ? <PromptDossier promptId={openId} /> : null}
+        {openId ? <PromptDossier promptId={openId} onDeleted={() => setOpenId(null)} /> : null}
       </div>
     </section>
   );
 }
 
-function PromptDossier({ promptId }: { promptId: string }) {
+function PromptDossier({ promptId, onDeleted }: { promptId: string; onDeleted: () => void }) {
   const { t } = useI18n();
   const refreshAtelier = useAtelierRefresh();
   const fetchDossier = useServerFn(promptDossier);
@@ -232,6 +249,9 @@ function PromptDossier({ promptId }: { promptId: string }) {
 
   const publish = useServerFn(publishPromptVersion);
   const activate = useServerFn(activatePromptVersion);
+  const freeze = useServerFn(freezePrompt);
+  const remove = useServerFn(deletePrompt);
+
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState("");
   const [note, setNote] = useState("");
@@ -272,6 +292,22 @@ function PromptDossier({ promptId }: { promptId: string }) {
     onError: (e: Error) => setError(e.message),
   });
 
+  const freezeMut = useMutation({
+    mutationFn: (frozen: boolean) => freeze({ data: { promptId, frozen } }),
+    onSuccess: refresh,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: () => remove({ data: { promptId } }),
+    onSuccess: async () => {
+      onDeleted();
+      await refresh();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+
   if (dossier.isLoading) return <p className="mt-8 text-[14px]">{t("atelier.loading")}</p>;
   const data = dossier.data;
   if (!data?.prompt) return <p className="mt-8 text-[14px]">{t("atelier.prompts.notFound")}</p>;
@@ -283,6 +319,61 @@ function PromptDossier({ promptId }: { promptId: string }) {
     <div className="border-line mt-10 border-t pt-6">
       <h2 className="font-latin text-[18px]">{data.prompt.name}</h2>
       <p className="mt-1 text-[13px] opacity-80">{data.prompt.stepLabelFr}</p>
+      {data.prompt.frozenAt ? (
+        <p className="mt-2 text-[13px]">
+          {t("atelier.prompts.frozenSince").replace("{date}", fmt(data.prompt.frozenAt))}
+        </p>
+      ) : null}
+
+      {/* Ranger la bibliothèque : figer (réversible, rien n'est effacé) ou
+          supprimer (seulement si le prompt n'est relié à rien). */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className={button}
+          onClick={() => {
+            setError(null);
+            if (freezeMut.isPending) return;
+            if (data.prompt!.frozenAt) {
+              freezeMut.mutate(false);
+              return;
+            }
+            const ok = window.confirm(t("atelier.prompts.confirmFreeze").replace("{name}", data.prompt!.name));
+            if (ok) freezeMut.mutate(true);
+          }}
+        >
+          {data.prompt.frozenAt ? t("atelier.prompts.unfreeze") : t("atelier.prompts.freeze")}
+        </button>
+        {data.prompt.usageCount === 0 ? (
+          <button
+            type="button"
+            className={button}
+            onClick={() => {
+              setError(null);
+              if (deleteMut.isPending) return;
+              const saisi = window.prompt(
+                t("atelier.prompts.confirmDelete")
+                  .replace("{name}", data.prompt!.name)
+                  .replace("{versions}", String(data.versions.length)),
+              );
+              if (saisi === null) return;
+              if (saisi.trim() !== data.prompt!.name.trim()) {
+                setError(t("atelier.prompts.deleteMismatch"));
+                return;
+              }
+              deleteMut.mutate();
+            }}
+          >
+            {t("atelier.prompts.delete")}
+          </button>
+        ) : (
+          <span className="text-[13px] opacity-80">
+            {t("atelier.prompts.deleteBlocked").replace("{count}", String(data.prompt.usageCount))}
+          </span>
+        )}
+      </div>
+      {error ? <p className="mt-2 text-[13px]">{error}</p> : null}
+
 
       <h3 className="mt-6 text-[14px] font-medium">
         {t("atelier.prompts.activeVersion")}{" "}

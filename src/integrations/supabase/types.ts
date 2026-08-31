@@ -1413,6 +1413,7 @@ export type Database = {
           code: string
           collection_id: string | null
           created_at: string
+          frozen_at: string | null
           id: string
           is_active: boolean
           lang: string
@@ -1425,6 +1426,7 @@ export type Database = {
           code: string
           collection_id?: string | null
           created_at?: string
+          frozen_at?: string | null
           id?: string
           is_active?: boolean
           lang?: string
@@ -1437,6 +1439,7 @@ export type Database = {
           code?: string
           collection_id?: string | null
           created_at?: string
+          frozen_at?: string | null
           id?: string
           is_active?: boolean
           lang?: string
@@ -2137,6 +2140,7 @@ export type Database = {
         Returns: boolean
       }
       instancier_chaine: { Args: { p_book_id: string }; Returns: number }
+      supprimer_prompt: { Args: { p_prompt_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "editor" | "user"

@@ -34,7 +34,10 @@ export type PromptListRow = {
   activeWebSearch: boolean;
   lastVersionAt: string | null;
   versionsCount: number;
+  frozenAt: string | null;
+  usageCount: number;
 };
+
 
 export type PromptVersionRow = {
   id: string;
@@ -84,11 +87,32 @@ export const atelierPrompts = createServerFn({ method: "GET" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
-    const [{ data: prompts }, { data: templates }, { data: versions }] = await Promise.all([
-      admin.from("prompts").select("id, step_code, name, active_version_id"),
-      admin.from("step_templates").select("code, label_fr, rank"),
-      admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
-    ]);
+    const [{ data: prompts }, { data: templates }, { data: versions }, { data: arts }, { data: reports }, { data: books }] =
+      await Promise.all([
+        admin.from("prompts").select("id, step_code, name, active_version_id, frozen_at"),
+        admin.from("step_templates").select("code, label_fr, rank"),
+        admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
+        admin.from("artifacts").select("prompt_version_id").not("prompt_version_id", "is", null),
+        admin.from("qc_reports").select("regles_prompt_version_id").not("regles_prompt_version_id", "is", null),
+        admin.from("books").select("prompt_id").not("prompt_id", "is", null),
+      ]);
+
+    // Un prompt « relié » est un prompt qui a produit un livrable, qui est cité
+    // par un rapport de contrôle, ou qui est attaché à un livre.
+    const usedVersionIds = [
+      ...(arts ?? []).map((a) => a.prompt_version_id as string),
+      ...(reports ?? []).map((r) => r.regles_prompt_version_id as string),
+    ];
+    const versionOwner = new Map((versions ?? []).map((v) => [v.id, v.prompt_id]));
+    const usage = new Map<string, number>();
+    for (const vid of usedVersionIds) {
+      const owner = versionOwner.get(vid);
+      if (owner) usage.set(owner, (usage.get(owner) ?? 0) + 1);
+    }
+    for (const b of books ?? []) {
+      const owner = b.prompt_id as string;
+      usage.set(owner, (usage.get(owner) ?? 0) + 1);
+    }
 
     const tpl = new Map((templates ?? []).map((t) => [t.code, t]));
     const rows: PromptListRow[] = (prompts ?? []).map((p) => {
@@ -109,8 +133,11 @@ export const atelierPrompts = createServerFn({ method: "GET" })
         activeWebSearch: active?.web_search ?? false,
         lastVersionAt: last?.created_at ?? null,
         versionsCount: mine.length,
+        frozenAt: p.frozen_at ?? null,
+        usageCount: usage.get(p.id) ?? 0,
       };
     });
+
     rows.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "fr"));
     return rows;
   });
@@ -120,7 +147,15 @@ export const promptDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }): Promise<{
-    prompt: { id: string; name: string; stepCode: string; stepLabelFr: string; activeVersionId: string | null } | null;
+    prompt: {
+      id: string;
+      name: string;
+      stepCode: string;
+      stepLabelFr: string;
+      activeVersionId: string | null;
+      frozenAt: string | null;
+      usageCount: number;
+    } | null;
     versions: PromptVersionRow[];
     activations: PromptActivationRow[];
     produced: PromptProducedRow[];
@@ -130,10 +165,11 @@ export const promptDossier = createServerFn({ method: "GET" })
 
     const { data: prompt } = await admin
       .from("prompts")
-      .select("id, name, step_code, active_version_id")
+      .select("id, name, step_code, active_version_id, frozen_at")
       .eq("id", data.promptId)
       .maybeSingle();
     if (!prompt) return { prompt: null, versions: [], activations: [], produced: [] };
+
 
     const [{ data: tpl }, { data: versions }, { data: activations }] = await Promise.all([
       admin.from("step_templates").select("label_fr").eq("code", prompt.step_code).maybeSingle(),
@@ -179,6 +215,18 @@ export const promptDossier = createServerFn({ method: "GET" })
       });
     }
 
+    // Ce qui rattache ce prompt à l'histoire de l'atelier : livrables produits,
+    // rapports de contrôle qui le citent, livres qui le désignent.
+    const [{ count: qcCount }, { count: bookCount }] = await Promise.all([
+      versionIds.length
+        ? admin
+            .from("qc_reports")
+            .select("id", { count: "exact", head: true })
+            .in("regles_prompt_version_id", versionIds)
+        : Promise.resolve({ count: 0 }),
+      admin.from("books").select("id", { count: "exact", head: true }).eq("prompt_id", prompt.id),
+    ]);
+
     return {
       prompt: {
         id: prompt.id,
@@ -186,7 +234,10 @@ export const promptDossier = createServerFn({ method: "GET" })
         stepCode: prompt.step_code,
         stepLabelFr: tpl?.label_fr ?? prompt.step_code,
         activeVersionId: prompt.active_version_id ?? null,
+        frozenAt: prompt.frozen_at ?? null,
+        usageCount: produced.length + (qcCount ?? 0) + (bookCount ?? 0),
       },
+
       versions: (versions ?? []).map((v) => ({
         id: v.id,
         version: v.version,
@@ -380,4 +431,48 @@ export const activatePromptVersion = createServerFn({ method: "POST" })
     });
 
     return { version: version.version };
+  });
+
+/**
+ * FIGER — le prompt sort de la bibliothèque active. Rien n'est effacé : ses
+ * versions et son historique restent en base, et l'étape est de nouveau libre
+ * pour un prompt de remplacement. Réversible.
+ */
+export const freezePrompt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ promptId: z.string().uuid(), frozen: z.boolean() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ frozen: boolean }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+
+    const { error } = await admin
+      .from("prompts")
+      .update({ frozen_at: data.frozen ? new Date().toISOString() : null })
+      .eq("id", data.promptId);
+    if (error)
+      throw new Error(
+        texteErreurBase(
+          data.frozen ? "Le prompt n’a pas pu être figé" : "Le prompt n’a pas pu être remis en service",
+          error,
+        ),
+      );
+    return { frozen: data.frozen };
+  });
+
+/**
+ * SUPPRIMER — effacement réel, réservé aux prompts qui n'ont rien produit et
+ * que rien ne cite. Le refus vient de la base elle-même : la fonction
+ * `supprimer_prompt` recompte les liens avant d'agir et journalise chaque
+ * ligne effacée dans maintenance_log.
+ */
+export const deletePrompt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ versionsSupprimees: number }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+
+    const { data: count, error } = await admin.rpc("supprimer_prompt", { p_prompt_id: data.promptId });
+    if (error) throw new Error(texteErreurBase("La suppression du prompt a été refusée", error));
+    return { versionsSupprimees: (count as number) ?? 0 };
   });

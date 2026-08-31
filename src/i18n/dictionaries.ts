@@ -263,6 +263,20 @@ const fr = {
   "atelier.prompts.producedEmpty": "Ce prompt n'a encore rien produit.",
   "atelier.prompts.activations": "Changements de version active",
   "atelier.prompts.noActivations": "Aucun changement enregistré.",
+  "atelier.prompts.showFrozen": "Voir les prompts figés",
+  "atelier.prompts.frozenTag": "figé",
+  "atelier.prompts.freeze": "Figer ce prompt",
+  "atelier.prompts.unfreeze": "Remettre en service",
+  "atelier.prompts.confirmFreeze":
+    "Figer « {name} » ? Il quitte la bibliothèque active et libère son étape. Rien n'est effacé : tu pourras le remettre en service.",
+  "atelier.prompts.frozenSince": "Prompt figé le {date} — il n'est plus utilisé par l'atelier.",
+  "atelier.prompts.delete": "Supprimer définitivement",
+  "atelier.prompts.confirmDelete":
+    "Supprimer définitivement « {name} » et ses {versions} version(s) ? Cette action est irréversible. Écris le nom du prompt pour confirmer.",
+  "atelier.prompts.deleteBlocked":
+    "Ce prompt est relié à {count} élément(s) de l'atelier : il peut être figé, pas supprimé.",
+  "atelier.prompts.deleteMismatch": "Le nom saisi ne correspond pas : rien n'a été supprimé.",
+
   "atelier.books.newBook": "Nouveau livre",
   "atelier.books.closeNewBook": "Annuler la création",
   "atelier.fiche.title": "Fiche du livre",
@@ -721,6 +735,19 @@ const en: Record<DictKey, string> = {
   "atelier.prompts.producedEmpty": "This prompt has produced nothing yet.",
   "atelier.prompts.activations": "Active version changes",
   "atelier.prompts.noActivations": "No change recorded.",
+  "atelier.prompts.showFrozen": "Show frozen prompts",
+  "atelier.prompts.frozenTag": "frozen",
+  "atelier.prompts.freeze": "Freeze this prompt",
+  "atelier.prompts.unfreeze": "Put back in service",
+  "atelier.prompts.confirmFreeze":
+    "Freeze \u201c{name}\u201d? It leaves the active library and frees its step. Nothing is deleted: you can put it back in service.",
+  "atelier.prompts.frozenSince": "Prompt frozen on {date} — the workshop no longer uses it.",
+  "atelier.prompts.delete": "Delete permanently",
+  "atelier.prompts.confirmDelete":
+    "Permanently delete \u201c{name}\u201d and its {versions} version(s)? This cannot be undone. Type the prompt name to confirm.",
+  "atelier.prompts.deleteBlocked": "This prompt is linked to {count} workshop item(s): it can be frozen, not deleted.",
+  "atelier.prompts.deleteMismatch": "The name typed does not match: nothing was deleted.",
+
   "atelier.books.newBook": "New book",
   "atelier.books.closeNewBook": "Cancel creation",
   "atelier.fiche.title": "Book sheet",
