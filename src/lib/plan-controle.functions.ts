@@ -86,9 +86,11 @@ export const setPlanControlSettings = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<{ ok: true }> => {
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (data.enabled !== undefined) patch["enabled"] = data.enabled;
-    if (data.mode !== undefined) patch["mode"] = data.mode;
+    const patch = {
+      updated_at: new Date().toISOString(),
+      ...(data.enabled === undefined ? {} : { enabled: data.enabled }),
+      ...(data.mode === undefined ? {} : { mode: data.mode }),
+    };
     const { error } = await admin.from("plan_control_settings").update(patch).eq("id", true);
     if (error) throw new Error(texteErreurBase("Les réglages du contrôle n'ont pas pu être enregistrés", error));
     return { ok: true };
