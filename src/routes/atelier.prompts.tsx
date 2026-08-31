@@ -319,6 +319,61 @@ function PromptDossier({ promptId, onDeleted }: { promptId: string; onDeleted: (
     <div className="border-line mt-10 border-t pt-6">
       <h2 className="font-latin text-[18px]">{data.prompt.name}</h2>
       <p className="mt-1 text-[13px] opacity-80">{data.prompt.stepLabelFr}</p>
+      {data.prompt.frozenAt ? (
+        <p className="mt-2 text-[13px]">
+          {t("atelier.prompts.frozenSince").replace("{date}", fmt(data.prompt.frozenAt))}
+        </p>
+      ) : null}
+
+      {/* Ranger la bibliothèque : figer (réversible, rien n'est effacé) ou
+          supprimer (seulement si le prompt n'est relié à rien). */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className={button}
+          onClick={() => {
+            setError(null);
+            if (freezeMut.isPending) return;
+            if (data.prompt!.frozenAt) {
+              freezeMut.mutate(false);
+              return;
+            }
+            const ok = window.confirm(t("atelier.prompts.confirmFreeze").replace("{name}", data.prompt!.name));
+            if (ok) freezeMut.mutate(true);
+          }}
+        >
+          {data.prompt.frozenAt ? t("atelier.prompts.unfreeze") : t("atelier.prompts.freeze")}
+        </button>
+        {data.prompt.usageCount === 0 ? (
+          <button
+            type="button"
+            className={button}
+            onClick={() => {
+              setError(null);
+              if (deleteMut.isPending) return;
+              const saisi = window.prompt(
+                t("atelier.prompts.confirmDelete")
+                  .replace("{name}", data.prompt!.name)
+                  .replace("{versions}", String(data.versions.length)),
+              );
+              if (saisi === null) return;
+              if (saisi.trim() !== data.prompt!.name.trim()) {
+                setError(t("atelier.prompts.deleteMismatch"));
+                return;
+              }
+              deleteMut.mutate();
+            }}
+          >
+            {t("atelier.prompts.delete")}
+          </button>
+        ) : (
+          <span className="text-[13px] opacity-80">
+            {t("atelier.prompts.deleteBlocked").replace("{count}", String(data.prompt.usageCount))}
+          </span>
+        )}
+      </div>
+      {error ? <p className="mt-2 text-[13px]">{error}</p> : null}
+
 
       <h3 className="mt-6 text-[14px] font-medium">
         {t("atelier.prompts.activeVersion")}{" "}
