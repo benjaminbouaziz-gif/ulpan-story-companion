@@ -11,14 +11,16 @@ Les critères mécaniques restent dans la grille, calculés par le code de calib
 - La case « recherche en ligne » est grisée et remise à faux dès que le modèle choisi ne la propose pas.
 - Un modèle déjà enregistré mais absent de la liste s'affiche en fin de liste, suffixé « (hors liste) » : aucun réglage existant n'est effacé en silence.
 - Texte d'aide remplacé, en français et en anglais : « Deux modèles sont ouverts dans l'atelier. La recherche en ligne n'est possible qu'avec Claude. »
-- Contrôle serveur dans `atelier-prompts.functions.ts` (enregistrement d'un prompt et d'une version) : un modèle non nul hors liste est refusé avec « Modèle hors liste de l'atelier : « X ». »
+- Contrôle serveur dans `atelier-prompts.functions.ts` (enregistrement d'un prompt et d'une version) : un modèle non nul hors liste est refusé avec « Modèle hors liste de l'atelier : « X ». » Le refus ne s'applique que si le modèle soumis diffère de celui déjà enregistré sur le prompt : republier une version en conservant le modèle en place reste possible, même hors liste.
+- Identifiants exacts, jamais abrégés ni normalisés : `google/gemini-2.5-flash` (passerelle Lovable, clé `LOVABLE_API_KEY`, pas de recherche en ligne) et `claude-sonnet-4-6` (Anthropic, clé `ANTHROPIC_API_KEY`, recherche en ligne possible).
 
 ## Chantier 2 — migration
 
-- Trois prompts nouveaux, chacun avec une version 1 active : `controle` (« Contrôleur — méthode », étape `controle`), `regles_plan` (« Règles — Plan de chapitres », étape `plan`), `regles_recit` (« Règles — Récit », étape `redaction`). Contenu provisoire d'une ligne « à remplir » en attendant les textes.
-- `controle_plan` et `controle_recit` passent inactifs. Ils ne sont pas supprimés.
+- Trois prompts nouveaux, chacun avec sa propre étape pour ne pas entrer en collision avec l'unicité (étape, langue) des prompts actifs : `controle` (« Contrôleur — méthode », étape `controle`), `regles_plan` (« Règles — Plan de chapitres », étape `regles_plan`), `regles_recit` (« Règles — Récit », étape `regles_recit`). Langue `fr`, aucune collection. Version 1 active, contenu provisoire d'une ligne « à remplir » en attendant les textes ; le prompt `controle` reçoit dès la migration le modèle `claude-sonnet-4-6`, pour être appelable sans réglage.
+- Aucun prompt existant n'est désactivé, déplacé ni modifié — `controle_plan` et `controle_recit` restent tels quels.
 - Les critères de la grille dont l'espèce est « jugé » passent inactifs. Ils ne sont pas supprimés. Les mécaniques restent actifs et intacts.
 - Deux colonnes sur les rapports : `regles_prompt_version_id`, `regles_version` — contre quelle version des règles le rapport a été rendu.
+
 
 ## Chantier 3 — lire les règles écrites
 
