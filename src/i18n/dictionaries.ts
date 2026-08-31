@@ -735,6 +735,19 @@ const en: Record<DictKey, string> = {
   "atelier.prompts.producedEmpty": "This prompt has produced nothing yet.",
   "atelier.prompts.activations": "Active version changes",
   "atelier.prompts.noActivations": "No change recorded.",
+  "atelier.prompts.showFrozen": "Show frozen prompts",
+  "atelier.prompts.frozenTag": "frozen",
+  "atelier.prompts.freeze": "Freeze this prompt",
+  "atelier.prompts.unfreeze": "Put back in service",
+  "atelier.prompts.confirmFreeze":
+    "Freeze \u201c{name}\u201d? It leaves the active library and frees its step. Nothing is deleted: you can put it back in service.",
+  "atelier.prompts.frozenSince": "Prompt frozen on {date} — the workshop no longer uses it.",
+  "atelier.prompts.delete": "Delete permanently",
+  "atelier.prompts.confirmDelete":
+    "Permanently delete \u201c{name}\u201d and its {versions} version(s)? This cannot be undone. Type the prompt name to confirm.",
+  "atelier.prompts.deleteBlocked": "This prompt is linked to {count} workshop item(s): it can be frozen, not deleted.",
+  "atelier.prompts.deleteMismatch": "The name typed does not match: nothing was deleted.",
+
   "atelier.books.newBook": "New book",
   "atelier.books.closeNewBook": "Cancel creation",
   "atelier.fiche.title": "Book sheet",
