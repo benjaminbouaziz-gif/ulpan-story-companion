@@ -13,6 +13,8 @@ import {
   lireGrille,
   lirePolitique,
   lirePromptControleur,
+  lirePromptRegles,
+  lireReglesEcrites,
   verdictsMecaniques,
   type Critere,
   type Grille,
