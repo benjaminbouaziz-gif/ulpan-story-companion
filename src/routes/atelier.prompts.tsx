@@ -13,7 +13,16 @@ import {
   freezePrompt,
   promptDossier,
   publishPromptVersion,
+  setPromptModel,
 } from "@/lib/atelier-prompts.functions";
+import {
+  ETAPES,
+  MODELES,
+  MODELE_GEMINI,
+  ROLES,
+  libelleEtape,
+  libelleRole,
+} from "@/lib/atelier-models";
 
 
 /**
