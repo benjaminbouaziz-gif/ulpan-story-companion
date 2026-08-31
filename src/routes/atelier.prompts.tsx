@@ -249,6 +249,9 @@ function PromptDossier({ promptId }: { promptId: string }) {
 
   const publish = useServerFn(publishPromptVersion);
   const activate = useServerFn(activatePromptVersion);
+  const freeze = useServerFn(freezePrompt);
+  const remove = useServerFn(deletePrompt);
+
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState("");
   const [note, setNote] = useState("");
