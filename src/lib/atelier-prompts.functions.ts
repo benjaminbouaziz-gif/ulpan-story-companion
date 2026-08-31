@@ -215,6 +215,18 @@ export const promptDossier = createServerFn({ method: "GET" })
       });
     }
 
+    // Ce qui rattache ce prompt à l'histoire de l'atelier : livrables produits,
+    // rapports de contrôle qui le citent, livres qui le désignent.
+    const [{ count: qcCount }, { count: bookCount }] = await Promise.all([
+      versionIds.length
+        ? admin
+            .from("qc_reports")
+            .select("id", { count: "exact", head: true })
+            .in("regles_prompt_version_id", versionIds)
+        : Promise.resolve({ count: 0 }),
+      admin.from("books").select("id", { count: "exact", head: true }).eq("prompt_id", prompt.id),
+    ]);
+
     return {
       prompt: {
         id: prompt.id,
@@ -222,7 +234,10 @@ export const promptDossier = createServerFn({ method: "GET" })
         stepCode: prompt.step_code,
         stepLabelFr: tpl?.label_fr ?? prompt.step_code,
         activeVersionId: prompt.active_version_id ?? null,
+        frozenAt: prompt.frozen_at ?? null,
+        usageCount: produced.length + (qcCount ?? 0) + (bookCount ?? 0),
       },
+
       versions: (versions ?? []).map((v) => ({
         id: v.id,
         version: v.version,
