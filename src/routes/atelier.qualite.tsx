@@ -25,66 +25,18 @@ export const Route = createFileRoute("/atelier/qualite")({
 
 const cell = "border-line border-b px-2 py-1 text-left align-top";
 
-const FAMILLES = [
-  { v: "conformite", l: "Conformité fiche" },
-  { v: "structure", l: "Structure" },
-  { v: "pedagogie", l: "Pédagogie" },
-  { v: "langue", l: "Langue" },
-] as const;
-
-/** Les clés de calcul câblées sur recit-calibrage.ts, côté serveur. */
-const CLES_MECANIQUES = [
-  // Grille « Plan »
-  "plan_structure",
-  "plan_numerotation",
-  // Grille « Récit » — toutes lues par le module de calibrage existant.
-  "nombre_pages",
-  "pagination",
-  "calibrage",
-  "entetes",
-];
-
-type Brouillon = {
-  id?: string;
-  gridId: string;
-  sortOrder: number;
-  code: string;
-  label: string;
-  question: string;
-  family: (typeof FAMILLES)[number]["v"];
-  isBlocking: boolean;
-  species: "juge" | "mecanique";
-  mechanicKey: string | null;
-};
-
-function nouveau(grid: QcGridRow): Brouillon {
-  const dernier = grid.criteres.reduce((n, c) => Math.max(n, c.sortOrder), 0);
-  return {
-    gridId: grid.id,
-    sortOrder: dernier + 1,
-    code: "",
-    label: "",
-    question: "",
-    family: "structure",
-    isBlocking: false,
-    species: "juge",
-    mechanicKey: null,
-  };
-}
-
 function QualityRoom() {
   const invalidate = useAtelierRefresh();
   const fetchSettings = useServerFn(qcSettings);
   const fetchGrids = useServerFn(qcGrids);
+  const fetchRegles = useServerFn(qcRegles);
   const setEnabled = useServerFn(setQcEnabled);
-  const saveCriterion = useServerFn(saveQcCriterion);
-  const removeCriterion = useServerFn(deleteQcCriterion);
 
   const [message, setMessage] = useState<string | null>(null);
-  const [brouillon, setBrouillon] = useState<Brouillon | null>(null);
 
   const settings = useQuery({ queryKey: ["atelier", "qc", "settings"], queryFn: () => fetchSettings() });
   const grids = useQuery({ queryKey: ["atelier", "qc", "grids"], queryFn: () => fetchGrids() });
+  const regles = useQuery({ queryKey: ["atelier", "qc", "regles"], queryFn: () => fetchRegles() });
 
   const basculer = useMutation({
     mutationFn: (enabled: boolean) => setEnabled({ data: { enabled } }),
@@ -99,40 +51,6 @@ function QualityRoom() {
     onError: (e: Error) => setMessage(e.message),
   });
 
-  const enregistrer = useMutation({
-    mutationFn: (b: Brouillon) =>
-      saveCriterion({
-        data: {
-          ...(b.id ? { id: b.id } : {}),
-          gridId: b.gridId,
-          sortOrder: b.sortOrder,
-          code: b.code,
-          label: b.label,
-          question: b.question,
-          family: b.family,
-          isBlocking: b.isBlocking,
-          species: b.species,
-          mechanicKey: b.mechanicKey,
-        },
-      }),
-    onSuccess: () => {
-      setBrouillon(null);
-      setMessage("Critère enregistré.");
-      invalidate();
-    },
-    onError: (e: Error) => setMessage(e.message),
-  });
-
-  const retirer = useMutation({
-    mutationFn: (id: string) => removeCriterion({ data: { id } }),
-    onSuccess: () => {
-      setMessage("Critère retiré de la grille. Les rapports déjà rendus le conservent.");
-      invalidate();
-    },
-    onError: (e: Error) => setMessage(e.message),
-  });
-
-  const champ = "border-line w-full border bg-transparent px-1 py-0.5";
 
   return (
     <Room titleKey="atelier.room.quality" descKey="atelier.room.quality.desc">
