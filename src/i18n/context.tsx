@@ -40,11 +40,21 @@ export function I18nProvider({
   return <I18nContext.Provider value={{ lang, t, setLang }}>{children}</I18nContext.Provider>;
 }
 
+/**
+ * Le fournisseur est monté à la racine du site. Si un rechargement à chaud le
+ * remonte à contretemps, on ne casse pas l'écran : on retombe sur le français,
+ * la langue d'écriture du projet, le temps que l'arbre se remette en place.
+ */
+const repliFr: I18nValue = {
+  lang: "fr",
+  t: (key) => dictionaries.fr[key] ?? key,
+  setLang: () => {},
+};
+
 export function useI18n(): I18nValue {
-  const value = useContext(I18nContext);
-  if (!value) throw new Error("useI18n must be used inside I18nProvider");
-  return value;
+  return useContext(I18nContext) ?? repliFr;
 }
+
 
 /** Choisit la colonne éditoriale correspondant à la langue courante. */
 export function pickLang<T>(lang: Lang, fr: T | null | undefined, en: T | null | undefined): T | null {
