@@ -1632,6 +1632,8 @@ export type Database = {
           model_used: string | null
           passed: boolean
           plan_version: number | null
+          regles_prompt_version_id: string | null
+          regles_version: number | null
           round: number
           score_conformite: number | null
           score_general: number | null
@@ -1658,6 +1660,8 @@ export type Database = {
           model_used?: string | null
           passed?: boolean
           plan_version?: number | null
+          regles_prompt_version_id?: string | null
+          regles_version?: number | null
           round?: number
           score_conformite?: number | null
           score_general?: number | null
@@ -1684,6 +1688,8 @@ export type Database = {
           model_used?: string | null
           passed?: boolean
           plan_version?: number | null
+          regles_prompt_version_id?: string | null
+          regles_version?: number | null
           round?: number
           score_conformite?: number | null
           score_general?: number | null
@@ -1714,6 +1720,13 @@ export type Database = {
             columns: ["grid_id"]
             isOneToOne: false
             referencedRelation: "qc_grids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qc_reports_regles_prompt_version_id_fkey"
+            columns: ["regles_prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
             referencedColumns: ["id"]
           },
           {

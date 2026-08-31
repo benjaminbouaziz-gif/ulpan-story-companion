@@ -217,7 +217,8 @@ const fr = {
   "atelier.prompts.missing.note": "Il manque la note de changement.",
   "atelier.prompts.field.model": "Modèle",
   "atelier.prompts.field.webSearch": "Recherche en ligne autorisée",
-  "atelier.prompts.modelHint": "claude-… (Anthropic), gemini-… (Google), google/gemini-… (passerelle Lovable).",
+  "atelier.prompts.modelHint":
+    "Deux modèles sont ouverts dans l'atelier. La recherche en ligne n'est possible qu'avec Claude.",
   "atelier.prompts.model": "Modèle",
   "atelier.prompts.webSearchOn": "recherche en ligne autorisée",
   "atelier.prompts.webSearchOff": "sans recherche en ligne",
@@ -677,7 +678,8 @@ const en: Record<DictKey, string> = {
   "atelier.prompts.missing.note": "The change note is missing.",
   "atelier.prompts.field.model": "Model",
   "atelier.prompts.field.webSearch": "Online search allowed",
-  "atelier.prompts.modelHint": "claude-… (Anthropic), gemini-… (Google), google/gemini-… (Lovable gateway).",
+  "atelier.prompts.modelHint":
+    "Deux modèles sont ouverts dans l'atelier. La recherche en ligne n'est possible qu'avec Claude.",
   "atelier.prompts.model": "Model",
   "atelier.prompts.webSearchOn": "online search allowed",
   "atelier.prompts.webSearchOff": "no online search",

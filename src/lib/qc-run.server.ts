@@ -13,6 +13,8 @@ import {
   lireGrille,
   lirePolitique,
   lirePromptControleur,
+  lirePromptRegles,
+  lireReglesEcrites,
   verdictsMecaniques,
   type Critere,
   type Grille,
@@ -177,6 +179,8 @@ async function enregistrerRapport(
     targetArtifactId: string | null;
     planVersion: number | null;
     agentRunId: string | null;
+    reglesPromptVersionId?: string | null;
+    reglesVersion?: number | null;
     status: string;
     stopReason: string | null;
     message: string | null;
@@ -196,6 +200,8 @@ async function enregistrerRapport(
       target_artifact_id: args.targetArtifactId,
       plan_version: args.planVersion,
       agent_run_id: args.agentRunId,
+      regles_prompt_version_id: args.reglesPromptVersionId ?? null,
+      regles_version: args.reglesVersion ?? null,
       status: args.status,
       passed: args.notes.ok,
       blocking_failed: args.notes.blockingFailed,
@@ -254,8 +260,20 @@ async function unTour(
   const admin = await getAdminClient(editor);
   const startedAt = Date.now();
   const estRecit = args.stepCode === REDACTION_STEP_CODE;
-  const codeControleur = estRecit ? "controle_recit" : "controle_plan";
-  const prompt = await lirePromptControleur(editor, codeControleur);
+  const codeControleur = "controle";
+  const prompt = await lirePromptControleur(editor);
+
+  // LES RÈGLES JUGÉES NE SONT PLUS DANS LA BASE : elles s'écrivent dans leur
+  // prompt. Un fichier de règles illisible fait échouer le contrôle.
+  const promptRegles = await lirePromptRegles(editor, args.stepCode);
+  const regles = lireReglesEcrites(
+    promptRegles.content,
+    args.grille.criteres.filter((c) => c.species === "mecanique").map((c) => c.code),
+  );
+  if (regles.problemes.length > 0)
+    throw new Error(
+      `Les règles écrites de « ${promptRegles.name} » (v${promptRegles.version}) ne sont pas lisibles : ${regles.problemes.join(" ")}`,
+    );
 
   // Le livrable à juger, et pour un chapitre : le plan de SA version.
   let markdown = "";
@@ -314,8 +332,8 @@ async function unTour(
     estRecit ? { kind: "recit", markdown, cible } : { kind: "plan", markdown },
   );
 
-  // 2) LE CONTRÔLEUR — verdicts seulement.
-  const juges = args.grille.criteres.filter((c) => c.species === "juge");
+  // 2) LE CONTRÔLEUR — verdicts seulement, sur les RÈGLES ÉCRITES.
+  const juges = regles.criteres;
   let verdictsJuges: VerdictCalcule[] = [];
   let modelUsed: string | null = null;
   let runId: string | null = null;
@@ -365,6 +383,8 @@ async function unTour(
       estRecit && cible
         ? `CHAPITRE JUGÉ : ${cible.chapterNo} · ${cible.titre} — ${cible.pages} page(s), pages ${cible.firstPage} à ${cible.lastPage}.`
         : null,
+      regles.preambule ? `CADRE DES RÈGLES :\n${regles.preambule}` : null,
+      `RÈGLES ÉCRITES — le texte intégral, tel qu'il est publié (« ${promptRegles.name} », v${promptRegles.version}) :\n${promptRegles.content}`,
       `LIVRABLE À JUGER :\n${markdown}`,
       toutLeLivre
         ? `LIVRE ENTIER — pour revérifier les critères transversaux (refrain, bouclage, notions déjà employées) :\n${toutLeLivre}`
@@ -376,7 +396,7 @@ async function unTour(
     try {
       const appel = await appelerControleur({
         prompt,
-        criteres: args.grille.criteres,
+        criteres: juges,
         matiere,
         onProgress: async (info) => {
           // Seule écriture volontairement tolérante : elle ne fait qu'avancer
@@ -436,6 +456,8 @@ async function unTour(
     targetArtifactId,
     planVersion,
     agentRunId: runId,
+    reglesPromptVersionId: promptRegles.versionId,
+    reglesVersion: promptRegles.version,
     status: notes.ok ? "valide" : "a_revoir",
     stopReason: null,
     message: null,
@@ -548,11 +570,32 @@ export async function controlerEtape(
     return { ...vide, message: "Aucun contrôle n'est réglé sur cette étape." };
 
   const grille = await lireGrille(editor, { gridId: politique.gridId, stepCode: step.step_code });
-  if (!grille || grille.criteres.length === 0)
+  const mesures = (grille?.criteres ?? []).filter((c) => c.species === "mecanique");
+  if (!grille)
     return {
       ...vide,
       status: "erreur",
-      message: "Aucune grille de critères active pour cette étape : le contrôle n'a rien à vérifier.",
+      message: "Aucune grille active pour cette étape : le contrôle n'a nulle part où ranger ses mesures.",
+    };
+
+  // UNE GRILLE QUI NE PORTE PLUS QUE DES MESURES EST NORMALE. Le contrôle ne
+  // refuse de tourner que s'il n'a NI mesure NI règle écrite lisible.
+  let reglesLisibles = 0;
+  try {
+    const p = await lirePromptRegles(editor, step.step_code);
+    reglesLisibles = lireReglesEcrites(
+      p.content,
+      mesures.map((c) => c.code),
+    ).criteres.length;
+  } catch {
+    reglesLisibles = 0;
+  }
+  if (mesures.length === 0 && reglesLisibles === 0)
+    return {
+      ...vide,
+      status: "erreur",
+      message:
+        "Ni mesure active ni règle écrite lisible pour cette étape : le contrôle n'a rien à vérifier. Écris les règles dans leur prompt.",
     };
 
   const estRecit = step.step_code === REDACTION_STEP_CODE;
