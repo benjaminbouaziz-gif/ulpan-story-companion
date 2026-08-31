@@ -272,6 +272,15 @@ export function PlanControlePanel({ bookStepId, onDone }: { bookStepId: string; 
       <div className="mt-2">
         {dernier ? <Rapport run={dernier} /> : <p className="text-[13px]">Aucun contrôle lancé pour l'instant.</p>}
       </div>
+      {s.reponseBrute ? (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[13px]">
+            La réponse brute du modèle ({s.reponseBrute.length} caractères)
+          </summary>
+          <pre className={`${mono} mt-2 max-h-[320px] overflow-auto`}>{s.reponseBrute}</pre>
+        </details>
+      ) : null}
+
     </div>
   );
 
