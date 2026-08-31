@@ -255,7 +255,9 @@ export const planControlState = createServerFn({ method: "GET" })
         createdAt: r.created_at,
         planV2ArtifactId: r.plan_v2_artifact_id ?? null,
         reportArtifactId: r.report_artifact_id ?? null,
-        attendus: ((r.notes as Notes | null)?.total ?? null) === null ? null : null,
+        attendus:
+          ((r.verdicts as VerdictLigne[] | null) ?? []).filter((v) => v.source === "modele").length || null,
+
       })),
     };
   });
