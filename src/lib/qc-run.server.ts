@@ -328,8 +328,8 @@ async function unTour(
     estRecit ? { kind: "recit", markdown, cible } : { kind: "plan", markdown },
   );
 
-  // 2) LE CONTRÔLEUR — verdicts seulement.
-  const juges = args.grille.criteres.filter((c) => c.species === "juge");
+  // 2) LE CONTRÔLEUR — verdicts seulement, sur les RÈGLES ÉCRITES.
+  const juges = regles.criteres;
   let verdictsJuges: VerdictCalcule[] = [];
   let modelUsed: string | null = null;
   let runId: string | null = null;
@@ -379,6 +379,8 @@ async function unTour(
       estRecit && cible
         ? `CHAPITRE JUGÉ : ${cible.chapterNo} · ${cible.titre} — ${cible.pages} page(s), pages ${cible.firstPage} à ${cible.lastPage}.`
         : null,
+      regles.preambule ? `CADRE DES RÈGLES :\n${regles.preambule}` : null,
+      `RÈGLES ÉCRITES — le texte intégral, tel qu'il est publié (« ${promptRegles.name} », v${promptRegles.version}) :\n${promptRegles.content}`,
       `LIVRABLE À JUGER :\n${markdown}`,
       toutLeLivre
         ? `LIVRE ENTIER — pour revérifier les critères transversaux (refrain, bouclage, notions déjà employées) :\n${toutLeLivre}`
@@ -390,7 +392,7 @@ async function unTour(
     try {
       const appel = await appelerControleur({
         prompt,
-        criteres: args.grille.criteres,
+        criteres: juges,
         matiere,
         onProgress: async (info) => {
           // Seule écriture volontairement tolérante : elle ne fait qu'avancer
@@ -450,6 +452,8 @@ async function unTour(
     targetArtifactId,
     planVersion,
     agentRunId: runId,
+    reglesPromptVersionId: promptRegles.versionId,
+    reglesVersion: promptRegles.version,
     status: notes.ok ? "valide" : "a_revoir",
     stopReason: null,
     message: null,
