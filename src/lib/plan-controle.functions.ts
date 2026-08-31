@@ -226,7 +226,30 @@ export const planControlState = createServerFn({ method: "GET" })
       planTexte = planTexte ?? null;
     }
 
+    // La réponse brute du dernier contrôleur : conservée avant tout parsing,
+    // consultable même quand le contrôle est non exploitable.
+    let reponseBrute: string | null = null;
+    if (dernier?.controleur_run_id) {
+      const { data: brutes } = await admin
+        .from("artifacts")
+        .select("storage_path")
+        .eq("book_step_id", step.id)
+        .eq("type", "reponse_brute")
+        .eq("robot_run_id", dernier.controleur_run_id)
+        .order("version", { ascending: false })
+        .limit(1);
+      const chemin = brutes?.[0]?.storage_path;
+      if (chemin) {
+        try {
+          reponseBrute = (await downloadArtifactText(editor, chemin)).text;
+        } catch {
+          reponseBrute = null;
+        }
+      }
+    }
+
     return {
+
       isPlanStep: true,
       enabled: reglages?.enabled ?? false,
       mode,
