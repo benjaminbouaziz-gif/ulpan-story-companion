@@ -11,14 +11,16 @@ Les critères mécaniques restent dans la grille, calculés par le code de calib
 - La case « recherche en ligne » est grisée et remise à faux dès que le modèle choisi ne la propose pas.
 - Un modèle déjà enregistré mais absent de la liste s'affiche en fin de liste, suffixé « (hors liste) » : aucun réglage existant n'est effacé en silence.
 - Texte d'aide remplacé, en français et en anglais : « Deux modèles sont ouverts dans l'atelier. La recherche en ligne n'est possible qu'avec Claude. »
-- Contrôle serveur dans `atelier-prompts.functions.ts` (enregistrement d'un prompt et d'une version) : un modèle non nul hors liste est refusé avec « Modèle hors liste de l'atelier : « X ». »
+- Contrôle serveur dans `atelier-prompts.functions.ts` (enregistrement d'un prompt et d'une version) : un modèle non nul hors liste est refusé avec « Modèle hors liste de l'atelier : « X ». » Le refus ne s'applique que si le modèle soumis diffère de celui déjà enregistré sur le prompt : republier une version en conservant le modèle en place reste possible, même hors liste.
+- Identifiants exacts, jamais abrégés ni normalisés : `google/gemini-2.5-flash` (passerelle Lovable, clé `LOVABLE_API_KEY`, pas de recherche en ligne) et `claude-sonnet-4-6` (Anthropic, clé `ANTHROPIC_API_KEY`, recherche en ligne possible).
 
 ## Chantier 2 — migration
 
-- Trois prompts nouveaux, chacun avec une version 1 active : `controle` (« Contrôleur — méthode », étape `controle`), `regles_plan` (« Règles — Plan de chapitres », étape `plan`), `regles_recit` (« Règles — Récit », étape `redaction`). Contenu provisoire d'une ligne « à remplir » en attendant les textes.
-- `controle_plan` et `controle_recit` passent inactifs. Ils ne sont pas supprimés.
+- Trois prompts nouveaux, chacun avec sa propre étape pour ne pas entrer en collision avec l'unicité (étape, langue) des prompts actifs : `controle` (« Contrôleur — méthode », étape `controle`), `regles_plan` (« Règles — Plan de chapitres », étape `regles_plan`), `regles_recit` (« Règles — Récit », étape `regles_recit`). Langue `fr`, aucune collection. Version 1 active, contenu provisoire d'une ligne « à remplir » en attendant les textes ; le prompt `controle` reçoit dès la migration le modèle `claude-sonnet-4-6`, pour être appelable sans réglage.
+- Aucun prompt existant n'est désactivé, déplacé ni modifié — `controle_plan` et `controle_recit` restent tels quels.
 - Les critères de la grille dont l'espèce est « jugé » passent inactifs. Ils ne sont pas supprimés. Les mécaniques restent actifs et intacts.
 - Deux colonnes sur les rapports : `regles_prompt_version_id`, `regles_version` — contre quelle version des règles le rapport a été rendu.
+
 
 ## Chantier 3 — lire les règles écrites
 
@@ -35,10 +37,12 @@ Le code est en minuscules, chiffres et tirets bas ; la famille est exactement co
 
 ## Chantier 4 — le contrôleur lit deux prompts
 
-- `lirePromptControleur` ne prend plus de code d'étape : elle lit toujours le prompt `controle`.
-- `lirePromptRegles(editor, stepCode)` lit `regles_plan` pour l'étape plan et `regles_recit` pour la rédaction, et remonte contenu, identifiant de version et numéro de version. Mêmes refus nommés qu'aujourd'hui : pas de version active, pas de modèle, modèle inconnu, clé absente.
+- `lirePromptControleur` ne prend plus de code d'étape : elle lit toujours le prompt `controle`. Les vérifications de modèle, de fournisseur et de clé restent sur elle, et sur elle seule.
+- `lirePromptRegles(editor, stepCode)` fait la correspondance dans le code : étape `plan` → prompt `regles_plan`, étape `redaction` → prompt `regles_recit`. Elle remonte contenu, identifiant de version et numéro de version, et vérifie seulement trois choses : le prompt existe, il a une version active, le contenu n'est pas vide. Un prompt de règles n'est jamais envoyé à un fournisseur : il est recopié dans le message du contrôleur, son modèle reste nul.
 - Dans un tour de contrôle : les mécaniques viennent de la grille (espèce mécanique uniquement), les jugés viennent des règles écrites, la liste envoyée au modèle est bâtie à partir des critères jugés puis suivie du préambule et du texte intégral des règles.
+- Le garde-fou change de sens : le contrôle refuse de tourner seulement s'il n'y a ni mesure active ni règle écrite lisible. Une grille qui ne porte plus que des mesures est un cas normal.
 - L'enregistrement du rapport écrit la version des règles. Sur un verdict jugé, l'identifiant de critère est nul ; code, libellé, famille et caractère bloquant restent écrits en clair — le rapport reste lisible après réécriture des règles.
+
 
 ## Chantier 5 — l'écran Qualité
 
@@ -47,9 +51,14 @@ Le code est en minuscules, chiffres et tirets bas ; la famille est exactement co
 - Si la lecture des règles échoue, la section affiche le message d'erreur en clair à la place de la liste.
 - Le formulaire d'ajout et de modification d'un critère jugé disparaît.
 
+## Preuve avant livraison
+
+Un test soumet à `lireReglesEcrites` six cas et rend le résultat des six : un texte sans aucune déclaration ; deux déclarations de même code ; une déclaration dont le code est celui d'une mesure active ; une famille inventée ; une déclaration sans texte sous elle — chacun doit être REFUSÉ, message nommant la ligne fautive. Puis un cas valide à deux règles : préambule séparé, deux critères sortis avec la bonne famille et le bon caractère bloquant. Le résultat des six cas est rendu dans la réponse.
+
 ## Détails techniques
 
-- Migration SQL : `insert` des trois prompts + version 1 + `active_version_id` ; `update prompts set is_active = false` sur les deux anciens contrôleurs ; `update qc_criteria set is_active = false where species = 'juge'` ; `alter table qc_reports add column regles_prompt_version_id uuid references prompt_versions(id), add column regles_version integer`. Aucun GRANT nouveau.
+- Migration SQL : `insert` des trois prompts + version 1 + `active_version_id` (modèle `claude-sonnet-4-6` sur `controle`, nul sur les deux prompts de règles) ; `update qc_criteria set is_active = false where species = 'juge'` ; `alter table qc_reports add column regles_prompt_version_id uuid references prompt_versions(id), add column regles_version integer`. Aucun GRANT nouveau, aucun prompt existant modifié.
+
 - `src/lib/qc-core.server.ts` : `lireReglesEcrites`, `lirePromptRegles`, `lirePromptControleur` sans argument de code ; `Critere.id` devient `string | null`.
 - `src/lib/qc-run.server.ts` : `unTour` filtre la grille sur les mécaniques, appelle les règles écrites, `enregistrerRapport` écrit les deux colonnes.
 - `src/lib/qc.functions.ts` : une fonction serveur qui, pour la salle Qualité, remonte par étape le prompt de règles, sa version, les codes lus ou l'erreur de lecture.
