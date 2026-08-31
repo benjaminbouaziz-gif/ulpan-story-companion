@@ -379,41 +379,50 @@ async function unTour(
         criteres: args.grille.criteres,
         matiere,
         onProgress: async (info) => {
+          // Seule écriture volontairement tolérante : elle ne fait qu'avancer
+          // le modèle en cours, et la clôture la réécrit de toute façon. La
+          // faire échouer couperait un appel déjà payé.
           if (runId) await admin.from("agent_runs").update({ model_used: info.modelUsed }).eq("id", runId);
         },
       });
       verdictsJuges = appel.verdicts;
       modelUsed = appel.modelUsed;
-      if (runId)
-        await admin
-          .from("agent_runs")
-          .update({
-            status: "termine",
-            ok: true,
-            model_used: appel.modelUsed,
-            cost_usd: appel.costUsd,
-            duration_ms: Date.now() - startedAt,
-            input_chars: appel.inputChars,
-            output_chars: appel.outputChars,
-            input_tokens: appel.inputTokens,
-            output_tokens: appel.outputTokens,
-            fields: appel.verdicts.length,
-          })
-          .eq("id", runId);
+      const { error: errFin } = await admin
+        .from("agent_runs")
+        .update({
+          status: "termine",
+          ok: true,
+          model_used: appel.modelUsed,
+          cost_usd: appel.costUsd,
+          duration_ms: Date.now() - startedAt,
+          input_chars: appel.inputChars,
+          output_chars: appel.outputChars,
+          input_tokens: appel.inputTokens,
+          output_tokens: appel.outputTokens,
+          fields: appel.verdicts.length,
+        })
+        .eq("id", runId);
+      // Durée, jetons et coût sont la seule preuve de la dépense : si elle ne
+      // s'écrit pas, le contrôle échoue au lieu de passer pour gratuit.
+      if (errFin)
+        throw new Error(texteErreurBase("Le lancement du contrôle n'a pas pu être clôturé en base", errFin));
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      if (runId)
-        await admin
-          .from("agent_runs")
-          .update({
-            status: "echoue",
-            ok: false,
-            error: message.slice(0, 2000),
-            error_summary: message.slice(0, 300),
-            duration_ms: Date.now() - startedAt,
-          })
-          .eq("id", runId);
-      throw new Error(message);
+      const { error: errEchec } = await admin
+        .from("agent_runs")
+        .update({
+          status: "echoue",
+          ok: false,
+          error: message.slice(0, 2000),
+          error_summary: message.slice(0, 300),
+          duration_ms: Date.now() - startedAt,
+        })
+        .eq("id", runId);
+      throw new Error(
+        errEchec
+          ? `${message} — de plus, l'échec n'a pas pu être journalisé : ${texteErreurBase("écriture refusée", errEchec)}`
+          : message,
+      );
     }
   }
 
