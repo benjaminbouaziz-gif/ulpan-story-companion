@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Room } from "@/components/AtelierRoom";
+import { ControleReglages } from "@/components/AtelierControleReglages";
 import { useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -84,6 +85,8 @@ function SettingsRoom() {
         {state === "error" ? <p className="mt-3 text-[13px]">{t("admin.passwordError")}</p> : null}
         {state === "short" ? <p className="mt-3 text-[13px]">{t("admin.passwordTooShort")}</p> : null}
       </form>
+
+      <ControleReglages />
     </Room>
   );
 }

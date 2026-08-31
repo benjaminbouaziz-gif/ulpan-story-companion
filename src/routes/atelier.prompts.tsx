@@ -13,7 +13,16 @@ import {
   freezePrompt,
   promptDossier,
   publishPromptVersion,
+  setPromptModel,
 } from "@/lib/atelier-prompts.functions";
+import {
+  ETAPES,
+  MODELES,
+  MODELE_GEMINI,
+  ROLES,
+  libelleEtape,
+  libelleRole,
+} from "@/lib/atelier-models";
 
 
 /**
@@ -58,34 +67,38 @@ function PromptsRoom() {
   const steps = useQuery({ queryKey: ["atelier", "promptSteps"], queryFn: () => fetchSteps() });
 
   const create = useServerFn(createPrompt);
+  const changeModel = useServerFn(setPromptModel);
   const [creating, setCreating] = useState(false);
-  const [newStep, setNewStep] = useState("");
+  const [newEtape, setNewEtape] = useState("");
+  const [newRole, setNewRole] = useState("");
   const [newName, setNewName] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [newModel, setNewModel] = useState("");
+  const [newModel, setNewModel] = useState<string>(MODELE_GEMINI);
   const [newWebSearch, setNewWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Le bouton reste toujours cliquable : au clic, il nomme ce qui manque.
-  const [missing, setMissing] = useState<{ step?: boolean; name?: boolean; content?: boolean }>({});
+  const [missing, setMissing] = useState<{ etape?: boolean; role?: boolean; name?: boolean; content?: boolean }>({});
 
   const createMut = useMutation({
     mutationFn: () =>
       create({
         data: {
-          stepCode: newStep,
+          etape: newEtape as "plan",
+          roleCode: newRole as "methode",
           name: newName,
           content: newContent,
           collectionId: null,
-          model: newModel.trim() === "" ? null : newModel.trim(),
+          model: newModel as typeof MODELE_GEMINI,
           webSearch: newWebSearch,
         },
       }),
     onSuccess: async (res) => {
       setCreating(false);
-      setNewStep("");
+      setNewEtape("");
+      setNewRole("");
       setNewName("");
       setNewContent("");
-      setNewModel("");
+      setNewModel(MODELE_GEMINI);
       setNewWebSearch(false);
       setError(null);
       setMissing({});
@@ -93,6 +106,14 @@ function PromptsRoom() {
       setOpenId(res.promptId);
     },
     onError: (e: Error) => setError(e.message || "L’enregistrement du prompt a échoué."),
+  });
+
+  /** Le modèle se change depuis la fiche, sans publier une version. */
+  const modelMut = useMutation({
+    mutationFn: (v: { promptId: string; model: string }) =>
+      changeModel({ data: { promptId: v.promptId, model: v.model as typeof MODELE_GEMINI } }),
+    onSuccess: () => refreshAtelier(),
+    onError: (e: Error) => setError(e.message),
   });
 
   // Les prompts figés ne s'affichent que si on les demande.
@@ -118,6 +139,8 @@ function PromptsRoom() {
             <thead>
               <tr>
                 <th className={cell}>{t("atelier.prompts.col.name")}</th>
+                <th className={cell}>Étape</th>
+                <th className={cell}>Rôle</th>
                 <th className={cell}>{t("atelier.prompts.col.model")}</th>
                 <th className={cell}>{t("atelier.prompts.col.webSearch")}</th>
                 <th className={cell}>{t("atelier.prompts.col.active")}</th>
@@ -132,7 +155,23 @@ function PromptsRoom() {
                     {p.name}
                     {p.frozenAt ? <span className="ml-2 opacity-70">({t("atelier.prompts.frozenTag")})</span> : null}
                   </td>
-                  <td className={cell}>{p.activeModel ?? t("atelier.none")}</td>
+                  <td className={cell}>{libelleEtape(p.etape)}</td>
+                  <td className={cell}>{libelleRole(p.roleCode)}</td>
+                  <td className={cell}>
+                    {/* Le modèle se change ici, sans publier de version. */}
+                    <select
+                      value={p.model}
+                      disabled={p.frozenAt !== null || modelMut.isPending}
+                      onChange={(e) => modelMut.mutate({ promptId: p.id, model: e.target.value })}
+                      className="border-line rounded-[2px] border px-1 py-0.5 text-[12px]"
+                    >
+                      {MODELES.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className={cell}>
                     {p.activeWebSearch
                       ? t("atelier.prompts.webSearchOn")
@@ -160,18 +199,31 @@ function PromptsRoom() {
           {creating ? (
             <div className="border-line border-t pt-4">
               <h2 className="font-latin text-[16px]">{t("atelier.prompts.new")}</h2>
+              {/* Un prompt se nomme désormais par son étape et son rôle, pas par un code technique. */}
               <label className="mt-3 block text-[13px]">
-                {t("atelier.prompts.field.step")}
-                <select value={newStep} onChange={(e) => setNewStep(e.target.value)} className={`${field} mt-1`}>
+                Étape
+                <select value={newEtape} onChange={(e) => setNewEtape(e.target.value)} className={`${field} mt-1`}>
                   <option value="">{t("atelier.prompts.chooseStep")}</option>
-                  {(steps.data ?? []).map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {s.rank}. {s.labelFr}
+                  {ETAPES.map((e) => (
+                    <option key={e.code} value={e.code}>
+                      {e.label}
                     </option>
                   ))}
                 </select>
               </label>
-              {missing.step ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
+              {missing.etape ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
+              <label className="mt-3 block text-[13px]">
+                Rôle
+                <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className={`${field} mt-1`}>
+                  <option value="">Choisir un rôle</option>
+                  {ROLES.map((r) => (
+                    <option key={r.code} value={r.code}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {missing.role ? <p className="mt-1 text-[13px]">Le rôle du prompt manque.</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.name")}
                 <input value={newName} onChange={(e) => setNewName(e.target.value)} className={`${field} mt-1`} />
@@ -187,9 +239,16 @@ function PromptsRoom() {
                 />
               </label>
               {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
+              {/* Deux modèles, pas un champ libre : on ne peut pas se tromper de nom. */}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
-                <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
+                <select value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`}>
+                  {MODELES.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
               <label className="mt-3 flex items-center gap-2 text-[13px]">
@@ -207,13 +266,14 @@ function PromptsRoom() {
                   className={button}
                   onClick={() => {
                     const m = {
-                      step: !newStep,
+                      etape: !newEtape,
+                      role: !newRole,
                       name: !newName.trim(),
                       content: !newContent.trim(),
                     };
                     setMissing(m);
                     setError(null);
-                    if (m.step || m.name || m.content) return;
+                    if (m.etape || m.role || m.name || m.content) return;
                      if (createMut.isPending) return;
                     createMut.mutate();
                   }}

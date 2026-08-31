@@ -13,6 +13,7 @@ export const ARTIFACT_BUCKET = "artifacts";
 export const ARTIFACT_TYPES = [
   "plan",
   "chapitre",
+  "rapport_controle",
   "recit_txt",
   "master_he",
   "ktiv_male",
