@@ -692,12 +692,18 @@ export async function controlerEtape(
 
 /** Toute fonction qui ouvre un état le referme : l'étape revient à l'éditeur. */
 async function cloreEtape(admin: Admin, stepId: string): Promise<void> {
-  const { data } = await admin.from("book_steps").select("status").eq("id", stepId).maybeSingle();
+  const { data, error: errLect } = await admin
+    .from("book_steps")
+    .select("status")
+    .eq("id", stepId)
+    .maybeSingle();
+  if (errLect) throw new Error(texteErreurBase("L'état de l'étape n'a pas pu être lu", errLect));
   if (data?.status === "valide" || data?.status === "valide_hors_crm") return;
-  await admin
+  const { error } = await admin
     .from("book_steps")
     .update({ status: "attend_validation", awaiting: "ben", updated_at: new Date().toISOString() })
     .eq("id", stepId);
+  if (error) throw new Error(texteErreurBase("L'étape n'a pas pu être rendue à l'éditeur", error));
 }
 
 async function marquerRapport(
@@ -706,7 +712,11 @@ async function marquerRapport(
   status: string,
   message: string,
 ): Promise<void> {
-  await admin.from("qc_reports").update({ status, stop_reason: status, message }).eq("id", reportId);
+  const { error } = await admin
+    .from("qc_reports")
+    .update({ status, stop_reason: status, message })
+    .eq("id", reportId);
+  if (error) throw new Error(texteErreurBase("Le rapport de contrôle n'a pas pu être mis à jour", error));
 }
 
 /** LA CORRECTION : le juge ne réécrit pas ; c'est l'agent de fabrication qui corrige. */
