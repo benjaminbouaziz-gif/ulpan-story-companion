@@ -3,6 +3,7 @@ import { getAdminClient } from "./supabase-admin.server";
 import { downloadArtifactText } from "./atelier-artifacts.server";
 import { blocDecisionsPourRobot } from "./decisions.server";
 import { lirePlanChapitres, type ChapitrePlan } from "./recit-calibrage";
+import { texteErreurBase } from "./db-error";
 import { assemblerLeRecit, executerChapitre, REDACTION_STEP_CODE } from "./atelier-recit-run.server";
 import { executerLancementPlan, PLAN_STEP_CODE } from "./atelier-robot-run.server";
 import {
