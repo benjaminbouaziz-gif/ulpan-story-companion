@@ -459,9 +459,13 @@ export function lireVerdictsRendus(texte: string, criteres: Critere[]): VerdictC
         species: "juge" as const,
         verdict: echoue ? ("echoue" as const) : ("valide" as const),
         location: (rendu?.location ?? "").trim() || null,
-        explanation: rendu
-          ? (rendu.explanation ?? "").trim() || null
-          : "Aucun verdict rendu par le contrôleur pour ce critère : il est compté comme échoué.",
+        explanation: !rendu
+          ? "Aucun verdict rendu par le contrôleur pour ce critère : il est compté comme échoué."
+          : echoue && mot.length === 0
+            ? "Le contrôleur n'a pas dit s'il validait ce critère : il est compté comme échoué."
+            : echoue && !MOTS_VALIDE.has(mot)
+              ? `Verdict illisible du contrôleur (« ${String(rendu.verdict ?? "")} ») : il est compté comme échoué. ${(rendu.explanation ?? "").trim()}`.trim()
+              : (rendu.explanation ?? "").trim() || null,
       };
     });
 }
