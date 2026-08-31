@@ -414,6 +414,22 @@ export function blocGrille(criteres: Critere[]): string {
 
 type VerdictRendu = { code: string; verdict: string; location?: string; explanation?: string };
 
+/**
+ * LES SEULS MOTS QUI VALIDENT. Tout le reste — mot inconnu, champ vide,
+ * critère absent, JSON illisible — ÉCHOUE. On ne valide jamais par défaut :
+ * un contrôle qui valide sans juger serait pire que pas de contrôle.
+ */
+const MOTS_VALIDE = new Set(["valide", "valid", "ok", "pass", "passe", "reussi", "conforme", "oui", "true", "yes"]);
+
+/** Sans accents, sans casse : « Validé », « VALIDE », « validé » se lisent pareil. */
+function normaliser(valeur: unknown): string {
+  return String(valeur ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 /** On lit du JSON, et on n'invente rien : un critère non rendu est un échec. */
 export function lireVerdictsRendus(texte: string, criteres: Critere[]): VerdictCalcule[] {
   let rendus: VerdictRendu[] = [];
@@ -432,7 +448,8 @@ export function lireVerdictsRendus(texte: string, criteres: Critere[]): VerdictC
     .filter((c) => c.species === "juge")
     .map((c) => {
       const rendu = parCode.get(c.code);
-      const echoue = !rendu || String(rendu.verdict ?? "").toLowerCase().startsWith("e");
+      const mot = normaliser(rendu?.verdict);
+      const echoue = !rendu || !MOTS_VALIDE.has(mot);
       return {
         criterionId: c.id,
         code: c.code,
