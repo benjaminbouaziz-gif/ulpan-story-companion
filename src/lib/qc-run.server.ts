@@ -216,7 +216,7 @@ async function enregistrerRapport(
   if (error || !report) throw new Error("Le rapport de contrôle n'a pas pu être enregistré.");
 
   if (args.verdicts.length > 0) {
-    await admin.from("qc_verdicts").insert(
+    const { error: errV } = await admin.from("qc_verdicts").insert(
       args.verdicts.map((v) => ({
         report_id: report.id,
         criterion_id: v.criterionId,
@@ -230,6 +230,8 @@ async function enregistrerRapport(
         explanation: v.explanation,
       })),
     );
+    // Un rapport sans ses verdicts est un rapport qui ment : on échoue.
+    if (errV) throw new Error(texteErreurBase("Les verdicts du contrôle n'ont pas pu être enregistrés", errV));
   }
   return report.id;
 }
@@ -318,7 +320,10 @@ async function unTour(
   let runId: string | null = null;
 
   if (juges.length > 0) {
-    const { data: run } = await admin
+    // LE LANCEMENT EST JOURNALISÉ AVANT D'ÊTRE PAYÉ. Si la ligne ne peut pas
+    // être écrite, le contrôle n'a pas le droit d'aboutir : aucun appel n'est
+    // fait, et l'erreur brute de la base remonte telle quelle.
+    const { data: run, error: errRun } = await admin
       .from("agent_runs")
       .insert({
         kind: "robot",
@@ -340,7 +345,14 @@ async function unTour(
       })
       .select("id")
       .single();
-    runId = run?.id ?? null;
+    if (errRun || !run)
+      throw new Error(
+        texteErreurBase(
+          "Le lancement du contrôle n'a pas pu être journalisé : aucun appel n'a été fait",
+          errRun,
+        ),
+      );
+    runId = run.id;
 
     const decisions = await blocDecisionsPourRobot(editor, args.bookId);
     const matiere = [
