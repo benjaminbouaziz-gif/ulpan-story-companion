@@ -570,11 +570,32 @@ export async function controlerEtape(
     return { ...vide, message: "Aucun contrôle n'est réglé sur cette étape." };
 
   const grille = await lireGrille(editor, { gridId: politique.gridId, stepCode: step.step_code });
-  if (!grille || grille.criteres.length === 0)
+  const mesures = (grille?.criteres ?? []).filter((c) => c.species === "mecanique");
+  if (!grille)
     return {
       ...vide,
       status: "erreur",
-      message: "Aucune grille de critères active pour cette étape : le contrôle n'a rien à vérifier.",
+      message: "Aucune grille active pour cette étape : le contrôle n'a nulle part où ranger ses mesures.",
+    };
+
+  // UNE GRILLE QUI NE PORTE PLUS QUE DES MESURES EST NORMALE. Le contrôle ne
+  // refuse de tourner que s'il n'a NI mesure NI règle écrite lisible.
+  let reglesLisibles = 0;
+  try {
+    const p = await lirePromptRegles(editor, step.step_code);
+    reglesLisibles = lireReglesEcrites(
+      p.content,
+      mesures.map((c) => c.code),
+    ).criteres.length;
+  } catch {
+    reglesLisibles = 0;
+  }
+  if (mesures.length === 0 && reglesLisibles === 0)
+    return {
+      ...vide,
+      status: "erreur",
+      message:
+        "Ni mesure active ni règle écrite lisible pour cette étape : le contrôle n'a rien à vérifier. Écris les règles dans leur prompt.",
     };
 
   const estRecit = step.step_code === REDACTION_STEP_CODE;
