@@ -1,65 +1,58 @@
-# Audit page par page — état d'avancement du site Ulpan Story
+# Contrôle du plan « Yoni » : ce qui s'est réellement passé
 
-Date : 26 août 2026. Site non publié (préproduction uniquement).
+## 1. L'appel au modèle a bien eu lieu
 
-## Vue d'ensemble
+Le rapport en base le prouve : `model_used = claude-sonnet-4-6`, et les trois critères jugés portent des explications rédigées, spécifiques au livre (« la bascule temporelle du ch. 1 vers le ch. 2 est expliquée », « paliers É1 à É6 », « la prise d'otages (ch. 6) »). Aucun code ne peut fabriquer ça : le contrôleur a lu le plan et rendu des verdicts.
 
-| Domaine | État |
-| --- | --- |
-| Identité visuelle, typographie hébraïque, bilingue FR/EN | En place |
-| Double page du livre (format A5 fidèle, 4 étapes) | En place |
-| Page méthode pilotée par la base | En place (français) |
-| Catalogue (collections, fiche livre) | En place, un seul tome |
-| Parcours QR → email → code d'accès | En place, jamais testé par un vrai lecteur |
-| Espace lecteur (glossaire, quiz) | En place ; audio et conversation absents |
-| Boutique / achat | Non commencé |
-| Pages légales | Coquilles vides |
-| Version anglaise publique | Non rédigée |
+Le rapport a bien 5 critères sur 5 validés, statut `valide` (le message affiché « arrêté au tour 1 » vient du libellé d'écran, pas d'un arrêt sur plafond).
 
-## Page par page
+## 2. Pourquoi aucune ligne dans la salle Robots
 
-**Accueil `/`** — Fait. Promesse, double page de démonstration, accès aux collections. Manque : lien d'achat.
+`qc_reports.agent_run_id` est **nul** : la ligne d'`agent_runs` n'a jamais été créée. Cause exacte, vérifiée en base :
 
-**La méthode `/methode`** — Fait et alimenté par la base : 10 sections, dont la double page réelle du chapitre 1, le bloc de chiffres et « Nos choix d'éditeur » (français seulement). Décision actée : cette page ne se traduit jamais automatiquement, elle se rédige à la main dans chaque langue. Version anglaise : à rédiger (0 section anglaise).
+- le contrôle insère sa ligne avec `mode: "controle"` ;
+- la table porte la contrainte `agent_runs_mode_connu` qui n'autorise que `initial`, `avec_precedent`, `sans_precedent`, `enchainement`, `chapitre`, `chapitre_revision`, `assemblage` ;
+- l'insertion est donc refusée par la base, et le code **ignore l'erreur** (`const { data: run } = await admin...insert(...)` sans contrôle d'erreur). `runId` reste nul, le contrôle continue comme si rien n'était, et plus rien n'est journalisé : ni durée, ni coût, ni jetons, ni modèle côté salle Robots.
 
-**Les collections `/collections`** — Fait. Une seule collection, « Héros d'Israël ».
+La salle Robots n'a aucun filtre : elle lit les 100 dernières lignes d'`agent_runs`. Il n'y a rien à afficher parce que rien n'a été écrit.
 
-**Fiche collection `/collections/:slug`** — Fait : présentation, pour qui, liste des tomes avec couverture.
+## 3. Le chemin exact, fonction par fonction
 
-**Fiche livre `/livres/:slug`** — Fait : couverture, titre, blurb, ce qu'on apprend, chiffres, double page. Manque : bouton d'achat (aucun lien Amazon en base), extrait PDF.
+```text
+AtelierQcReport.tsx (bouton « Contrôler »)
+  -> runQcControl                     src/lib/qc.functions.ts:538
+     assertEditor, puis controlerEtape(..., { forcer: true })
+  -> controlerEtape                   src/lib/qc-run.server.ts:506
+     controleActif() -> interrupteur global
+     lirePolitique() -> stratégie / plafond / seuil
+     lireGrille()    -> critères actifs de l'étape
+     boucle des tours -> unTour()
+  -> unTour                           src/lib/qc-run.server.ts:238
+     lirePromptControleur(editor, 'controle_plan')   <- CHARGEMENT DU PROMPT
+        src/lib/qc-core.server.ts:367 : prompts.code = 'controle_plan',
+        puis prompt_versions de active_version_id (contenu, modèle, web_search),
+        avec vérification fournisseur + clé d'API.
+     lecture du dernier artefact 'plan' (storage) -> markdown
+     verdictsMecaniques()  -> 2 critères, aucun modèle (recit-calibrage.ts)
+     insert agent_runs 'en_cours'  <- ÉCHOUE ICI, silencieusement
+     appelerControleur()             src/lib/qc-core.server.ts:460
+        matière = fiche du livre + décisions + livrable, système = contenu du prompt
+     -> appelerModele()              src/lib/robot-provider.server.ts   <- DÉPART DE LA REQUÊTE
+     lireVerdictsRendus() -> verdicts jugés
+     calculerNotes() + enregistrerRapport() -> qc_reports / qc_verdicts
+```
 
-**Double page du livre** (utilisée sur `/methode` et la fiche livre) — Fait, c'est la pièce la plus avancée : format A5 réel, marges réelles, alignement des lignes de base d'une page à l'autre, quatre étapes (traduction, trous, clés, sans nekoudot), glossaire de fin de livre, lecture séquentielle sur téléphone, zoom. Contenu réel : chapitre 1 saisi (19 blocs, 5 clés, 10 entrées de glossaire) ; les autres chapitres restent à saisir.
+## 4. Un critère jugé non évaluable : ce que fait le code aujourd'hui
 
-**Accès par QR `/b/:qr_code`** — Fait techniquement : la page reconnaît le code du livre et recueille l'email.
+Il **échoue**, et c'est déjà le comportement voulu. Dans `lireVerdictsRendus` (`qc-core.server.ts:415`) : JSON illisible, critère absent de la réponse, ou verdict vide, tous donnent `echoue`, avec l'explication « Aucun verdict rendu par le contrôleur pour ce critère : il est compté comme échoué. » Une réponse vide lève une erreur, et un dépassement de délai (4 min) lève aussi. Aucun critère jugé n'est validé par défaut.
 
-**Activation `/activation`** — Fait : double opt-in, lien magique et code à 6 chiffres, emails envoyés depuis notify.ulpanstory.com avec la charte maison. À éprouver en conditions réelles (0 inscription enregistrée à ce jour).
+**Sauf un trou, celui-ci :** si l'appel au modèle échoue avant d'être lancé pour une autre raison, l'échec remonte — mais l'échec de journalisation, lui, est avalé. Le contrôle a donc pu se dérouler « invisible ». C'est le seul point où le code ment par omission.
 
-**Connexion `/connexion`** — Coquille : affiche « bientôt ». La connexion passe aujourd'hui par `/activation`. À trancher : garder une page dédiée ou rediriger.
+## Ce que je corrigerais (à ton accord)
 
-**Espace lecteur `/compagnon`** — Fait : liste des livres débloqués, invite à s'identifier sinon.
+1. **Rendre le contrôle visible** : autoriser `mode = 'controle'` dans la contrainte `agent_runs_mode_connu` (migration purement additive).
+2. **Ne plus jamais avaler l'échec de journalisation** : si l'insertion dans `agent_runs` échoue, le contrôle s'arrête avec l'erreur brute de la base. Un contrôle non journalisé n'a pas le droit d'aboutir.
+3. **Rattacher les rapports orphelins ? Non** : le rapport Yoni reste sans ligne de lancement (l'information de durée/coût est perdue). Je ne fabrique rien.
+4. **Salle Robots** : afficher `controle` dans la colonne Mode (« contrôle qualité »), et le tour en cours (`batch_current / batch_total`).
 
-**Compagnon d'un livre `/compagnon/:book_slug`** — Partiellement fait : glossaire du livre et quiz interactif (10 questions saisies, correction immédiate, progression enregistrée). Audio annoncé mais aucune piste en base ; conversation en hébreu non commencée.
-
-**Contact `/contact`** — Adresse email seulement, pas de texte ni de formulaire.
-
-**Confidentialité `/confidentialite`** — Vide (texte juridique à écrire).
-
-**Mentions légales `/mentions-legales`** — Vide (éditeur, hébergeur, SIRET à écrire).
-
-**Administration `/admin`** — Trois outils en place : double page de démonstration (`/admin/extraits`), pages éditoriales avec versions, traduction assistée et choix de langue par section (`/admin/pages`), chiffres des livres avec avertissement de recalcul (`/admin/chiffres`). Manquent : saisie des pages du livre (blocs et clés) avec le validateur de parité, gestion du glossaire et des quiz, réserve de QR codes.
-
-## Points d'attention à remonter
-
-1. **Aucun compte administrateur n'est encore attribué** : la table des rôles est vide, donc l'administration est inaccessible tant qu'un compte n'est pas nommé éditeur.
-2. **Aucun lien d'achat** en base : le site présente les livres mais ne permet pas de les acheter.
-3. **Pages légales vides** : bloquant pour une mise en ligne publique (obligation légale + collecte d'emails).
-4. **Version anglaise non rédigée** : 9 sections sur 10 attendent leur texte anglais, écrit à la main par choix éditorial.
-5. **Contenu du livre** : un seul chapitre saisi sur les quatre étapes ; il faut l'outil de saisie avant d'industrialiser.
-
-## Prochaines étapes proposées, dans l'ordre
-
-1. Nommer un compte éditeur et rédiger les trois pages légales.
-2. Éditeur d'administration des pages du livre (blocs, clés, validateur de parité) — condition pour saisir les chapitres suivants.
-3. Achat : liens Amazon par tome et extrait PDF.
-4. Audio du compagnon, puis conversation en hébreu.
-5. Rédaction de la méthode anglaise et bascule du site .com.
+Rien d'autre n'est touché : ni les grilles, ni les notes, ni les stratégies, ni le chemin d'appel.
