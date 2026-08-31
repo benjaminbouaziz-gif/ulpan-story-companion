@@ -139,6 +139,8 @@ function PromptsRoom() {
             <thead>
               <tr>
                 <th className={cell}>{t("atelier.prompts.col.name")}</th>
+                <th className={cell}>Étape</th>
+                <th className={cell}>Rôle</th>
                 <th className={cell}>{t("atelier.prompts.col.model")}</th>
                 <th className={cell}>{t("atelier.prompts.col.webSearch")}</th>
                 <th className={cell}>{t("atelier.prompts.col.active")}</th>
@@ -153,7 +155,23 @@ function PromptsRoom() {
                     {p.name}
                     {p.frozenAt ? <span className="ml-2 opacity-70">({t("atelier.prompts.frozenTag")})</span> : null}
                   </td>
-                  <td className={cell}>{p.activeModel ?? t("atelier.none")}</td>
+                  <td className={cell}>{libelleEtape(p.etape)}</td>
+                  <td className={cell}>{libelleRole(p.roleCode)}</td>
+                  <td className={cell}>
+                    {/* Le modèle se change ici, sans publier de version. */}
+                    <select
+                      value={p.model}
+                      disabled={p.frozenAt !== null || modelMut.isPending}
+                      onChange={(e) => modelMut.mutate({ promptId: p.id, model: e.target.value })}
+                      className="border-line rounded-[2px] border px-1 py-0.5 text-[12px]"
+                    >
+                      {MODELES.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className={cell}>
                     {p.activeWebSearch
                       ? t("atelier.prompts.webSearchOn")
