@@ -254,8 +254,20 @@ async function unTour(
   const admin = await getAdminClient(editor);
   const startedAt = Date.now();
   const estRecit = args.stepCode === REDACTION_STEP_CODE;
-  const codeControleur = estRecit ? "controle_recit" : "controle_plan";
-  const prompt = await lirePromptControleur(editor, codeControleur);
+  const codeControleur = "controle";
+  const prompt = await lirePromptControleur(editor);
+
+  // LES RÈGLES JUGÉES NE SONT PLUS DANS LA BASE : elles s'écrivent dans leur
+  // prompt. Un fichier de règles illisible fait échouer le contrôle.
+  const promptRegles = await lirePromptRegles(editor, args.stepCode);
+  const regles = lireReglesEcrites(
+    promptRegles.content,
+    args.grille.criteres.filter((c) => c.species === "mecanique").map((c) => c.code),
+  );
+  if (regles.problemes.length > 0)
+    throw new Error(
+      `Les règles écrites de « ${promptRegles.name} » (v${promptRegles.version}) ne sont pas lisibles : ${regles.problemes.join(" ")}`,
+    );
 
   // Le livrable à juger, et pour un chapitre : le plan de SA version.
   let markdown = "";
