@@ -51,9 +51,14 @@ Le code est en minuscules, chiffres et tirets bas ; la famille est exactement co
 - Si la lecture des règles échoue, la section affiche le message d'erreur en clair à la place de la liste.
 - Le formulaire d'ajout et de modification d'un critère jugé disparaît.
 
+## Preuve avant livraison
+
+Un test soumet à `lireReglesEcrites` six cas et rend le résultat des six : un texte sans aucune déclaration ; deux déclarations de même code ; une déclaration dont le code est celui d'une mesure active ; une famille inventée ; une déclaration sans texte sous elle — chacun doit être REFUSÉ, message nommant la ligne fautive. Puis un cas valide à deux règles : préambule séparé, deux critères sortis avec la bonne famille et le bon caractère bloquant. Le résultat des six cas est rendu dans la réponse.
+
 ## Détails techniques
 
-- Migration SQL : `insert` des trois prompts + version 1 + `active_version_id` ; `update prompts set is_active = false` sur les deux anciens contrôleurs ; `update qc_criteria set is_active = false where species = 'juge'` ; `alter table qc_reports add column regles_prompt_version_id uuid references prompt_versions(id), add column regles_version integer`. Aucun GRANT nouveau.
+- Migration SQL : `insert` des trois prompts + version 1 + `active_version_id` (modèle `claude-sonnet-4-6` sur `controle`, nul sur les deux prompts de règles) ; `update qc_criteria set is_active = false where species = 'juge'` ; `alter table qc_reports add column regles_prompt_version_id uuid references prompt_versions(id), add column regles_version integer`. Aucun GRANT nouveau, aucun prompt existant modifié.
+
 - `src/lib/qc-core.server.ts` : `lireReglesEcrites`, `lirePromptRegles`, `lirePromptControleur` sans argument de code ; `Critere.id` devient `string | null`.
 - `src/lib/qc-run.server.ts` : `unTour` filtre la grille sur les mécaniques, appelle les règles écrites, `enregistrerRapport` écrit les deux colonnes.
 - `src/lib/qc.functions.ts` : une fonction serveur qui, pour la salle Qualité, remonte par étape le prompt de règles, sa version, les codes lus ou l'erreur de lecture.
