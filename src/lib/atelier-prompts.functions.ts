@@ -4,6 +4,20 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { texteErreurBase } from "./db-error";
+import { MODELE_CLAUDE, MODELE_GEMINI } from "./atelier-models";
+
+/**
+ * L'étape technique de la chaîne (book_steps.step_code) qui correspond à chaque
+ * étape structurée de la bibliothèque. Elle reste en base pour rattacher un
+ * prompt à la chaîne de production ; l'écran ne montre plus qu'Étape × Rôle.
+ */
+const STEP_CODE_PAR_ETAPE: Record<string, string> = {
+  plan: "plan",
+  recit: "redaction",
+  vocabulaire: "lexique",
+  hebreu: "master_he",
+  assemblage: "montage",
+};
 
 /**
  * BRIQUE 4 — LA BIBLIOTHÈQUE DE PROMPTS.
@@ -28,6 +42,10 @@ export type PromptListRow = {
   stepCode: string;
   stepLabelFr: string;
   rank: number;
+  /** Les trois champs structurés : étape, rôle, modèle. */
+  etape: string;
+  roleCode: string;
+  model: string;
   name: string;
   activeVersion: number | null;
   activeModel: string | null;
@@ -89,7 +107,7 @@ export const atelierPrompts = createServerFn({ method: "GET" })
 
     const [{ data: prompts }, { data: templates }, { data: versions }, { data: arts }, { data: reports }, { data: books }] =
       await Promise.all([
-        admin.from("prompts").select("id, step_code, name, active_version_id, frozen_at"),
+        admin.from("prompts").select("id, step_code, etape, role_code, model, name, active_version_id, frozen_at"),
         admin.from("step_templates").select("code, label_fr, rank"),
         admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
         admin.from("artifacts").select("prompt_version_id").not("prompt_version_id", "is", null),
@@ -127,9 +145,12 @@ export const atelierPrompts = createServerFn({ method: "GET" })
         stepCode: p.step_code,
         stepLabelFr: tpl.get(p.step_code)?.label_fr ?? p.step_code,
         rank: tpl.get(p.step_code)?.rank ?? 999,
+        etape: p.etape,
+        roleCode: p.role_code,
+        model: p.model,
         name: p.name,
         activeVersion: active?.version ?? null,
-        activeModel: active?.model ?? null,
+        activeModel: p.model,
         activeWebSearch: active?.web_search ?? false,
         lastVersionAt: last?.created_at ?? null,
         versionsCount: mine.length,
@@ -152,6 +173,9 @@ export const promptDossier = createServerFn({ method: "GET" })
       name: string;
       stepCode: string;
       stepLabelFr: string;
+      etape: string;
+      roleCode: string;
+      model: string;
       activeVersionId: string | null;
       frozenAt: string | null;
       usageCount: number;
@@ -165,7 +189,7 @@ export const promptDossier = createServerFn({ method: "GET" })
 
     const { data: prompt } = await admin
       .from("prompts")
-      .select("id, name, step_code, active_version_id, frozen_at")
+      .select("id, name, step_code, etape, role_code, model, active_version_id, frozen_at")
       .eq("id", data.promptId)
       .maybeSingle();
     if (!prompt) return { prompt: null, versions: [], activations: [], produced: [] };
@@ -233,6 +257,9 @@ export const promptDossier = createServerFn({ method: "GET" })
         name: prompt.name,
         stepCode: prompt.step_code,
         stepLabelFr: tpl?.label_fr ?? prompt.step_code,
+        etape: prompt.etape,
+        roleCode: prompt.role_code,
+        model: prompt.model,
         activeVersionId: prompt.active_version_id ?? null,
         frozenAt: prompt.frozen_at ?? null,
         usageCount: produced.length + (qcCount ?? 0) + (bookCount ?? 0),
@@ -259,11 +286,18 @@ export const createPrompt = createServerFn({ method: "POST" })
   .inputValidator((data) =>
     z
       .object({
-        stepCode: z.string().min(1),
+        etape: z.enum(["plan", "recit", "vocabulaire", "hebreu", "assemblage"]),
+        roleCode: z.enum([
+          "methode",
+          "methode_controle",
+          "regles_controle",
+          "redaction_corrective",
+          "redaction_initiale",
+        ]),
         name: z.string().trim().min(1),
         collectionId: z.string().uuid().nullable().optional(),
         content: z.string().trim().min(1),
-        model: z.string().trim().min(1).nullable().optional(),
+        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE]).optional(),
         webSearch: z.boolean().optional(),
       })
       .parse(data),
@@ -272,22 +306,17 @@ export const createPrompt = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
-    // L'étape ne vient jamais de la saisie : elle doit être une étape 'llm'.
-    const { data: tpl } = await admin
-      .from("step_templates")
-      .select("code, species")
-      .eq("code", data.stepCode)
-      .maybeSingle();
-    if (!tpl || tpl.species !== "llm") throw new Error("L’étape choisie ne peut pas recevoir de prompt.");
+    const stepCode = STEP_CODE_PAR_ETAPE[data.etape] ?? "plan";
 
-    // Code unique, dérivé de l'étape.
-    const { data: siblings } = await admin.from("prompts").select("code").like("code", `${tpl.code}%`);
-    let code = tpl.code;
+    // Code unique, dérivé du couple étape × rôle.
+    const base = `${data.etape}-${data.roleCode}`;
+    const { data: siblings } = await admin.from("prompts").select("code").like("code", `${base}%`);
+    let code = base;
     let n = 1;
     const taken = new Set((siblings ?? []).map((s) => s.code));
     while (taken.has(code)) {
       n += 1;
-      code = `${tpl.code}-${n}`;
+      code = `${base}-${n}`;
     }
 
     const { data: prompt, error } = await admin
@@ -295,17 +324,20 @@ export const createPrompt = createServerFn({ method: "POST" })
       .insert({
         code,
         name: data.name,
-        step_code: tpl.code,
+        step_code: stepCode,
+        etape: data.etape,
+        role_code: data.roleCode,
+        model: data.model ?? MODELE_GEMINI,
         collection_id: data.collectionId ?? null,
         is_active: true,
       })
       .select("id")
       .single();
     if (error || !prompt) {
-      // La base n'admet qu'un seul prompt actif par étape (hors collection).
-      if (error?.code === "23505" && (error.message ?? "").includes("prompts_actif_global")) {
+      // La base n'admet qu'un seul prompt actif par couple étape × rôle.
+      if (error?.code === "23505" && (error.message ?? "").includes("prompts_actif")) {
         throw new Error(
-          "Un prompt actif existe déjà pour cette étape. Ouvre-le et publie une nouvelle version plutôt que d'en créer un second.",
+          "Un prompt actif existe déjà pour ce couple Étape × Rôle. Ouvre-le et publie une nouvelle version plutôt que d'en créer un second.",
         );
       }
       throw new Error("L’enregistrement du prompt a été refusé par le serveur.");
@@ -475,4 +507,29 @@ export const deletePrompt = createServerFn({ method: "POST" })
     const { data: count, error } = await admin.rpc("supprimer_prompt", { p_prompt_id: data.promptId });
     if (error) throw new Error(texteErreurBase("La suppression du prompt a été refusée", error));
     return { versionsSupprimees: (count as number) ?? 0 };
+  });
+
+/**
+ * LE MODÈLE, CHANGÉ SUR LA CARTE — sans nouvelle version.
+ *
+ * Le modèle n'est pas du contenu : il ne s'écrit jamais dans le texte du prompt
+ * et ne justifie pas une re-publication. Il se change ici, sur la carte, et
+ * l'exécution le relit à chaque appel. Deux valeurs possibles, pas une de plus.
+ */
+export const setPromptModel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        promptId: z.string().uuid(),
+        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE]),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }): Promise<{ model: string }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const { error } = await admin.from("prompts").update({ model: data.model }).eq("id", data.promptId);
+    if (error) throw new Error(texteErreurBase("Le modèle n’a pas pu être changé", error));
+    return { model: data.model };
   });
