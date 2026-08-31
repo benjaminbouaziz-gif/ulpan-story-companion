@@ -9,6 +9,7 @@ import { ARTIFACT_TYPES, artifactFileName } from "@/lib/artifact-path";
 import { PlanRobotPanel } from "./AtelierPlanRobot";
 import { RecitRobotPanel } from "./AtelierRecitRobot";
 import { StepDecisions } from "./AtelierDecisions";
+import { StepQcPanel } from "./AtelierQcReport";
 import { stepDecisions } from "@/lib/atelier-decisions.functions";
 import {
   artifactSignedUrl,
@@ -233,6 +234,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
 
       {/* c-ter. mes arbitrages : ils deviennent une donnée du livre */}
       <StepDecisions bookStepId={bookStepId} />
+
+      {/* c-quater. BRIQUE 9 — le verdict du contrôle, puis le rapport replié */}
+      <StepQcPanel bookStepId={bookStepId} />
 
       {/* d. les deux actions */}
       {horsCrm ? (
