@@ -36,7 +36,8 @@ export const NOM_FAMILLE: Record<Famille, string> = {
 export type Strategie = "aucun" | "une_fois" | "boucle";
 
 export type Critere = {
-  id: string;
+  /** Nul pour une règle écrite : elle ne vient plus d'une table. */
+  id: string | null;
   code: string;
   label: string;
   question: string;
