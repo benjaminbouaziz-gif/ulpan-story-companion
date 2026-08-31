@@ -207,13 +207,21 @@ function PromptsRoom() {
               {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
-                <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
+                <SelecteurModele
+                  valeur={newModel}
+                  onChange={(v) => {
+                    setNewModel(v);
+                    if (!rechercheOuverte(v)) setNewWebSearch(false);
+                  }}
+                  className={`${field} mt-1`}
+                />
               </label>
               <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
               <label className="mt-3 flex items-center gap-2 text-[13px]">
                 <input
                   type="checkbox"
-                  checked={newWebSearch}
+                  checked={newWebSearch && rechercheOuverte(newModel)}
+                  disabled={!rechercheOuverte(newModel)}
                   onChange={(e) => setNewWebSearch(e.target.checked)}
                 />
                 {t("atelier.prompts.field.webSearch")}
@@ -356,11 +364,23 @@ function PromptDossier({ promptId }: { promptId: string }) {
             {missing.note ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.note")}</p> : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.model")}
-              <input value={model} onChange={(e) => setModel(e.target.value)} className={`${field} mt-1`} />
+              <SelecteurModele
+                valeur={model}
+                onChange={(v) => {
+                  setModel(v);
+                  if (!rechercheOuverte(v)) setWebSearch(false);
+                }}
+                className={`${field} mt-1`}
+              />
             </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
             <label className="mt-3 flex items-center gap-2 text-[13px]">
-              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={webSearch && rechercheOuverte(model)}
+                disabled={!rechercheOuverte(model)}
+                onChange={(e) => setWebSearch(e.target.checked)}
+              />
               {t("atelier.prompts.field.webSearch")}
             </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.noteRequired")}</p>
