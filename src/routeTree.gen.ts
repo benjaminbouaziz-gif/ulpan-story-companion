@@ -30,6 +30,7 @@ import { Route as AtelierLecteursRouteImport } from './routes/atelier.lecteurs'
 import { Route as AtelierLivresRouteImport } from './routes/atelier.livres'
 import { Route as AtelierMesureRouteImport } from './routes/atelier.mesure'
 import { Route as AtelierPromptsRouteImport } from './routes/atelier.prompts'
+import { Route as AtelierQualiteRouteImport } from './routes/atelier.qualite'
 import { Route as AtelierReglagesRouteImport } from './routes/atelier.reglages'
 import { Route as AtelierRobotsRouteImport } from './routes/atelier.robots'
 import { Route as AtelierSiteRouteImport } from './routes/atelier.site'
@@ -149,6 +150,11 @@ const AtelierPromptsRoute = AtelierPromptsRouteImport.update({
   path: '/prompts',
   getParentRoute: () => AtelierRoute,
 } as any)
+const AtelierQualiteRoute = AtelierQualiteRouteImport.update({
+  id: '/qualite',
+  path: '/qualite',
+  getParentRoute: () => AtelierRoute,
+} as any)
 const AtelierReglagesRoute = AtelierReglagesRouteImport.update({
   id: '/reglages',
   path: '/reglages',
@@ -235,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/atelier/livres': typeof AtelierLivresRoute
   '/atelier/mesure': typeof AtelierMesureRoute
   '/atelier/prompts': typeof AtelierPromptsRoute
+  '/atelier/qualite': typeof AtelierQualiteRoute
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
   '/atelier/site': typeof AtelierSiteRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/atelier/livres': typeof AtelierLivresRoute
   '/atelier/mesure': typeof AtelierMesureRoute
   '/atelier/prompts': typeof AtelierPromptsRoute
+  '/atelier/qualite': typeof AtelierQualiteRoute
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
   '/atelier/site': typeof AtelierSiteRoute
@@ -306,6 +314,7 @@ export interface FileRoutesById {
   '/atelier/livres': typeof AtelierLivresRoute
   '/atelier/mesure': typeof AtelierMesureRoute
   '/atelier/prompts': typeof AtelierPromptsRoute
+  '/atelier/qualite': typeof AtelierQualiteRoute
   '/atelier/reglages': typeof AtelierReglagesRoute
   '/atelier/robots': typeof AtelierRobotsRoute
   '/atelier/site': typeof AtelierSiteRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/atelier/livres'
     | '/atelier/mesure'
     | '/atelier/prompts'
+    | '/atelier/qualite'
     | '/atelier/reglages'
     | '/atelier/robots'
     | '/atelier/site'
@@ -378,6 +388,7 @@ export interface FileRouteTypes {
     | '/atelier/livres'
     | '/atelier/mesure'
     | '/atelier/prompts'
+    | '/atelier/qualite'
     | '/atelier/reglages'
     | '/atelier/robots'
     | '/atelier/site'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/atelier/livres'
     | '/atelier/mesure'
     | '/atelier/prompts'
+    | '/atelier/qualite'
     | '/atelier/reglages'
     | '/atelier/robots'
     | '/atelier/site'
@@ -601,6 +613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierPromptsRouteImport
       parentRoute: typeof AtelierRoute
     }
+    '/atelier/qualite': {
+      id: '/atelier/qualite'
+      path: '/qualite'
+      fullPath: '/atelier/qualite'
+      preLoaderRoute: typeof AtelierQualiteRouteImport
+      parentRoute: typeof AtelierRoute
+    }
     '/atelier/reglages': {
       id: '/atelier/reglages'
       path: '/reglages'
@@ -720,6 +739,7 @@ interface AtelierRouteChildren {
   AtelierLivresRoute: typeof AtelierLivresRoute
   AtelierMesureRoute: typeof AtelierMesureRoute
   AtelierPromptsRoute: typeof AtelierPromptsRoute
+  AtelierQualiteRoute: typeof AtelierQualiteRoute
   AtelierReglagesRoute: typeof AtelierReglagesRoute
   AtelierRobotsRoute: typeof AtelierRobotsRoute
   AtelierSiteRoute: typeof AtelierSiteRoute
@@ -734,6 +754,7 @@ const AtelierRouteChildren: AtelierRouteChildren = {
   AtelierLivresRoute: AtelierLivresRoute,
   AtelierMesureRoute: AtelierMesureRoute,
   AtelierPromptsRoute: AtelierPromptsRoute,
+  AtelierQualiteRoute: AtelierQualiteRoute,
   AtelierReglagesRoute: AtelierReglagesRoute,
   AtelierRobotsRoute: AtelierRobotsRoute,
   AtelierSiteRoute: AtelierSiteRoute,

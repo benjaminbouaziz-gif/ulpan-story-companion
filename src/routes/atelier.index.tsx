@@ -5,6 +5,7 @@ import { Room } from "@/components/AtelierRoom";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { atelierQueue, type QueueStep } from "@/lib/atelier-queue.functions";
+import { qcQueueVerdicts } from "@/lib/qc.functions";
 
 /**
  * LE TABLEAU DE BORD — UNE SEULE FILE.
@@ -32,6 +33,15 @@ function Dashboard() {
   const fetchQueue = useServerFn(atelierQueue);
   const queue = useQuery({ queryKey: ["atelier", "queue"], queryFn: () => fetchQueue() });
 
+  /**
+   * BRIQUE 9 — le verdict de contrôle de chaque étape, en une ligne. La file
+   * est mon point d'entrée : je ne vais dans le dossier que si elle m'y envoie.
+   */
+  const fetchVerdicts = useServerFn(qcQueueVerdicts);
+  const verdicts = useQuery({ queryKey: ["atelier", "qc", "queue"], queryFn: () => fetchVerdicts() });
+  const verdict = (s: QueueStep) =>
+    (verdicts.data ?? []).find((v) => v.stepId === s.stepId)?.line ?? "aucun contrôle";
+
   const openLink = (s: QueueStep) => (
     <Link to="/atelier/etape/$id" params={{ id: s.stepId }} className="border-b border-current">
       {t("atelier.queue.open")}
@@ -57,6 +67,7 @@ function Dashboard() {
               <th className={cell}>{t("atelier.queue.col.step")}</th>
               <th className={cell}>{t("atelier.books.col.status")}</th>
               {extraKey ? <th className={cell}>{t(extraKey)}</th> : null}
+              <th className={cell}>Contrôle</th>
               <th className={cell} />
             </tr>
           </thead>
@@ -67,6 +78,7 @@ function Dashboard() {
                 <td className={cell}>{s.labelFr}</td>
                 <td className={cell}>{t(`atelier.status.${s.status}` as DictKey)}</td>
                 {extraKey ? <td className={cell}>{extra ? extra(s) : t("atelier.none")}</td> : null}
+                <td className={cell}>{verdict(s)}</td>
                 <td className={cell}>{openLink(s)}</td>
               </tr>
             ))}
@@ -95,6 +107,7 @@ function Dashboard() {
                   <th className={cell}>{t("atelier.queue.col.step")}</th>
                   <th className={cell}>{t("atelier.queue.col.since")}</th>
                   <th className={cell}>{t("atelier.queue.col.artifact")}</th>
+                  <th className={cell}>Contrôle</th>
                   <th className={cell} />
                 </tr>
               </thead>
@@ -109,6 +122,7 @@ function Dashboard() {
                         ? `${s.lastArtifact.type} · ${t("atelier.step.version")} ${s.lastArtifact.version}`
                         : t("atelier.step.noArtifacts")}
                     </td>
+                    <td className={cell}>{verdict(s)}</td>
                     <td className={cell}>{openLink(s)}</td>
                   </tr>
                 ))}
