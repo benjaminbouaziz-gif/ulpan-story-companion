@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { controleApresFabrication } from "./qc-run.server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
@@ -307,7 +308,10 @@ export const launchPlanRobot = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<{ artifactVersion: number; modelUsed: string }> => {
     const editor = await assertEditor(context.supabase, context.userId);
-    return executerLancementPlan(editor, data);
+    const r = await executerLancementPlan(editor, data);
+    // BRIQUE 9 — sur off, ou sans stratégie, cet appel ne fait rien.
+    await controleApresFabrication(editor, { bookStepId: data.bookStepId });
+    return r;
   });
 
 /**

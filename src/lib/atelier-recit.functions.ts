@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { controleApresFabrication } from "./qc-run.server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
@@ -41,7 +42,11 @@ export const writeChapter = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }): Promise<ResultatChapitre> => {
     const editor = await assertEditor(context.supabase, context.userId);
-    return executerChapitre(editor, data);
+    const r = await executerChapitre(editor, data);
+    // BRIQUE 9 — le contrôle, s'il est en marche ET si l'étape porte une
+    // stratégie. Sur off, cet appel ne fait strictement rien.
+    await controleApresFabrication(editor, { bookStepId: data.bookStepId, chapterNo: r.chapterNo });
+    return r;
   });
 
 export const writeRemainingChapters = createServerFn({ method: "POST" })
