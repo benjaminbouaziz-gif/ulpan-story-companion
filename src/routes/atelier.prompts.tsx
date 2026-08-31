@@ -12,6 +12,7 @@ import {
   promptDossier,
   publishPromptVersion,
 } from "@/lib/atelier-prompts.functions";
+import { MODELES_ATELIER, modeleConnu } from "@/lib/modeles";
 
 /**
  * LA BIBLIOTHÈQUE DE PROMPTS.
