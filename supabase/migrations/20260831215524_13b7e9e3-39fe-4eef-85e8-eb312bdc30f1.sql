@@ -1,0 +1,2 @@
+ALTER TABLE public.prompts DROP CONSTRAINT prompts_model_valide;
+ALTER TABLE public.prompts ADD CONSTRAINT prompts_model_valide CHECK (model = ANY (ARRAY['google/gemini-3.7-flash'::text, 'claude-sonnet-5'::text, 'gemini-3.7-flash'::text]));
