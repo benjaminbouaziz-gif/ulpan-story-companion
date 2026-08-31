@@ -261,6 +261,7 @@ export const planControlState = createServerFn({ method: "GET" })
       planV2Texte,
       running,
       runningPhase: running ? (dernier?.phase ?? null) : null,
+      reponseBrute,
       runs: (runs ?? []).map((r) => ({
         id: r.id,
         mode: r.mode as ModeControle,
