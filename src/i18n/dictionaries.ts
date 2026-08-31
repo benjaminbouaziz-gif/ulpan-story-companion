@@ -263,6 +263,20 @@ const fr = {
   "atelier.prompts.producedEmpty": "Ce prompt n'a encore rien produit.",
   "atelier.prompts.activations": "Changements de version active",
   "atelier.prompts.noActivations": "Aucun changement enregistré.",
+  "atelier.prompts.showFrozen": "Voir les prompts figés",
+  "atelier.prompts.frozenTag": "figé",
+  "atelier.prompts.freeze": "Figer ce prompt",
+  "atelier.prompts.unfreeze": "Remettre en service",
+  "atelier.prompts.confirmFreeze":
+    "Figer « {name} » ? Il quitte la bibliothèque active et libère son étape. Rien n'est effacé : tu pourras le remettre en service.",
+  "atelier.prompts.frozenSince": "Prompt figé le {date} — il n'est plus utilisé par l'atelier.",
+  "atelier.prompts.delete": "Supprimer définitivement",
+  "atelier.prompts.confirmDelete":
+    "Supprimer définitivement « {name} » et ses {versions} version(s) ? Cette action est irréversible. Écris le nom du prompt pour confirmer.",
+  "atelier.prompts.deleteBlocked":
+    "Ce prompt est relié à {count} élément(s) de l'atelier : il peut être figé, pas supprimé.",
+  "atelier.prompts.deleteMismatch": "Le nom saisi ne correspond pas : rien n'a été supprimé.",
+
   "atelier.books.newBook": "Nouveau livre",
   "atelier.books.closeNewBook": "Annuler la création",
   "atelier.fiche.title": "Fiche du livre",
