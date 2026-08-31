@@ -1413,6 +1413,7 @@ export type Database = {
           code: string
           collection_id: string | null
           created_at: string
+          frozen_at: string | null
           id: string
           is_active: boolean
           lang: string
@@ -1425,6 +1426,7 @@ export type Database = {
           code: string
           collection_id?: string | null
           created_at?: string
+          frozen_at?: string | null
           id?: string
           is_active?: boolean
           lang?: string
@@ -1437,6 +1439,7 @@ export type Database = {
           code?: string
           collection_id?: string | null
           created_at?: string
+          frozen_at?: string | null
           id?: string
           is_active?: boolean
           lang?: string
