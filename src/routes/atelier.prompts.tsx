@@ -95,6 +95,10 @@ function PromptsRoom() {
     onError: (e: Error) => setError(e.message || "L’enregistrement du prompt a échoué."),
   });
 
+  // Les prompts figés ne s'affichent que si on les demande.
+  const visibles = (list.data ?? []).filter((p) => showFrozen || !p.frozenAt);
+
+
   return (
     <section className="max-w-[1000px]">
       <h1 className="font-latin text-[24px]">{t("atelier.room.prompts")}</h1>
