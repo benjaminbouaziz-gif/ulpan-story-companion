@@ -55,47 +55,71 @@ function Rapport({ run }: { run: ControleRunRow }) {
         {run.error ? <p className="mt-1 text-[12px] opacity-80">{run.error}</p> : null}
       </div>
     );
-  if (!v || !n) return <p className="text-[13px]">Aucun rapport lisible pour cette exécution.</p>;
+  if (!v || !n || v.length === 0)
+    return <p className="text-[13px]">Aucun rapport lisible pour cette exécution.</p>;
 
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        <Pastille ok={v.structure} nom="Structure" />
-        <Pastille ok={v.progression} nom="Progression" />
-        <Pastille ok={v.methode} nom="Méthode" />
-        <Pastille ok={v.coherence_recit} nom="Cohérence du récit" />
+        {n.familles.map((f) => (
+          <Pastille
+            key={f.famille}
+            ok={f.bloquantsEchoues === 0 && f.valides === f.total}
+            nom={`${f.famille} ${f.note}%`}
+          />
+        ))}
       </div>
       <p className="mt-2 text-[13px]">
-        Notes : structure {n.structure ?? "—"} · progression {n.progression ?? "—"} · méthode{" "}
-        {n.methode ?? "—"} · cohérence {n.coherence_recit ?? "—"} —{" "}
-        <strong>moyenne {run.moyenne ?? n.moyenne ?? "—"}</strong>
+        {n.familles.map((f) => `${f.famille} ${f.note}% (${f.valides}/${f.total})`).join(" · ")} —{" "}
+        <strong>moyenne {run.moyenne ?? n.moyenne}</strong>
       </p>
+      <p className="mt-1 text-[12px] opacity-80">
+        {n.valides}/{n.total} points valides · {n.bloquantsEchoues} bloquant(s) échoué(s) ·{" "}
+        {run.attendus ?? 0} jugés par le modèle, {n.total - (run.attendus ?? 0)} mesurés par le code
+      </p>
+
+      <h4 className="mt-3 text-[13px] font-medium">Les {n.total} verdicts</h4>
+      <ul className="mt-1 space-y-1">
+        {v.map((x) => (
+          <li key={x.code} className="border-line border-t pt-1 text-[12px]">
+            <span
+              aria-hidden
+              className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                x.verdict === "valide" ? "bg-emerald-600" : "bg-destructive"
+              }`}
+            />
+            <span className="font-mono">{x.code}</span>{" "}
+            <span className="opacity-80">
+              [{x.famille}
+              {x.bloquant ? " · bloquant" : ""} · {x.source === "code" ? "mesuré" : "jugé"}]
+            </span>{" "}
+            {x.question}
+            {x.explanation ? <span className="block opacity-80">{x.explanation}</span> : null}
+            {x.location ? <span className="block opacity-80">Où : {x.location}</span> : null}
+          </li>
+        ))}
+      </ul>
+
       <h4 className="mt-3 text-[13px] font-medium">
         Propositions ({run.propositions.length})
       </h4>
       {run.propositions.length === 0 ? (
-        <p className="mt-1 text-[13px]">Aucune proposition : le contrôleur n'a rien relevé.</p>
+        <p className="mt-1 text-[13px]">Aucun point échoué : rien à corriger.</p>
       ) : (
         <ul className="mt-1 space-y-2">
-          {run.propositions.map((p, i) => (
-            <li key={`${p.chapitre}-${i}`} className="border-line border-t pt-2 text-[13px]">
+          {run.propositions.map((p) => (
+            <li key={p.code} className="border-line border-t pt-2 text-[13px]">
               <p>
-                <span className="font-medium">
-                  {p.chapitre === null ? "Plan entier" : `Chapitre ${p.chapitre}`}
+                <span className="font-mono font-medium">{p.code}</span>{" "}
+                <span className="opacity-80">
+                  [{p.famille}
+                  {p.bloquant ? " · bloquant" : ""}]
                 </span>{" "}
-                <span
-                  className={`ml-1 rounded-[2px] border px-1 text-[11px] ${
-                    p.gravite === "majeure"
-                      ? "border-destructive text-destructive"
-                      : "border-line opacity-80"
-                  }`}
-                >
-                  {p.gravite}
-                </span>
+                {p.question}
               </p>
-              <p className="mt-1">{p.defaut}</p>
-              {p.regle_violee ? <p className="mt-1 opacity-80">Règle : {p.regle_violee}</p> : null}
-              {p.correction ? <p className="mt-1">Correction proposée : {p.correction}</p> : null}
+              {p.explanation ? <p className="mt-1">{p.explanation}</p> : null}
+              {p.location ? <p className="mt-1 opacity-80">Où : {p.location}</p> : null}
+              {p.proposition ? <p className="mt-1">Correction proposée : {p.proposition}</p> : null}
             </li>
           ))}
         </ul>
@@ -103,6 +127,7 @@ function Rapport({ run }: { run: ControleRunRow }) {
     </div>
   );
 }
+
 
 export function PlanControlePanel({ bookStepId, onDone }: { bookStepId: string; onDone: () => void }) {
   const fetchState = useServerFn(planControlState);
