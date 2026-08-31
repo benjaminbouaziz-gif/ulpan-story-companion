@@ -28,8 +28,10 @@ function RunsTable() {
           <th className="py-1 pr-3 font-normal opacity-70">Robot</th>
           <th className="py-1 pr-3 font-normal opacity-70">Modèle</th>
           <th className="py-1 pr-3 font-normal opacity-70">Mode</th>
+          <th className="py-1 pr-3 font-normal opacity-70">Tour / lot</th>
           <th className="py-1 pr-3 font-normal opacity-70">Statut</th>
           <th className="py-1 pr-3 font-normal opacity-70">Durée</th>
+          <th className="py-1 pr-3 font-normal opacity-70">Jetons reçus</th>
           <th className="py-1 pr-3 font-normal opacity-70">Jetons produits</th>
           <th className="py-1 pr-3 font-normal opacity-70">Coût</th>
         </tr>
