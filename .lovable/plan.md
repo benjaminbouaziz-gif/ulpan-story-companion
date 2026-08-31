@@ -1,32 +1,56 @@
-# Conserver la réponse brute du contrôleur
+# Brique 9 bis — les règles jugées deviennent un prompt
 
-## Le constat
+## Ce qui ne bouge pas
 
-Le contrôleur ne rend plus de verdicts parce que le prompt actif `controle_plan` (version 4) n'est pas un prompt de contrôleur : c'est le texte de consigne d'installation de la grille, sans la consigne de format JSON qu'avait la version 1. Ce point est diagnostiqué et n'est pas l'objet de ce plan.
+Les critères mécaniques restent dans la grille, calculés par le code de calibrage, aucune valeur touchée. Le calcul des notes, les trois sorties (validé, plafond, stagnation), la règle « un critère non rendu échoue », la frontière éditeur → contexte → client d'administration : rien de tout cela ne change. Le seuil, le plafond de tours et la stratégie restent des réglages d'étape.
 
-Ce plan ne traite qu'un manque d'outillage : la réponse brute du modèle est jetée après lecture, donc chaque panne de format se diagnostique à l'aveugle.
+## Chantier 1 — le modèle se choisit dans une liste
 
-## Ce qui est ajouté
+- Nouveau module partagé `src/lib/modeles.ts` : `ModeleAtelier`, `MODELES_ATELIER` (Gemini 2.5 Flash par la passerelle, sans recherche en ligne ; Claude Sonnet 4.6 par la clé Anthropic, avec recherche en ligne) et `modeleConnu(id)`. Aucune clé dedans.
+- Dans Atelier › Prompts, aux deux endroits de saisie (nouveau prompt, nouvelle version) : le champ libre devient une liste déroulante, avec une entrée vide « — aucun — » qui vaut « aucun modèle ».
+- La case « recherche en ligne » est grisée et remise à faux dès que le modèle choisi ne la propose pas.
+- Un modèle déjà enregistré mais absent de la liste s'affiche en fin de liste, suffixé « (hors liste) » : aucun réglage existant n'est effacé en silence.
+- Texte d'aide remplacé, en français et en anglais : « Deux modèles sont ouverts dans l'atelier. La recherche en ligne n'est possible qu'avec Claude. »
+- Contrôle serveur dans `atelier-prompts.functions.ts` (enregistrement d'un prompt et d'une version) : un modèle non nul hors liste est refusé avec « Modèle hors liste de l'atelier : « X ». »
 
-1. **La réponse brute est conservée sur le rapport.** Deux colonnes ajoutées à `qc_reports` :
-   - `raw_response` — le texte exact rendu par le contrôleur, sans retouche ;
-   - `raw_parse_ok` — vrai si un objet JSON a pu être lu, faux sinon.
-   Rien n'est modifié ni retiré : ce sont deux colonnes nouvelles, nulles pour les rapports existants.
+## Chantier 2 — migration
 
-2. **Les codes du dialogue sont conservés aussi.** Deux colonnes de plus :
-   - `codes_envoyes` — la liste des codes de critères jugés soumis au modèle ;
-   - `codes_rendus` — la liste des codes trouvés dans sa réponse.
-   Cela répond en une ligne à « quels codes partent, quels codes reviennent », y compris quand le modèle renvoie des codes inventés.
+- Trois prompts nouveaux, chacun avec une version 1 active : `controle` (« Contrôleur — méthode », étape `controle`), `regles_plan` (« Règles — Plan de chapitres », étape `plan`), `regles_recit` (« Règles — Récit », étape `redaction`). Contenu provisoire d'une ligne « à remplir » en attendant les textes.
+- `controle_plan` et `controle_recit` passent inactifs. Ils ne sont pas supprimés.
+- Les critères de la grille dont l'espèce est « jugé » passent inactifs. Ils ne sont pas supprimés. Les mécaniques restent actifs et intacts.
+- Deux colonnes sur les rapports : `regles_prompt_version_id`, `regles_version` — contre quelle version des règles le rapport a été rendu.
 
-3. **Le rapport dépliable montre le brut.** Dans le dossier d'étape, sous le tableau des verdicts, un bloc replié « Réponse brute du contrôleur » : l'indication JSON lisible ou non, les codes attendus, les codes reçus, puis le texte brut dans un cadre à défilement. Replié par défaut : la lecture normale ne change pas.
+## Chantier 3 — lire les règles écrites
 
-4. **Un rapport d'erreur reste un rapport.** Quand le fournisseur refuse l'appel, le texte de l'erreur est déjà dans `message` ; la réponse brute reste vide et le bloc le dit clairement au lieu d'être absent.
+Le code ne connaît aucune règle, seulement la forme d'une déclaration :
+
+```text
+[code · famille · bloquant] Libellé court
+Le texte de la règle, sur autant de lignes que nécessaire.
+```
+
+Le code est en minuscules, chiffres et tirets bas ; la famille est exactement conformite, structure, pedagogie ou langue ; le troisième champ est « bloquant » ou « simple » ; les espaces autour des points médians sont tolérés. Tout ce qui précède la première déclaration est un préambule : transmis au contrôleur, mais ne produit aucun verdict.
+
+`lireReglesEcrites(texte)` renvoie préambule, critères jugés et problèmes. Elle refuse — et le contrôle échoue au lieu de valider — quand : aucune déclaration, deux fois le même code, un code déjà porté par un critère mécanique actif de la grille, une famille inconnue, une déclaration sans texte sous elle. Le message nomme la ligne fautive.
+
+## Chantier 4 — le contrôleur lit deux prompts
+
+- `lirePromptControleur` ne prend plus de code d'étape : elle lit toujours le prompt `controle`.
+- `lirePromptRegles(editor, stepCode)` lit `regles_plan` pour l'étape plan et `regles_recit` pour la rédaction, et remonte contenu, identifiant de version et numéro de version. Mêmes refus nommés qu'aujourd'hui : pas de version active, pas de modèle, modèle inconnu, clé absente.
+- Dans un tour de contrôle : les mécaniques viennent de la grille (espèce mécanique uniquement), les jugés viennent des règles écrites, la liste envoyée au modèle est bâtie à partir des critères jugés puis suivie du préambule et du texte intégral des règles.
+- L'enregistrement du rapport écrit la version des règles. Sur un verdict jugé, l'identifiant de critère est nul ; code, libellé, famille et caractère bloquant restent écrits en clair — le rapport reste lisible après réécriture des règles.
+
+## Chantier 5 — l'écran Qualité
+
+- « Les grilles de critères » ne liste plus que les mesures, sous le titre « Les mesures — calculées par le code, non modifiables ici ».
+- Section nouvelle « Les règles jugées » : par étape contrôlée, le nom du prompt de règles, sa version active, le nombre de règles lues, la liste des codes, et un lien vers la fiche du prompt.
+- Si la lecture des règles échoue, la section affiche le message d'erreur en clair à la place de la liste.
+- Le formulaire d'ajout et de modification d'un critère jugé disparaît.
 
 ## Détails techniques
 
-- Migration : `alter table qc_reports add column raw_response text, add column raw_parse_ok boolean, add column codes_envoyes text[], add column codes_rendus text[]` (aucun GRANT nouveau : la table n'est lue que par le service).
-- `src/lib/qc-core.server.ts` : `lireVerdictsRendus` retourne, en plus des verdicts, `{ parseOk, codesRendus }` ; `appelerControleur` remonte `rawText`, `codesEnvoyes`, `codesRendus`, `parseOk` dans `AppelControleur`.
-- `src/lib/qc-run.server.ts` : `enregistrerRapport` écrit ces quatre champs ; toute erreur d'écriture remonte, comme le reste de la brique 9.
-- `src/lib/qc.functions.ts` : `QcReportRow` expose `rawResponse`, `rawParseOk`, `codesEnvoyes`, `codesRendus`.
-- `src/components/AtelierQcReport.tsx` : le bloc replié, avec `whitespace-pre-wrap` et hauteur bornée.
-- Aucun changement de la logique de jugement : un critère non rendu échoue toujours.
+- Migration SQL : `insert` des trois prompts + version 1 + `active_version_id` ; `update prompts set is_active = false` sur les deux anciens contrôleurs ; `update qc_criteria set is_active = false where species = 'juge'` ; `alter table qc_reports add column regles_prompt_version_id uuid references prompt_versions(id), add column regles_version integer`. Aucun GRANT nouveau.
+- `src/lib/qc-core.server.ts` : `lireReglesEcrites`, `lirePromptRegles`, `lirePromptControleur` sans argument de code ; `Critere.id` devient `string | null`.
+- `src/lib/qc-run.server.ts` : `unTour` filtre la grille sur les mécaniques, appelle les règles écrites, `enregistrerRapport` écrit les deux colonnes.
+- `src/lib/qc.functions.ts` : une fonction serveur qui, pour la salle Qualité, remonte par étape le prompt de règles, sa version, les codes lus ou l'erreur de lecture.
+- `src/routes/atelier.qualite.tsx`, `src/components/AtelierQcPolicies.tsx`, `src/routes/atelier.prompts.tsx`, `src/lib/atelier-prompts.functions.ts`, `src/i18n/dictionaries.ts` : modifications décrites ci-dessus, rien d'autre.
