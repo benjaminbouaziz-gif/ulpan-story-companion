@@ -34,7 +34,10 @@ export type PromptListRow = {
   activeWebSearch: boolean;
   lastVersionAt: string | null;
   versionsCount: number;
+  frozenAt: string | null;
+  usageCount: number;
 };
+
 
 export type PromptVersionRow = {
   id: string;
