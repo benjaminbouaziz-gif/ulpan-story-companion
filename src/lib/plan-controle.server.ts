@@ -331,7 +331,7 @@ export async function executerControlePlan(
     stepId: step.id,
     robot: "controle_plan",
     model: regles.model,
-    mode: `controle_${mode}`,
+    mode: "controle",
   });
 
   // Contexte vierge : la méthode de contrôle est jointe, le plan est la matière.
@@ -450,7 +450,7 @@ export async function executerControlePlan(
       stepId: step.id,
       robot: "correction_plan",
       model: correctif.model,
-      mode: `correction_${mode}`,
+      mode: "correction",
     });
     const systemRedacteur = `${correctif.content}\n\n--- MÉTHODE (document joint) ---\n${methode.content}`;
     const userRedacteur = [
