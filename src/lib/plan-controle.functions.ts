@@ -106,9 +106,9 @@ export type ControleRunRow = {
   status: string;
   phase: string | null;
   planVersion: number | null;
-  verdicts: Verdicts | null;
+  verdicts: VerdictLigne[] | null;
   notes: Notes | null;
-  propositions: Proposition[];
+  propositions: VerdictLigne[];
   moyenne: number | null;
   controleurModelUsed: string | null;
   redacteurModelUsed: string | null;
@@ -239,9 +239,9 @@ export const planControlState = createServerFn({ method: "GET" })
         status: r.status,
         phase: r.phase ?? null,
         planVersion: r.plan_version ?? null,
-        verdicts: (r.verdicts as Verdicts | null) ?? null,
+        verdicts: (r.verdicts as VerdictLigne[] | null) ?? null,
         notes: (r.notes as Notes | null) ?? null,
-        propositions: ((r.propositions as Proposition[] | null) ?? []) as Proposition[],
+        propositions: ((r.propositions as VerdictLigne[] | null) ?? []) as VerdictLigne[],
         moyenne: r.moyenne === null ? null : Number(r.moyenne),
         controleurModelUsed: r.controleur_model_used ?? null,
         redacteurModelUsed: r.redacteur_model_used ?? null,
@@ -416,7 +416,7 @@ export const planControlMeasures = createServerFn({ method: "GET" })
       planVersion: r.plan_version ?? null,
       notes: (r.notes as Notes | null) ?? null,
       moyenne: r.moyenne === null ? null : Number(r.moyenne),
-      propositions: ((r.propositions as Proposition[] | null) ?? []).length,
+      propositions: ((r.propositions as VerdictLigne[] | null) ?? []).length,
       controleurModelUsed: r.controleur_model_used ?? null,
       redacteurModelUsed: r.redacteur_model_used ?? null,
     }));
