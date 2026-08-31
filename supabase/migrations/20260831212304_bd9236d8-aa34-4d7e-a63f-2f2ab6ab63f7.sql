@@ -1,0 +1,1 @@
+update public.plan_control_runs set status = 'echoue', error = 'Libéré pour test du correctif agent_runs.mode' where id = '1a21e63c-20d1-44c4-8ef1-011fb8722540' and status = 'en_cours';

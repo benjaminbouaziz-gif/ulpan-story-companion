@@ -1,0 +1,1 @@
+update public.plan_control_runs set status = 'termine', phase = 'termine', duration_ms = 96589 where id = '11638088-39b4-492b-b18f-7377cd5fdf76' and status = 'en_cours';
