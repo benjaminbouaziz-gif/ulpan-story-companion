@@ -2140,6 +2140,7 @@ export type Database = {
         Returns: boolean
       }
       instancier_chaine: { Args: { p_book_id: string }; Returns: number }
+      supprimer_prompt: { Args: { p_prompt_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "editor" | "user"
