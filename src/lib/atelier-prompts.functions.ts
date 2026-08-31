@@ -432,3 +432,47 @@ export const activatePromptVersion = createServerFn({ method: "POST" })
 
     return { version: version.version };
   });
+
+/**
+ * FIGER — le prompt sort de la bibliothèque active. Rien n'est effacé : ses
+ * versions et son historique restent en base, et l'étape est de nouveau libre
+ * pour un prompt de remplacement. Réversible.
+ */
+export const freezePrompt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ promptId: z.string().uuid(), frozen: z.boolean() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ frozen: boolean }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+
+    const { error } = await admin
+      .from("prompts")
+      .update({ frozen_at: data.frozen ? new Date().toISOString() : null })
+      .eq("id", data.promptId);
+    if (error)
+      throw new Error(
+        texteErreurBase(
+          data.frozen ? "Le prompt n’a pas pu être figé" : "Le prompt n’a pas pu être remis en service",
+          error,
+        ),
+      );
+    return { frozen: data.frozen };
+  });
+
+/**
+ * SUPPRIMER — effacement réel, réservé aux prompts qui n'ont rien produit et
+ * que rien ne cite. Le refus vient de la base elle-même : la fonction
+ * `supprimer_prompt` recompte les liens avant d'agir et journalise chaque
+ * ligne effacée dans maintenance_log.
+ */
+export const deletePrompt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ versionsSupprimees: number }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+
+    const { data: count, error } = await admin.rpc("supprimer_prompt", { p_prompt_id: data.promptId });
+    if (error) throw new Error(texteErreurBase("La suppression du prompt a été refusée", error));
+    return { versionsSupprimees: (count as number) ?? 0 };
+  });
