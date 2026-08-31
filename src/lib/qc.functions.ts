@@ -138,7 +138,9 @@ export const qcGrids = createServerFn({ method: "GET" })
       stepCode: g.step_code,
       isActive: g.is_active,
       criteres: (criteres ?? [])
-        .filter((c) => c.grid_id === g.id)
+        // LES RÈGLES JUGÉES NE SONT PLUS DES LIGNES : cet écran ne montre
+        // plus que les mesures calculées par le code.
+        .filter((c) => c.grid_id === g.id && c.species === "mecanique")
         .map((c) => ({
           id: c.id,
           sortOrder: c.sort_order,
