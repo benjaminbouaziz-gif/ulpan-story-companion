@@ -11,6 +11,8 @@
 
 export const MODELE_GEMINI = "google/gemini-3.7-flash";
 export const MODELE_CLAUDE = "claude-sonnet-5";
+/** Gemini appelé DIRECTEMENT chez Google (clé GOOGLE_AI_API_KEY, côté serveur). */
+export const MODELE_GEMINI_GOOGLE = "gemini-3.7-flash";
 
 export const MODELES = [
   {
@@ -22,6 +24,11 @@ export const MODELES = [
     id: MODELE_CLAUDE,
     label: "Claude Sonnet (clé Anthropic)",
     fournisseur: "API Anthropic",
+  },
+  {
+    id: MODELE_GEMINI_GOOGLE,
+    label: "Gemini 3.7 Flash (clé Google)",
+    fournisseur: "API Google AI Studio",
   },
 ] as const;
 
