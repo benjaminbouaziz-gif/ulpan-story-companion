@@ -488,8 +488,10 @@ export async function executerControlePlan(
         lang: step.lang,
         type: "plan",
         version: planV2Version,
+        runId: runRedacteur,
         fileName: `plan-v${planV2Version}.md`,
       });
+
       const planBytes = new TextEncoder().encode(res.text).buffer as ArrayBuffer;
       await uploadArtifactBytes(editor, planPath, planBytes, "text/markdown; charset=utf-8");
       const { data: planArt, error: pErr } = await admin
