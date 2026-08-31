@@ -87,11 +87,32 @@ export const atelierPrompts = createServerFn({ method: "GET" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
-    const [{ data: prompts }, { data: templates }, { data: versions }] = await Promise.all([
-      admin.from("prompts").select("id, step_code, name, active_version_id"),
-      admin.from("step_templates").select("code, label_fr, rank"),
-      admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
-    ]);
+    const [{ data: prompts }, { data: templates }, { data: versions }, { data: arts }, { data: reports }, { data: books }] =
+      await Promise.all([
+        admin.from("prompts").select("id, step_code, name, active_version_id, frozen_at"),
+        admin.from("step_templates").select("code, label_fr, rank"),
+        admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
+        admin.from("artifacts").select("prompt_version_id").not("prompt_version_id", "is", null),
+        admin.from("qc_reports").select("regles_prompt_version_id").not("regles_prompt_version_id", "is", null),
+        admin.from("books").select("prompt_id").not("prompt_id", "is", null),
+      ]);
+
+    // Un prompt « relié » est un prompt qui a produit un livrable, qui est cité
+    // par un rapport de contrôle, ou qui est attaché à un livre.
+    const usedVersionIds = [
+      ...(arts ?? []).map((a) => a.prompt_version_id as string),
+      ...(reports ?? []).map((r) => r.regles_prompt_version_id as string),
+    ];
+    const versionOwner = new Map((versions ?? []).map((v) => [v.id, v.prompt_id]));
+    const usage = new Map<string, number>();
+    for (const vid of usedVersionIds) {
+      const owner = versionOwner.get(vid);
+      if (owner) usage.set(owner, (usage.get(owner) ?? 0) + 1);
+    }
+    for (const b of books ?? []) {
+      const owner = b.prompt_id as string;
+      usage.set(owner, (usage.get(owner) ?? 0) + 1);
+    }
 
     const tpl = new Map((templates ?? []).map((t) => [t.code, t]));
     const rows: PromptListRow[] = (prompts ?? []).map((p) => {
@@ -112,8 +133,11 @@ export const atelierPrompts = createServerFn({ method: "GET" })
         activeWebSearch: active?.web_search ?? false,
         lastVersionAt: last?.created_at ?? null,
         versionsCount: mine.length,
+        frozenAt: p.frozen_at ?? null,
+        usageCount: usage.get(p.id) ?? 0,
       };
     });
+
     rows.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "fr"));
     return rows;
   });
