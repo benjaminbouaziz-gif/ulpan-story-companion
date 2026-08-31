@@ -9,9 +9,12 @@ import {
   atelierPromptSteps,
   atelierPrompts,
   createPrompt,
+  deletePrompt,
+  freezePrompt,
   promptDossier,
   publishPromptVersion,
 } from "@/lib/atelier-prompts.functions";
+
 
 /**
  * LA BIBLIOTHÈQUE DE PROMPTS.
