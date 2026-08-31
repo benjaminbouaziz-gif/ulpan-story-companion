@@ -58,34 +58,38 @@ function PromptsRoom() {
   const steps = useQuery({ queryKey: ["atelier", "promptSteps"], queryFn: () => fetchSteps() });
 
   const create = useServerFn(createPrompt);
+  const changeModel = useServerFn(setPromptModel);
   const [creating, setCreating] = useState(false);
-  const [newStep, setNewStep] = useState("");
+  const [newEtape, setNewEtape] = useState("");
+  const [newRole, setNewRole] = useState("");
   const [newName, setNewName] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [newModel, setNewModel] = useState("");
+  const [newModel, setNewModel] = useState<string>(MODELE_GEMINI);
   const [newWebSearch, setNewWebSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Le bouton reste toujours cliquable : au clic, il nomme ce qui manque.
-  const [missing, setMissing] = useState<{ step?: boolean; name?: boolean; content?: boolean }>({});
+  const [missing, setMissing] = useState<{ etape?: boolean; role?: boolean; name?: boolean; content?: boolean }>({});
 
   const createMut = useMutation({
     mutationFn: () =>
       create({
         data: {
-          stepCode: newStep,
+          etape: newEtape as "plan",
+          roleCode: newRole as "methode",
           name: newName,
           content: newContent,
           collectionId: null,
-          model: newModel.trim() === "" ? null : newModel.trim(),
+          model: newModel as typeof MODELE_GEMINI,
           webSearch: newWebSearch,
         },
       }),
     onSuccess: async (res) => {
       setCreating(false);
-      setNewStep("");
+      setNewEtape("");
+      setNewRole("");
       setNewName("");
       setNewContent("");
-      setNewModel("");
+      setNewModel(MODELE_GEMINI);
       setNewWebSearch(false);
       setError(null);
       setMissing({});
@@ -93,6 +97,14 @@ function PromptsRoom() {
       setOpenId(res.promptId);
     },
     onError: (e: Error) => setError(e.message || "L’enregistrement du prompt a échoué."),
+  });
+
+  /** Le modèle se change depuis la fiche, sans publier une version. */
+  const modelMut = useMutation({
+    mutationFn: (v: { promptId: string; model: string }) =>
+      changeModel({ data: { promptId: v.promptId, model: v.model as typeof MODELE_GEMINI } }),
+    onSuccess: () => refreshAtelier(),
+    onError: (e: Error) => setError(e.message),
   });
 
   // Les prompts figés ne s'affichent que si on les demande.
