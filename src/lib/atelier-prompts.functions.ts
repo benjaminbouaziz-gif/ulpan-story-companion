@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { texteErreurBase } from "./db-error";
-import { MODELE_CLAUDE, MODELE_GEMINI } from "./atelier-models";
+import { MODELE_CLAUDE, MODELE_GEMINI, MODELE_GEMINI_GOOGLE } from "./atelier-models";
 
 /**
  * L'étape technique de la chaîne (book_steps.step_code) qui correspond à chaque
@@ -297,7 +297,7 @@ export const createPrompt = createServerFn({ method: "POST" })
         name: z.string().trim().min(1),
         collectionId: z.string().uuid().nullable().optional(),
         content: z.string().trim().min(1),
-        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE]).optional(),
+        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE, MODELE_GEMINI_GOOGLE]).optional(),
         webSearch: z.boolean().optional(),
       })
       .parse(data),
@@ -522,7 +522,7 @@ export const setPromptModel = createServerFn({ method: "POST" })
     z
       .object({
         promptId: z.string().uuid(),
-        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE]),
+        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE, MODELE_GEMINI_GOOGLE]),
       })
       .parse(data),
   )
