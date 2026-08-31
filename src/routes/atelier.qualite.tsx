@@ -41,14 +41,14 @@ const FAMILLES = [
 
 /** Les clés de calcul câblées sur recit-calibrage.ts, côté serveur. */
 const CLES_MECANIQUES = [
-  "plan_chapitres",
-  "plan_pages_total",
-  "calibrage_pages",
+  // Grille « Plan »
+  "plan_structure",
+  "plan_numerotation",
+  // Grille « Récit » — toutes lues par le module de calibrage existant.
   "nombre_pages",
   "pagination",
-  "doublons_pages",
-  "entetes_pages",
-  "assemblage_recit",
+  "calibrage",
+  "entetes",
 ];
 
 type Brouillon = {
