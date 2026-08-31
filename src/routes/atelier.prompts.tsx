@@ -241,13 +241,14 @@ function PromptsRoom() {
                   className={button}
                   onClick={() => {
                     const m = {
-                      step: !newStep,
+                      etape: !newEtape,
+                      role: !newRole,
                       name: !newName.trim(),
                       content: !newContent.trim(),
                     };
                     setMissing(m);
                     setError(null);
-                    if (m.step || m.name || m.content) return;
+                    if (m.etape || m.role || m.name || m.content) return;
                      if (createMut.isPending) return;
                     createMut.mutate();
                   }}
