@@ -48,7 +48,9 @@ function fmt(iso: string | null): string {
 function PromptsRoom() {
   const { t } = useI18n();
   const refreshAtelier = useAtelierRefresh();
+  const [openId, setOpenId] = useState<string | null>(null);
   const [showFrozen, setShowFrozen] = useState(false);
+
 
   const fetchList = useServerFn(atelierPrompts);
   const fetchSteps = useServerFn(atelierPromptSteps);
