@@ -421,6 +421,20 @@ type VerdictRendu = { code: string; verdict: string; location?: string; explanat
  */
 const MOTS_VALIDE = new Set(["valide", "valid", "ok", "pass", "passe", "reussi", "conforme", "oui", "true", "yes"]);
 
+/** Les mots d'échec explicites : le contrôleur a bien jugé, il a dit non. */
+const MOTS_ECHOUE = new Set([
+  "echoue",
+  "echec",
+  "fail",
+  "failed",
+  "ko",
+  "non",
+  "non conforme",
+  "false",
+  "no",
+  "refuse",
+]);
+
 /** Sans accents, sans casse : « Validé », « VALIDE », « validé » se lisent pareil. */
 function normaliser(valeur: unknown): string {
   return String(valeur ?? "")
