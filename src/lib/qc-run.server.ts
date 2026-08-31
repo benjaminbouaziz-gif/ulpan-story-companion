@@ -3,6 +3,7 @@ import { getAdminClient } from "./supabase-admin.server";
 import { downloadArtifactText } from "./atelier-artifacts.server";
 import { blocDecisionsPourRobot } from "./decisions.server";
 import { lirePlanChapitres, type ChapitrePlan } from "./recit-calibrage";
+import { texteErreurBase } from "./db-error";
 import { assemblerLeRecit, executerChapitre, REDACTION_STEP_CODE } from "./atelier-recit-run.server";
 import { executerLancementPlan, PLAN_STEP_CODE } from "./atelier-robot-run.server";
 import {
@@ -216,7 +217,7 @@ async function enregistrerRapport(
   if (error || !report) throw new Error("Le rapport de contrôle n'a pas pu être enregistré.");
 
   if (args.verdicts.length > 0) {
-    await admin.from("qc_verdicts").insert(
+    const { error: errV } = await admin.from("qc_verdicts").insert(
       args.verdicts.map((v) => ({
         report_id: report.id,
         criterion_id: v.criterionId,
@@ -230,6 +231,8 @@ async function enregistrerRapport(
         explanation: v.explanation,
       })),
     );
+    // Un rapport sans ses verdicts est un rapport qui ment : on échoue.
+    if (errV) throw new Error(texteErreurBase("Les verdicts du contrôle n'ont pas pu être enregistrés", errV));
   }
   return report.id;
 }
@@ -318,7 +321,10 @@ async function unTour(
   let runId: string | null = null;
 
   if (juges.length > 0) {
-    const { data: run } = await admin
+    // LE LANCEMENT EST JOURNALISÉ AVANT D'ÊTRE PAYÉ. Si la ligne ne peut pas
+    // être écrite, le contrôle n'a pas le droit d'aboutir : aucun appel n'est
+    // fait, et l'erreur brute de la base remonte telle quelle.
+    const { data: run, error: errRun } = await admin
       .from("agent_runs")
       .insert({
         kind: "robot",
@@ -340,7 +346,14 @@ async function unTour(
       })
       .select("id")
       .single();
-    runId = run?.id ?? null;
+    if (errRun || !run)
+      throw new Error(
+        texteErreurBase(
+          "Le lancement du contrôle n'a pas pu être journalisé : aucun appel n'a été fait",
+          errRun,
+        ),
+      );
+    runId = run.id;
 
     const decisions = await blocDecisionsPourRobot(editor, args.bookId);
     const matiere = [
@@ -366,41 +379,50 @@ async function unTour(
         criteres: args.grille.criteres,
         matiere,
         onProgress: async (info) => {
+          // Seule écriture volontairement tolérante : elle ne fait qu'avancer
+          // le modèle en cours, et la clôture la réécrit de toute façon. La
+          // faire échouer couperait un appel déjà payé.
           if (runId) await admin.from("agent_runs").update({ model_used: info.modelUsed }).eq("id", runId);
         },
       });
       verdictsJuges = appel.verdicts;
       modelUsed = appel.modelUsed;
-      if (runId)
-        await admin
-          .from("agent_runs")
-          .update({
-            status: "termine",
-            ok: true,
-            model_used: appel.modelUsed,
-            cost_usd: appel.costUsd,
-            duration_ms: Date.now() - startedAt,
-            input_chars: appel.inputChars,
-            output_chars: appel.outputChars,
-            input_tokens: appel.inputTokens,
-            output_tokens: appel.outputTokens,
-            fields: appel.verdicts.length,
-          })
-          .eq("id", runId);
+      const { error: errFin } = await admin
+        .from("agent_runs")
+        .update({
+          status: "termine",
+          ok: true,
+          model_used: appel.modelUsed,
+          cost_usd: appel.costUsd,
+          duration_ms: Date.now() - startedAt,
+          input_chars: appel.inputChars,
+          output_chars: appel.outputChars,
+          input_tokens: appel.inputTokens,
+          output_tokens: appel.outputTokens,
+          fields: appel.verdicts.length,
+        })
+        .eq("id", runId);
+      // Durée, jetons et coût sont la seule preuve de la dépense : si elle ne
+      // s'écrit pas, le contrôle échoue au lieu de passer pour gratuit.
+      if (errFin)
+        throw new Error(texteErreurBase("Le lancement du contrôle n'a pas pu être clôturé en base", errFin));
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      if (runId)
-        await admin
-          .from("agent_runs")
-          .update({
-            status: "echoue",
-            ok: false,
-            error: message.slice(0, 2000),
-            error_summary: message.slice(0, 300),
-            duration_ms: Date.now() - startedAt,
-          })
-          .eq("id", runId);
-      throw new Error(message);
+      const { error: errEchec } = await admin
+        .from("agent_runs")
+        .update({
+          status: "echoue",
+          ok: false,
+          error: message.slice(0, 2000),
+          error_summary: message.slice(0, 300),
+          duration_ms: Date.now() - startedAt,
+        })
+        .eq("id", runId);
+      throw new Error(
+        errEchec
+          ? `${message} — de plus, l'échec n'a pas pu être journalisé : ${texteErreurBase("écriture refusée", errEchec)}`
+          : message,
+      );
     }
   }
 
@@ -670,12 +692,18 @@ export async function controlerEtape(
 
 /** Toute fonction qui ouvre un état le referme : l'étape revient à l'éditeur. */
 async function cloreEtape(admin: Admin, stepId: string): Promise<void> {
-  const { data } = await admin.from("book_steps").select("status").eq("id", stepId).maybeSingle();
+  const { data, error: errLect } = await admin
+    .from("book_steps")
+    .select("status")
+    .eq("id", stepId)
+    .maybeSingle();
+  if (errLect) throw new Error(texteErreurBase("L'état de l'étape n'a pas pu être lu", errLect));
   if (data?.status === "valide" || data?.status === "valide_hors_crm") return;
-  await admin
+  const { error } = await admin
     .from("book_steps")
     .update({ status: "attend_validation", awaiting: "ben", updated_at: new Date().toISOString() })
     .eq("id", stepId);
+  if (error) throw new Error(texteErreurBase("L'étape n'a pas pu être rendue à l'éditeur", error));
 }
 
 async function marquerRapport(
@@ -684,7 +712,11 @@ async function marquerRapport(
   status: string,
   message: string,
 ): Promise<void> {
-  await admin.from("qc_reports").update({ status, stop_reason: status, message }).eq("id", reportId);
+  const { error } = await admin
+    .from("qc_reports")
+    .update({ status, stop_reason: status, message })
+    .eq("id", reportId);
+  if (error) throw new Error(texteErreurBase("Le rapport de contrôle n'a pas pu être mis à jour", error));
 }
 
 /** LA CORRECTION : le juge ne réécrit pas ; c'est l'agent de fabrication qui corrige. */
@@ -739,7 +771,7 @@ async function corriger(
       }
     }
 
-    await admin.from("qc_corrections").insert({
+    const { error: errCorr } = await admin.from("qc_corrections").insert({
       report_id: args.tour.reportId,
       book_step_id: args.step.id,
       chapter_no: chapterNo,
@@ -748,6 +780,7 @@ async function corriger(
       message,
       ...(nouvelle !== null ? {} : {}),
     });
+    if (errCorr) throw new Error(texteErreurBase("La correction n'a pas pu être journalisée", errCorr));
     return message;
   }
 
@@ -759,13 +792,16 @@ async function corriger(
     blocEchecs(args.tour.verdicts),
   ].join("\n\n");
 
-  await admin.from("reviews").insert({
+  const { error: errRev } = await admin.from("reviews").insert({
     book_step_id: args.step.id,
     decision: "revision_demandee",
     comment: paquet,
-    artifact_id: args.tour.reportId ? null : null,
+    artifact_id: null,
     author: editor.userId,
   });
+  // Sans motif écrit, le robot corrigerait à l'aveugle : on n'y va pas.
+  if (errRev)
+    throw new Error(texteErreurBase("Le motif de révision n'a pas pu être écrit : aucune correction lancée", errRev));
 
   let message = "";
   let ok = false;
@@ -776,7 +812,7 @@ async function corriger(
   } catch (e) {
     message = `Correction du plan refusée : ${e instanceof Error ? e.message : String(e)}`;
   }
-  await admin.from("qc_corrections").insert({
+  const { error: errCorrPlan } = await admin.from("qc_corrections").insert({
     report_id: args.tour.reportId,
     book_step_id: args.step.id,
     chapter_no: null,
@@ -784,6 +820,8 @@ async function corriger(
     ok,
     message,
   });
+  if (errCorrPlan)
+    throw new Error(texteErreurBase("La correction n'a pas pu être journalisée", errCorrPlan));
   return message;
 }
 
@@ -832,10 +870,13 @@ export async function corrigerDepuisRapport(
   const grille = await lireGrille(editor, { gridId: rapport.grid_id, stepCode: step.step_code });
   if (!grille) throw new Error("Grille de critères introuvable.");
 
-  const { data: verdicts } = await admin
+  const { data: verdicts, error: errVerdicts } = await admin
     .from("qc_verdicts")
     .select("criterion_id, criterion_code, label, family, is_blocking, species, verdict, location, explanation")
     .eq("report_id", rapport.id);
+  // Une lecture muette donnerait « rien à corriger » : on préfère l'erreur.
+  if (errVerdicts)
+    throw new Error(texteErreurBase("Les verdicts de ce rapport n'ont pas pu être lus", errVerdicts));
 
   const tour: Tour = {
     reportId: rapport.id,
@@ -873,7 +914,7 @@ export async function forcerValidation(
     .eq("id", args.reportId)
     .maybeSingle();
   if (!rapport) throw new Error("Rapport de contrôle introuvable.");
-  await admin
+  const { error } = await admin
     .from("qc_reports")
     .update({
       status: "force_valide",
@@ -881,4 +922,5 @@ export async function forcerValidation(
       message: `Validation forcée par l'éditeur : ${args.comment}`,
     })
     .eq("id", rapport.id);
+  if (error) throw new Error(texteErreurBase("La validation forcée n'a pas pu être écrite", error));
 }

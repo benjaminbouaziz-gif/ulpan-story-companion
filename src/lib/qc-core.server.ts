@@ -106,7 +106,10 @@ async function avecDelai<T>(promise: Promise<T>, ms: number, message: string): P
 /** Sur off, la chaîne se comporte exactement comme avant la brique 9. */
 export async function controleActif(editor: EditorContext): Promise<boolean> {
   const admin = await getAdminClient(editor);
-  const { data } = await admin.from("qc_settings").select("enabled").eq("id", true).maybeSingle();
+  const { data, error } = await admin.from("qc_settings").select("enabled").eq("id", true).maybeSingle();
+  // Une lecture muette passerait pour « interrupteur à l'arrêt » : on préfère
+  // l'erreur, sinon le contrôle se saute tout seul en silence.
+  if (error) throw new Error(`L'interrupteur du contrôle qualité n'a pas pu être lu : ${error.message}`);
   return data?.enabled === true;
 }
 
@@ -411,6 +414,36 @@ export function blocGrille(criteres: Critere[]): string {
 
 type VerdictRendu = { code: string; verdict: string; location?: string; explanation?: string };
 
+/**
+ * LES SEULS MOTS QUI VALIDENT. Tout le reste — mot inconnu, champ vide,
+ * critère absent, JSON illisible — ÉCHOUE. On ne valide jamais par défaut :
+ * un contrôle qui valide sans juger serait pire que pas de contrôle.
+ */
+const MOTS_VALIDE = new Set(["valide", "valid", "ok", "pass", "passe", "reussi", "conforme", "oui", "true", "yes"]);
+
+/** Les mots d'échec explicites : le contrôleur a bien jugé, il a dit non. */
+const MOTS_ECHOUE = new Set([
+  "echoue",
+  "echec",
+  "fail",
+  "failed",
+  "ko",
+  "non",
+  "non conforme",
+  "false",
+  "no",
+  "refuse",
+]);
+
+/** Sans accents, sans casse : « Validé », « VALIDE », « validé » se lisent pareil. */
+function normaliser(valeur: unknown): string {
+  return String(valeur ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 /** On lit du JSON, et on n'invente rien : un critère non rendu est un échec. */
 export function lireVerdictsRendus(texte: string, criteres: Critere[]): VerdictCalcule[] {
   let rendus: VerdictRendu[] = [];
@@ -429,7 +462,8 @@ export function lireVerdictsRendus(texte: string, criteres: Critere[]): VerdictC
     .filter((c) => c.species === "juge")
     .map((c) => {
       const rendu = parCode.get(c.code);
-      const echoue = !rendu || String(rendu.verdict ?? "").toLowerCase().startsWith("e");
+      const mot = normaliser(rendu?.verdict);
+      const echoue = !rendu || !MOTS_VALIDE.has(mot);
       return {
         criterionId: c.id,
         code: c.code,
@@ -439,9 +473,13 @@ export function lireVerdictsRendus(texte: string, criteres: Critere[]): VerdictC
         species: "juge" as const,
         verdict: echoue ? ("echoue" as const) : ("valide" as const),
         location: (rendu?.location ?? "").trim() || null,
-        explanation: rendu
-          ? (rendu.explanation ?? "").trim() || null
-          : "Aucun verdict rendu par le contrôleur pour ce critère : il est compté comme échoué.",
+        explanation: !rendu
+          ? "Aucun verdict rendu par le contrôleur pour ce critère : il est compté comme échoué."
+          : mot.length === 0
+            ? "Le contrôleur n'a pas dit s'il validait ce critère : il est compté comme échoué."
+            : !MOTS_VALIDE.has(mot) && !MOTS_ECHOUE.has(mot)
+              ? `Verdict illisible du contrôleur (« ${String(rendu.verdict ?? "")} ») : compté comme échoué. ${(rendu.explanation ?? "").trim()}`.trim()
+              : (rendu.explanation ?? "").trim() || null,
       };
     });
 }

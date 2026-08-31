@@ -337,11 +337,15 @@ export type RobotRunLine = {
   model: string | null;
   status: string | null;
   durationMs: number | null;
+  inputTokens: number | null;
   outputTokens: number | null;
   costUsd: number | null;
   truncated: boolean;
   errorSummary: string | null;
   mode: string | null;
+  /** Le tour du contrôle, ou le chapitre du lot : batch_current sur batch_total. */
+  batchCurrent: number | null;
+  batchTotal: number | null;
 };
 
 /** L'historique des lancements, pour la salle Robots. Rien de décoratif. */
@@ -353,7 +357,7 @@ export const listRobotRuns = createServerFn({ method: "GET" })
     const { data: runs } = await admin
       .from("agent_runs")
       .select(
-        "id, created_at, robot_name, model, model_used, status, duration_ms, output_tokens, cost_usd, truncated, error_summary, book_step_id, mode",
+        "id, created_at, robot_name, model, model_used, status, duration_ms, input_tokens, output_tokens, cost_usd, truncated, error_summary, book_step_id, mode, batch_current, batch_total",
       )
       .order("created_at", { ascending: false })
       .limit(100);
@@ -383,10 +387,13 @@ export const listRobotRuns = createServerFn({ method: "GET" })
       model: r.model_used ?? r.model,
       status: r.status,
       durationMs: r.duration_ms,
+      inputTokens: r.input_tokens,
       outputTokens: r.output_tokens,
       costUsd: r.cost_usd === null || r.cost_usd === undefined ? null : Number(r.cost_usd),
       truncated: r.truncated ?? false,
       errorSummary: r.error_summary,
       mode: r.mode ?? null,
+      batchCurrent: r.batch_current ?? null,
+      batchTotal: r.batch_total ?? null,
     }));
   });
