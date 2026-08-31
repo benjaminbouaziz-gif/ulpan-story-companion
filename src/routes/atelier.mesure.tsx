@@ -36,10 +36,8 @@ function MeasureRoom() {
                 <th className="py-2 pr-3 font-medium">Plan</th>
                 <th className="py-2 pr-3 font-medium">Mode</th>
                 <th className="py-2 pr-3 font-medium">État</th>
-                <th className="py-2 pr-3 font-medium">Structure</th>
-                <th className="py-2 pr-3 font-medium">Progression</th>
-                <th className="py-2 pr-3 font-medium">Méthode</th>
-                <th className="py-2 pr-3 font-medium">Cohérence</th>
+                <th className="py-2 pr-3 font-medium">Notes par famille</th>
+
                 <th className="py-2 pr-3 font-medium">Moyenne</th>
                 <th className="py-2 pr-3 font-medium">Propositions</th>
                 <th className="py-2 pr-3 font-medium">Contrôleur</th>
@@ -54,10 +52,14 @@ function MeasureRoom() {
                   <td className="py-2 pr-3">{r.planVersion === null ? "—" : `v${r.planVersion}`}</td>
                   <td className="py-2 pr-3">{r.mode}</td>
                   <td className="py-2 pr-3">{r.status}</td>
-                  <td className="py-2 pr-3">{r.notes?.structure ?? "—"}</td>
-                  <td className="py-2 pr-3">{r.notes?.progression ?? "—"}</td>
-                  <td className="py-2 pr-3">{r.notes?.methode ?? "—"}</td>
-                  <td className="py-2 pr-3">{r.notes?.coherence_recit ?? "—"}</td>
+                  <td className="py-2 pr-3">
+                    {(r.notes?.familles ?? []).length === 0
+                      ? "—"
+                      : (r.notes?.familles ?? [])
+                          .map((f) => `${f.famille} ${f.note}% (${f.valides}/${f.total})`)
+                          .join(" · ")}
+                  </td>
+
                   <td className="py-2 pr-3">{r.moyenne ?? "—"}</td>
                   <td className="py-2 pr-3">{r.propositions}</td>
                   <td className="py-2 pr-3">{r.controleurModelUsed ?? "—"}</td>
