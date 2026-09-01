@@ -99,11 +99,17 @@ export const adminSignIn = createServerFn({ method: "POST" })
     }
 
     if (signIn.error || !signIn.data.session) {
-      if (registre) {
-        const { error } = await registre
-          .from("admin_login_attempts")
-          .insert({ email_hash: emailHash, ip_hash: ipHash });
-        if (error) console.error("[atelier/connexion] écriture du registre impossible", error);
+      // Le registre ne doit jamais faire échouer la réponse : s'il tombe, on
+      // l'écrit dans le journal et la réponse reste « identifiants refusés ».
+      try {
+        if (registre) {
+          const { error } = await registre
+            .from("admin_login_attempts")
+            .insert({ email_hash: emailHash, ip_hash: ipHash });
+          if (error) console.error("[atelier/connexion] écriture du registre impossible", error);
+        }
+      } catch (e) {
+        console.error("[atelier/connexion] écriture du registre impossible", e);
       }
       return { ok: false as const, reason: "refused" as const };
     }
