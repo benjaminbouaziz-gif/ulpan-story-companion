@@ -248,11 +248,10 @@ export function lireRapportControleur(
     }
     vus.add(code);
 
-    const gravite = chaine(e["severity"]).toLowerCase();
-    // La grille commande : un critère bloquant reste bloquant. Le modèle peut
-    // seulement DURCIR un signalement, jamais adoucir un bloquant.
-    const severity: Gravite =
-      critere.isBlocking || gravite === "bloquant" ? "bloquant" : "signalement";
+    // LA GRILLE COMMANDE, ET ELLE SEULE. Le contrôleur annonce une gravité,
+    // on la lit, mais elle ne peut ni durcir ni adoucir la grille : sinon un
+    // simple signalement déclencherait une réécriture, et l'inverse aussi.
+    const severity: Gravite = critere.isBlocking ? "bloquant" : "signalement";
 
     verdicts.push({
       code,
@@ -260,7 +259,8 @@ export function lireRapportControleur(
       family: critere.family,
       species: "juge",
       verdict,
-      severity: verdict === "echoue" ? severity : critere.isBlocking ? "bloquant" : "signalement",
+      severity,
+
       location: chaine(e["location"]),
       evidence: chaine(e["evidence"]) || chaine(e["explanation"]),
       requiredFix: chaine(e["required_fix"]) || chaine(e["requiredFix"]),
