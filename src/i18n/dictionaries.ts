@@ -159,7 +159,9 @@ const fr = {
   "atelier.email": "Adresse email",
   "atelier.password": "Mot de passe",
   "atelier.submit": "Entrer",
-  "atelier.signInError": "Identifiants incorrects.",
+  "atelier.signInError": "Adresse ou mot de passe incorrect.",
+  "atelier.signInBroken":
+    "La connexion n'a pas pu aboutir : panne technique du serveur, pas vos identifiants.",
   "atelier.tooManyAttempts": "Trop de tentatives. Réessayez dans quinze minutes.",
   "atelier.signOut": "Se déconnecter",
   "atelier.forbidden": "Accès réservé.",
