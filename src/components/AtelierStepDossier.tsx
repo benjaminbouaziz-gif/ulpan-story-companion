@@ -229,7 +229,9 @@ export function StepDossier({ bookStepId }: { bookStepId: string }) {
 
       {/* c-bis. le robot de l'étape, quand elle en a un */}
       <PlanRobotPanel bookStepId={bookStepId} onDone={invalidate} />
+      <PlanControlPanel bookStepId={bookStepId} onDone={invalidate} />
       <RecitRobotPanel bookStepId={bookStepId} onDone={invalidate} />
+
 
       {/* c-ter. mes arbitrages : ils deviennent une donnée du livre */}
       <StepDecisions bookStepId={bookStepId} />
