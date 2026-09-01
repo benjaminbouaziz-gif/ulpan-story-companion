@@ -4,7 +4,12 @@ import { artifactPath } from "./artifact-path";
 import { downloadArtifactText, sha256Hex, uploadArtifactBytes } from "./atelier-artifacts.server";
 import { blocDecisionsPourRobot, synchroniserDecisions } from "./decisions.server";
 import { texteErreurBase, violeIndex } from "./db-error";
-import { appelerModele, cleConfiguree, fournisseurDuModele, secretDuModele } from "./robot-provider.server";
+import {
+  appelerModele,
+  cleConfiguree,
+  fournisseurDuModele,
+  secretDuModele,
+} from "./robot-provider.server";
 import { lirePlanChapitres } from "./recit-calibrage";
 import {
   lireRapportControleur,
@@ -138,12 +143,17 @@ async function lireContexte(editor: EditorContext, bookStepId: string) {
   return { admin, step, plans: plans ?? [], rapports: rapports ?? [], runs: runs ?? [] };
 }
 
-async function verdictsDuRapport(ctx: Contexte, reportIds: string[]): Promise<Map<string, VerdictAffiche[]>> {
+async function verdictsDuRapport(
+  ctx: Contexte,
+  reportIds: string[],
+): Promise<Map<string, VerdictAffiche[]>> {
   const parRapport = new Map<string, VerdictAffiche[]>();
   if (reportIds.length === 0) return parRapport;
   const { data } = await ctx.admin
     .from("qc_verdicts")
-    .select("report_id, criterion_code, label, family, species, verdict, is_blocking, location, explanation")
+    .select(
+      "report_id, criterion_code, label, family, species, verdict, is_blocking, location, explanation",
+    )
     .in("report_id", reportIds)
     .order("created_at", { ascending: true });
   for (const v of data ?? []) {
@@ -344,7 +354,10 @@ export async function etatControlePlan(
 /* LA MATIÈRE ENVOYÉE AUX DEUX RÔLES                                   */
 /* ------------------------------------------------------------------ */
 
-async function blocFiche(ctx: Contexte, bookId: string): Promise<{ texte: string; chapitresAttendus: number | null }> {
+async function blocFiche(
+  ctx: Contexte,
+  bookId: string,
+): Promise<{ texte: string; chapitresAttendus: number | null }> {
   const { data: book } = await ctx.admin
     .from("books")
     .select(
@@ -370,7 +383,9 @@ async function blocFiche(ctx: Contexte, bookId: string): Promise<{ texte: string
     `Collection : ${collection?.name_fr ?? "non renseignée"}`,
     collection?.story_nature_fr ? `Nature de la collection :\n${collection.story_nature_fr}` : null,
     book.chapters_count ? `Nombre de chapitres attendu : ${book.chapters_count}` : null,
-    (book.work_summary_fr ?? "").trim().length > 0 ? `Résumé de l'éditeur :\n${book.work_summary_fr}` : null,
+    (book.work_summary_fr ?? "").trim().length > 0
+      ? `Résumé de l'éditeur :\n${book.work_summary_fr}`
+      : null,
     (book.book_constraints_fr ?? "").trim().length > 0
       ? `Consignes propres au livre :\n${book.book_constraints_fr}`
       : null,
@@ -388,7 +403,14 @@ async function blocFiche(ctx: Contexte, bookId: string): Promise<{ texte: string
 async function promptActif(
   ctx: Contexte,
   roleCode: string,
-): Promise<{ promptId: string; versionId: string; version: number; content: string; model: string; webSearch: boolean }> {
+): Promise<{
+  promptId: string;
+  versionId: string;
+  version: number;
+  content: string;
+  model: string;
+  webSearch: boolean;
+}> {
   const { data: prompts } = await ctx.admin
     .from("prompts")
     .select("id, code, name, active_version_id")
@@ -527,12 +549,19 @@ async function clore(
       output_tokens: args.outputTokens ?? null,
       input_tokens: args.inputTokens ?? null,
       fields: args.ok ? 1 : 0,
-      ...(args.error ? { error: args.error.slice(0, 2000), error_summary: args.error.slice(0, 300) } : {}),
+      ...(args.error
+        ? { error: args.error.slice(0, 2000), error_summary: args.error.slice(0, 300) }
+        : {}),
     })
     .eq("id", runId);
 }
 
-async function marquerEtape(ctx: Contexte, stepId: string, status: string, awaiting: string): Promise<void> {
+async function marquerEtape(
+  ctx: Contexte,
+  stepId: string,
+  status: string,
+  awaiting: string,
+): Promise<void> {
   await ctx.admin
     .from("book_steps")
     .update({ status, awaiting, updated_at: new Date().toISOString() })
@@ -601,7 +630,8 @@ async function executerControle(editor: EditorContext, bookStepId: string): Prom
       },
     });
     if (result.text.trim().length === 0) throw new Error("Le contrôleur a répondu sans contenu.");
-    if (result.truncated) throw new Error("La réponse du contrôleur a été coupée : plafond de longueur atteint.");
+    if (result.truncated)
+      throw new Error("La réponse du contrôleur a été coupée : plafond de longueur atteint.");
   } catch (e) {
     erreurAppel = e instanceof Error ? e.message : String(e);
   }
@@ -729,7 +759,8 @@ async function executerControle(editor: EditorContext, bookStepId: string): Prom
     })
     .select("id")
     .single();
-  if (repErr || !rapport) throw new Error(texteErreurBase("Le rapport n'a pas pu être enregistré", repErr));
+  if (repErr || !rapport)
+    throw new Error(texteErreurBase("Le rapport n'a pas pu être enregistré", repErr));
 
   const ids = await idsDesCriteres(ctx, gridId);
   await ctx.admin.from("qc_verdicts").insert(
@@ -779,7 +810,8 @@ async function executerReecriture(editor: EditorContext, bookStepId: string): Pr
 
   const rapport = [...ctx.rapports].reverse().find((r) => r.plan_version === plan.version) ?? null;
   if (!rapport) throw new Error("Ce plan n'a pas encore été contrôlé.");
-  if (rapport.status === "erreur") throw new Error("Le dernier contrôle est inexploitable : rien à corriger.");
+  if (rapport.status === "erreur")
+    throw new Error("Le dernier contrôle est inexploitable : rien à corriger.");
   if (rapport.passed) throw new Error("Le dernier contrôle ne relève aucun écart bloquant.");
 
   const { data: verdicts } = await ctx.admin
@@ -835,11 +867,14 @@ async function executerReecriture(editor: EditorContext, bookStepId: string): Pr
       },
     });
     if (result.text.trim().length === 0) throw new Error("Le réécriteur a répondu sans contenu.");
-    if (result.truncated) throw new Error("La réécriture a été coupée : plafond de longueur atteint.");
+    if (result.truncated)
+      throw new Error("La réécriture a été coupée : plafond de longueur atteint.");
     // Une réécriture illisible n'est PAS un plan : le plan source reste en place.
     const relu = lirePlanChapitres(result.text);
     if (relu.chapitres.length === 0)
-      throw new Error("La réécriture ne contient aucun chapitre au format attendu : elle est refusée.");
+      throw new Error(
+        "La réécriture ne contient aucun chapitre au format attendu : elle est refusée.",
+      );
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     await clore(ctx, runId, {
@@ -931,7 +966,8 @@ export async function avancerControlePlan(
   bookStepId: string,
 ): Promise<{ message: string; etat: EtatControlePlan }> {
   const avant = await etatControlePlan(editor, bookStepId);
-  if (!avant.applicable) return { message: "Cette étape n'est pas le plan de chapitres.", etat: avant };
+  if (!avant.applicable)
+    return { message: "Cette étape n'est pas le plan de chapitres.", etat: avant };
   if (avant.running) return { message: "Un appel est déjà en cours.", etat: avant };
   if (!avant.nextAction) return { message: avant.message ?? "Rien à lancer.", etat: avant };
 

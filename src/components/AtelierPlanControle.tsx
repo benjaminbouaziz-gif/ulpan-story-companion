@@ -137,7 +137,11 @@ export function PlanControlPanel({
       {/* Le détail des critères, replié : bloquants d'abord, puis signalements. */}
       {rapportCourant && rapportCourant.verdicts.length > 0 ? (
         <div className="mt-3">
-          <button type="button" className="border-b border-current" onClick={() => setDetail((v) => !v)}>
+          <button
+            type="button"
+            className="border-b border-current"
+            onClick={() => setDetail((v) => !v)}
+          >
             {detail ? t("atelier.pc.hideDetails") : t("atelier.pc.details")}
           </button>
           {detail ? (
@@ -159,11 +163,15 @@ export function PlanControlPanel({
                           : null}
                       </td>
                       <td className={cell}>
-                        {v.species === "mecanique" ? t("atelier.pc.measured") : t("atelier.pc.judged")}
+                        {v.species === "mecanique"
+                          ? t("atelier.pc.measured")
+                          : t("atelier.pc.judged")}
                       </td>
                       <td className={cell}>
                         {v.location ? <span className="block opacity-70">{v.location}</span> : null}
-                        {v.explanation ? <span className="block whitespace-pre-line">{v.explanation}</span> : null}
+                        {v.explanation ? (
+                          <span className="block whitespace-pre-line">{v.explanation}</span>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
