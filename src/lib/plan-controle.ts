@@ -116,9 +116,7 @@ export function mesurerMecaniques(
           const vide = lecture.chapitres.length === 0;
           return verdictMecanique(critere, vide, {
             location: "Ensemble du plan",
-            evidence: vide
-              ? "Aucun titre au format « ## Chapitre N · titre » n'a été trouvé."
-              : "",
+            evidence: vide ? "Aucun titre au format « ## Chapitre N · titre » n'a été trouvé." : "",
             requiredFix:
               "Structurer le plan en « ## Chapitre N · titre », avec une ligne « Pages : n » sous chaque chapitre.",
           });
@@ -199,10 +197,7 @@ function chaine(v: unknown): string {
  * une entrée, s'il en ajoute une inconnue, s'il rend un verdict illisible ou s'il
  * n'est pas du JSON. Aucun repli silencieux : dans ce cas, aucun plan ne passe.
  */
-export function lireRapportControleur(
-  texte: string,
-  criteres: CritereGrille[],
-): LectureRapport {
+export function lireRapportControleur(texte: string, criteres: CritereGrille[]): LectureRapport {
   const juges = criteres.filter((c) => c.species === "juge");
   const attendus = new Map(juges.map((c) => [c.code, c]));
   const erreurs: string[] = [];
@@ -214,7 +209,9 @@ export function lireRapportControleur(
     return {
       ok: false,
       verdicts: [],
-      erreurs: [`Le rapport du contrôleur n'est pas exploitable : ${e instanceof Error ? e.message : String(e)}.`],
+      erreurs: [
+        `Le rapport du contrôleur n'est pas exploitable : ${e instanceof Error ? e.message : String(e)}.`,
+      ],
     };
   }
 
@@ -234,7 +231,9 @@ export function lireRapportControleur(
     const code = chaine(e["code"]);
     const critere = attendus.get(code);
     if (!critere) {
-      erreurs.push(`Le rapport juge un critère inconnu de la grille : « ${code || "(sans code)"} ».`);
+      erreurs.push(
+        `Le rapport juge un critère inconnu de la grille : « ${code || "(sans code)"} ».`,
+      );
       continue;
     }
     if (vus.has(code)) {
@@ -269,7 +268,8 @@ export function lireRapportControleur(
   }
 
   for (const c of juges)
-    if (!vus.has(c.code)) erreurs.push(`Le rapport ne juge pas le critère « ${c.code} » (${c.label}).`);
+    if (!vus.has(c.code))
+      erreurs.push(`Le rapport ne juge pas le critère « ${c.code} » (${c.label}).`);
 
   // Un échec sans correction exigée n'est pas exploitable par le réécriteur.
   for (const v of verdicts)
