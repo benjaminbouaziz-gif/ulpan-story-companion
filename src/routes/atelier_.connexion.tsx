@@ -34,7 +34,17 @@ function AtelierSignIn() {
     try {
       const result = await signIn({ data: { email: email.trim(), password } });
       if (!result.ok) {
-        setError(t(result.reason === "throttled" ? "atelier.tooManyAttempts" : "atelier.signInError"));
+        // Trois causes, trois messages : l'écran ne doit pas accuser vos
+        // identifiants quand c'est le serveur qui est en panne.
+        setError(
+          t(
+            result.reason === "throttled"
+              ? "atelier.tooManyAttempts"
+              : result.reason === "interne"
+                ? "atelier.signInBroken"
+                : "atelier.signInError",
+          ),
+        );
         return;
       }
       const { error: sessionError } = await supabase.auth.setSession({
@@ -42,12 +52,12 @@ function AtelierSignIn() {
         refresh_token: result.refresh_token,
       });
       if (sessionError) {
-        setError(t("atelier.signInError"));
+        setError(t("atelier.signInBroken"));
         return;
       }
       navigate({ to: "/atelier", replace: true });
     } catch {
-      setError(t("atelier.signInError"));
+      setError(t("atelier.signInBroken"));
     } finally {
       setBusy(false);
     }
