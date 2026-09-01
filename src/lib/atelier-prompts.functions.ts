@@ -4,20 +4,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { texteErreurBase } from "./db-error";
-import { MODELE_CLAUDE, MODELE_GEMINI, MODELE_GEMINI_GOOGLE } from "./atelier-models";
-
-/**
- * L'étape technique de la chaîne (book_steps.step_code) qui correspond à chaque
- * étape structurée de la bibliothèque. Elle reste en base pour rattacher un
- * prompt à la chaîne de production ; l'écran ne montre plus qu'Étape × Rôle.
- */
-const STEP_CODE_PAR_ETAPE: Record<string, string> = {
-  plan: "plan",
-  recit: "redaction",
-  vocabulaire: "lexique",
-  hebreu: "master_he",
-  assemblage: "montage",
-};
 
 /**
  * BRIQUE 4 — LA BIBLIOTHÈQUE DE PROMPTS.
@@ -42,20 +28,13 @@ export type PromptListRow = {
   stepCode: string;
   stepLabelFr: string;
   rank: number;
-  /** Les trois champs structurés : étape, rôle, modèle. */
-  etape: string;
-  roleCode: string;
-  model: string;
   name: string;
   activeVersion: number | null;
   activeModel: string | null;
   activeWebSearch: boolean;
   lastVersionAt: string | null;
   versionsCount: number;
-  frozenAt: string | null;
-  usageCount: number;
 };
-
 
 export type PromptVersionRow = {
   id: string;
@@ -105,32 +84,11 @@ export const atelierPrompts = createServerFn({ method: "GET" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
-    const [{ data: prompts }, { data: templates }, { data: versions }, { data: arts }, { data: reports }, { data: books }] =
-      await Promise.all([
-        admin.from("prompts").select("id, step_code, etape, role_code, model, name, active_version_id, frozen_at"),
-        admin.from("step_templates").select("code, label_fr, rank"),
-        admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
-        admin.from("artifacts").select("prompt_version_id").not("prompt_version_id", "is", null),
-        admin.from("qc_reports").select("regles_prompt_version_id").not("regles_prompt_version_id", "is", null),
-        admin.from("books").select("prompt_id").not("prompt_id", "is", null),
-      ]);
-
-    // Un prompt « relié » est un prompt qui a produit un livrable, qui est cité
-    // par un rapport de contrôle, ou qui est attaché à un livre.
-    const usedVersionIds = [
-      ...(arts ?? []).map((a) => a.prompt_version_id as string),
-      ...(reports ?? []).map((r) => r.regles_prompt_version_id as string),
-    ];
-    const versionOwner = new Map((versions ?? []).map((v) => [v.id, v.prompt_id]));
-    const usage = new Map<string, number>();
-    for (const vid of usedVersionIds) {
-      const owner = versionOwner.get(vid);
-      if (owner) usage.set(owner, (usage.get(owner) ?? 0) + 1);
-    }
-    for (const b of books ?? []) {
-      const owner = b.prompt_id as string;
-      usage.set(owner, (usage.get(owner) ?? 0) + 1);
-    }
+    const [{ data: prompts }, { data: templates }, { data: versions }] = await Promise.all([
+      admin.from("prompts").select("id, step_code, name, active_version_id"),
+      admin.from("step_templates").select("code, label_fr, rank"),
+      admin.from("prompt_versions").select("id, prompt_id, version, created_at, model, web_search"),
+    ]);
 
     const tpl = new Map((templates ?? []).map((t) => [t.code, t]));
     const rows: PromptListRow[] = (prompts ?? []).map((p) => {
@@ -145,20 +103,14 @@ export const atelierPrompts = createServerFn({ method: "GET" })
         stepCode: p.step_code,
         stepLabelFr: tpl.get(p.step_code)?.label_fr ?? p.step_code,
         rank: tpl.get(p.step_code)?.rank ?? 999,
-        etape: p.etape,
-        roleCode: p.role_code,
-        model: p.model,
         name: p.name,
         activeVersion: active?.version ?? null,
-        activeModel: p.model,
+        activeModel: active?.model ?? null,
         activeWebSearch: active?.web_search ?? false,
         lastVersionAt: last?.created_at ?? null,
         versionsCount: mine.length,
-        frozenAt: p.frozen_at ?? null,
-        usageCount: usage.get(p.id) ?? 0,
       };
     });
-
     rows.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "fr"));
     return rows;
   });
@@ -168,18 +120,7 @@ export const promptDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }): Promise<{
-    prompt: {
-      id: string;
-      name: string;
-      stepCode: string;
-      stepLabelFr: string;
-      etape: string;
-      roleCode: string;
-      model: string;
-      activeVersionId: string | null;
-      frozenAt: string | null;
-      usageCount: number;
-    } | null;
+    prompt: { id: string; name: string; stepCode: string; stepLabelFr: string; activeVersionId: string | null } | null;
     versions: PromptVersionRow[];
     activations: PromptActivationRow[];
     produced: PromptProducedRow[];
@@ -189,11 +130,10 @@ export const promptDossier = createServerFn({ method: "GET" })
 
     const { data: prompt } = await admin
       .from("prompts")
-      .select("id, name, step_code, etape, role_code, model, active_version_id, frozen_at")
+      .select("id, name, step_code, active_version_id")
       .eq("id", data.promptId)
       .maybeSingle();
     if (!prompt) return { prompt: null, versions: [], activations: [], produced: [] };
-
 
     const [{ data: tpl }, { data: versions }, { data: activations }] = await Promise.all([
       admin.from("step_templates").select("label_fr").eq("code", prompt.step_code).maybeSingle(),
@@ -239,32 +179,14 @@ export const promptDossier = createServerFn({ method: "GET" })
       });
     }
 
-    // Ce qui rattache ce prompt à l'histoire de l'atelier : livrables produits,
-    // rapports de contrôle qui le citent, livres qui le désignent.
-    const [{ count: qcCount }, { count: bookCount }] = await Promise.all([
-      versionIds.length
-        ? admin
-            .from("qc_reports")
-            .select("id", { count: "exact", head: true })
-            .in("regles_prompt_version_id", versionIds)
-        : Promise.resolve({ count: 0 }),
-      admin.from("books").select("id", { count: "exact", head: true }).eq("prompt_id", prompt.id),
-    ]);
-
     return {
       prompt: {
         id: prompt.id,
         name: prompt.name,
         stepCode: prompt.step_code,
         stepLabelFr: tpl?.label_fr ?? prompt.step_code,
-        etape: prompt.etape,
-        roleCode: prompt.role_code,
-        model: prompt.model,
         activeVersionId: prompt.active_version_id ?? null,
-        frozenAt: prompt.frozen_at ?? null,
-        usageCount: produced.length + (qcCount ?? 0) + (bookCount ?? 0),
       },
-
       versions: (versions ?? []).map((v) => ({
         id: v.id,
         version: v.version,
@@ -286,18 +208,11 @@ export const createPrompt = createServerFn({ method: "POST" })
   .inputValidator((data) =>
     z
       .object({
-        etape: z.enum(["plan", "recit", "vocabulaire", "hebreu", "assemblage"]),
-        roleCode: z.enum([
-          "methode",
-          "methode_controle",
-          "regles_controle",
-          "redaction_corrective",
-          "redaction_initiale",
-        ]),
+        stepCode: z.string().min(1),
         name: z.string().trim().min(1),
         collectionId: z.string().uuid().nullable().optional(),
         content: z.string().trim().min(1),
-        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE, MODELE_GEMINI_GOOGLE]).optional(),
+        model: z.string().trim().min(1).nullable().optional(),
         webSearch: z.boolean().optional(),
       })
       .parse(data),
@@ -306,17 +221,22 @@ export const createPrompt = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
-    const stepCode = STEP_CODE_PAR_ETAPE[data.etape] ?? "plan";
+    // L'étape ne vient jamais de la saisie : elle doit être une étape 'llm'.
+    const { data: tpl } = await admin
+      .from("step_templates")
+      .select("code, species")
+      .eq("code", data.stepCode)
+      .maybeSingle();
+    if (!tpl || tpl.species !== "llm") throw new Error("L’étape choisie ne peut pas recevoir de prompt.");
 
-    // Code unique, dérivé du couple étape × rôle.
-    const base = `${data.etape}-${data.roleCode}`;
-    const { data: siblings } = await admin.from("prompts").select("code").like("code", `${base}%`);
-    let code = base;
+    // Code unique, dérivé de l'étape.
+    const { data: siblings } = await admin.from("prompts").select("code").like("code", `${tpl.code}%`);
+    let code = tpl.code;
     let n = 1;
     const taken = new Set((siblings ?? []).map((s) => s.code));
     while (taken.has(code)) {
       n += 1;
-      code = `${base}-${n}`;
+      code = `${tpl.code}-${n}`;
     }
 
     const { data: prompt, error } = await admin
@@ -324,20 +244,17 @@ export const createPrompt = createServerFn({ method: "POST" })
       .insert({
         code,
         name: data.name,
-        step_code: stepCode,
-        etape: data.etape,
-        role_code: data.roleCode,
-        model: data.model ?? MODELE_GEMINI,
+        step_code: tpl.code,
         collection_id: data.collectionId ?? null,
         is_active: true,
       })
       .select("id")
       .single();
     if (error || !prompt) {
-      // La base n'admet qu'un seul prompt actif par couple étape × rôle.
-      if (error?.code === "23505" && (error.message ?? "").includes("prompts_actif")) {
+      // La base n'admet qu'un seul prompt actif par étape (hors collection).
+      if (error?.code === "23505" && (error.message ?? "").includes("prompts_actif_global")) {
         throw new Error(
-          "Un prompt actif existe déjà pour ce couple Étape × Rôle. Ouvre-le et publie une nouvelle version plutôt que d'en créer un second.",
+          "Un prompt actif existe déjà pour cette étape. Ouvre-le et publie une nouvelle version plutôt que d'en créer un second.",
         );
       }
       throw new Error("L’enregistrement du prompt a été refusé par le serveur.");
@@ -463,73 +380,4 @@ export const activatePromptVersion = createServerFn({ method: "POST" })
     });
 
     return { version: version.version };
-  });
-
-/**
- * FIGER — le prompt sort de la bibliothèque active. Rien n'est effacé : ses
- * versions et son historique restent en base, et l'étape est de nouveau libre
- * pour un prompt de remplacement. Réversible.
- */
-export const freezePrompt = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ promptId: z.string().uuid(), frozen: z.boolean() }).parse(data))
-  .handler(async ({ context, data }): Promise<{ frozen: boolean }> => {
-    const editor = await assertEditor(context.supabase, context.userId);
-    const admin = await getAdminClient(editor);
-
-    const { error } = await admin
-      .from("prompts")
-      .update({ frozen_at: data.frozen ? new Date().toISOString() : null })
-      .eq("id", data.promptId);
-    if (error)
-      throw new Error(
-        texteErreurBase(
-          data.frozen ? "Le prompt n’a pas pu être figé" : "Le prompt n’a pas pu être remis en service",
-          error,
-        ),
-      );
-    return { frozen: data.frozen };
-  });
-
-/**
- * SUPPRIMER — effacement réel, réservé aux prompts qui n'ont rien produit et
- * que rien ne cite. Le refus vient de la base elle-même : la fonction
- * `supprimer_prompt` recompte les liens avant d'agir et journalise chaque
- * ligne effacée dans maintenance_log.
- */
-export const deletePrompt = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
-  .handler(async ({ context, data }): Promise<{ versionsSupprimees: number }> => {
-    const editor = await assertEditor(context.supabase, context.userId);
-    const admin = await getAdminClient(editor);
-
-    const { data: count, error } = await admin.rpc("supprimer_prompt", { p_prompt_id: data.promptId });
-    if (error) throw new Error(texteErreurBase("La suppression du prompt a été refusée", error));
-    return { versionsSupprimees: (count as number) ?? 0 };
-  });
-
-/**
- * LE MODÈLE, CHANGÉ SUR LA CARTE — sans nouvelle version.
- *
- * Le modèle n'est pas du contenu : il ne s'écrit jamais dans le texte du prompt
- * et ne justifie pas une re-publication. Il se change ici, sur la carte, et
- * l'exécution le relit à chaque appel. Deux valeurs possibles, pas une de plus.
- */
-export const setPromptModel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
-    z
-      .object({
-        promptId: z.string().uuid(),
-        model: z.enum([MODELE_GEMINI, MODELE_CLAUDE, MODELE_GEMINI_GOOGLE]),
-      })
-      .parse(data),
-  )
-  .handler(async ({ context, data }): Promise<{ model: string }> => {
-    const editor = await assertEditor(context.supabase, context.userId);
-    const admin = await getAdminClient(editor);
-    const { error } = await admin.from("prompts").update({ model: data.model }).eq("id", data.promptId);
-    if (error) throw new Error(texteErreurBase("Le modèle n’a pas pu être changé", error));
-    return { model: data.model };
   });

@@ -5,7 +5,7 @@
  * `appelerModele`. Trois familles acceptées aujourd'hui :
  *
  *   claude-…            → Anthropic          (secret ANTHROPIC_API_KEY)
- *   gemini-…            → Google AI Studio   (secret GOOGLE_AI_API_KEY)
+ *   gemini-…            → Google AI Studio   (secret GEMINI_API_KEY)
  *   google/gemini-…     → passerelle Lovable (clé LOVABLE_API_KEY, déjà là)
  *
  * La recherche en ligne n'est activée que si la version de prompt la demande,
@@ -15,9 +15,6 @@
  * fonction, jamais au chargement du module, jamais renvoyée à l'écran.
  * Ni le contenu envoyé ni la réponse reçue ne sont journalisés.
  */
-
-/** Le seul nom de modèle envoyé à l’API Google directe. */
-const MODELE_GOOGLE_DIRECT = "gemini-3.7-flash";
 
 export type Fournisseur = "anthropic" | "google" | "lovable";
 
@@ -92,7 +89,7 @@ export function secretDuModele(model: string): string | null {
     case "anthropic":
       return "ANTHROPIC_API_KEY";
     case "google":
-      return "GOOGLE_AI_API_KEY";
+      return "GEMINI_API_KEY";
     case "lovable":
       return "LOVABLE_API_KEY";
     default:
@@ -317,11 +314,9 @@ async function appelGoogle(
   system: string,
   user: string,
 ): Promise<AppelResultat> {
-  const key = process.env["GOOGLE_AI_API_KEY"];
-  if (!key) throw new Error("La clé GOOGLE_AI_API_KEY n'est pas configurée.");
-  // Modèle ÉPINGLÉ côté serveur : jamais « le dernier Gemini » choisi par Google.
-  const modelePin = MODELE_GOOGLE_DIRECT;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelePin)}:generateContent`;
+  const key = process.env["GEMINI_API_KEY"];
+  if (!key) throw new Error("La clé GEMINI_API_KEY n'est pas configurée.");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const t0 = Date.now();
   const signal = AbortSignal.timeout(MODEL_TOTAL_TIMEOUT_MS);
   let res: Response;
@@ -356,7 +351,7 @@ async function appelGoogle(
     .trim();
   return {
     text,
-    modelUsed: json.modelVersion ?? modelePin,
+    modelUsed: json.modelVersion ?? model,
     costUsd: null,
     outputTokens: json.usageMetadata?.candidatesTokenCount ?? null,
     inputTokens: json.usageMetadata?.promptTokenCount ?? null,

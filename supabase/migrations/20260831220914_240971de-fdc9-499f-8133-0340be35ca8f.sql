@@ -1,2 +1,0 @@
-ALTER TABLE public.artifacts DROP CONSTRAINT artifacts_type_check;
-ALTER TABLE public.artifacts ADD CONSTRAINT artifacts_type_check CHECK (type = ANY (ARRAY['plan'::text, 'chapitre'::text, 'rapport_controle'::text, 'recit_txt'::text, 'master_he'::text, 'ktiv_male'::text, 'delta_lexical'::text, 'glossaire'::text, 'quiz'::text, 'pdf_interieur'::text, 'pdf_couverture'::text, 'paquet_kdp'::text, 'audio'::text, 'autre'::text]));
