@@ -44,11 +44,8 @@ export const adminSignIn = createServerFn({ method: "POST" })
      * doit continuer et la panne être écrite dans le journal — jamais déguisée
      * en « identifiant incorrect ».
      */
-    let registre: Awaited<
-      ReturnType<typeof import("@/integrations/supabase/client.server")["supabaseAdmin"]["from"]>
-    > extends never
-      ? never
-      : typeof import("@/integrations/supabase/client.server")["supabaseAdmin"] | null = null;
+    type Registre = typeof import("@/integrations/supabase/client.server").supabaseAdmin;
+    let registre: Registre | null = null;
     try {
       registre = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
     } catch (e) {
