@@ -245,6 +245,10 @@ export const createPrompt = createServerFn({ method: "POST" })
         code,
         name: data.name,
         step_code: tpl.code,
+        // L'étape et le rôle sont obligatoires en base : ils découlent de l'étape
+        // choisie, jamais de la saisie. Le rôle reprend le code, unique par nature.
+        etape: tpl.code,
+        role_code: code,
         collection_id: data.collectionId ?? null,
         is_active: true,
       })

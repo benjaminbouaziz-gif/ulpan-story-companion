@@ -159,7 +159,9 @@ const fr = {
   "atelier.email": "Adresse email",
   "atelier.password": "Mot de passe",
   "atelier.submit": "Entrer",
-  "atelier.signInError": "Identifiants incorrects.",
+  "atelier.signInError": "Adresse ou mot de passe incorrect.",
+  "atelier.signInBroken":
+    "La connexion n'a pas pu aboutir : panne technique du serveur, pas vos identifiants.",
   "atelier.tooManyAttempts": "Trop de tentatives. Réessayez dans quinze minutes.",
   "atelier.signOut": "Se déconnecter",
   "atelier.forbidden": "Accès réservé.",
@@ -617,7 +619,9 @@ const en: Record<DictKey, string> = {
   "atelier.email": "Email address",
   "atelier.password": "Password",
   "atelier.submit": "Enter",
-  "atelier.signInError": "Incorrect credentials.",
+  "atelier.signInError": "Incorrect email or password.",
+  "atelier.signInBroken":
+    "Sign-in could not complete: a technical server failure, not your credentials.",
   "atelier.tooManyAttempts": "Too many attempts. Try again in fifteen minutes.",
   "atelier.signOut": "Sign out",
   "atelier.forbidden": "Restricted access.",

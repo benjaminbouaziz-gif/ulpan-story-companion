@@ -32,47 +32,92 @@ function callerIp() {
 export const adminSignIn = createServerFn({ method: "POST" })
   .inputValidator((data) => input.parse(data))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.trim().toLowerCase();
     const emailHash = fingerprint(email);
     const ip = callerIp();
     const ipHash = ip ? fingerprint(ip) : null;
     const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
 
+    /**
+     * Le registre des tentatives est un GARDE-FOU, pas la porte elle-même :
+     * s'il tombe en panne (clé serveur absente, droits manquants), la connexion
+     * doit continuer et la panne être écrite dans le journal — jamais déguisée
+     * en « identifiant incorrect ».
+     */
+    type Registre = typeof import("@/integrations/supabase/client.server").supabaseAdmin;
+    let registre: Registre | null = null;
+    try {
+      registre = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    } catch (e) {
+      console.error("[atelier/connexion] registre des tentatives indisponible", e);
+    }
+
     const countFailures = async (column: "email_hash" | "ip_hash", value: string) => {
-      const { count } = await supabaseAdmin
+      if (!registre) return 0;
+      const { count, error } = await registre
         .from("admin_login_attempts")
         .select("id", { count: "exact", head: true })
         .eq(column, value)
         .gte("created_at", since);
+      if (error) {
+        console.error("[atelier/connexion] lecture du registre impossible", error);
+        return 0;
+      }
       return count ?? 0;
     };
 
-    const tooMany =
-      (await countFailures("email_hash", emailHash)) >= MAX_FAILURES ||
-      (ipHash ? (await countFailures("ip_hash", ipHash)) >= MAX_FAILURES : false);
-    if (tooMany) return { ok: false as const, reason: "throttled" as const };
+    try {
+      const tooMany =
+        (await countFailures("email_hash", emailHash)) >= MAX_FAILURES ||
+        (ipHash ? (await countFailures("ip_hash", ipHash)) >= MAX_FAILURES : false);
+      if (tooMany) return { ok: false as const, reason: "throttled" as const };
+    } catch (e) {
+      console.error("[atelier/connexion] comptage des échecs impossible", e);
+    }
 
-    const client = createClient(
-      process.env["SUPABASE_URL"]!,
-      process.env["SUPABASE_PUBLISHABLE_KEY"]!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
-    const { data: signIn, error } = await client.auth.signInWithPassword({
-      email,
-      password: data.password,
-    });
+    const url = process.env["SUPABASE_URL"];
+    const publishable = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    if (!url || !publishable) {
+      console.error(
+        "[atelier/connexion] variables serveur manquantes : " +
+          [!url ? "SUPABASE_URL" : null, !publishable ? "SUPABASE_PUBLISHABLE_KEY" : null]
+            .filter(Boolean)
+            .join(", "),
+      );
+      return { ok: false as const, reason: "interne" as const };
+    }
 
-    if (error || !signIn.session) {
-      await supabaseAdmin
-        .from("admin_login_attempts")
-        .insert({ email_hash: emailHash, ip_hash: ipHash });
+    let signIn: Awaited<ReturnType<ReturnType<typeof createClient>["auth"]["signInWithPassword"]>>;
+    try {
+      const client = createClient(url, publishable, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      signIn = await client.auth.signInWithPassword({ email, password: data.password });
+    } catch (e) {
+      console.error("[atelier/connexion] appel d'authentification en échec", e);
+      return { ok: false as const, reason: "interne" as const };
+    }
+
+    if (signIn.error || !signIn.data.session) {
+      // Le registre ne doit jamais faire échouer la réponse : s'il tombe, on
+      // l'écrit dans le journal et la réponse reste « identifiants refusés ».
+      try {
+        if (registre) {
+          const { error } = await registre
+            .from("admin_login_attempts")
+            .insert({ email_hash: emailHash, ip_hash: ipHash });
+          if (error) console.error("[atelier/connexion] écriture du registre impossible", error);
+        }
+      } catch (e) {
+        console.error("[atelier/connexion] écriture du registre impossible", e);
+      }
       return { ok: false as const, reason: "refused" as const };
     }
 
     return {
       ok: true as const,
-      access_token: signIn.session.access_token,
-      refresh_token: signIn.session.refresh_token,
+      access_token: signIn.data.session.access_token,
+      refresh_token: signIn.data.session.refresh_token,
     };
   });
+
