@@ -457,8 +457,40 @@ const fr = {
   "companion.loading": "Ouverture…",
   "companion.words": "mots",
 
-
+  // Le contrôle du plan : une progression simple, sans technique.
+  "atelier.pc.title": "Vérification du plan",
+  "atelier.pc.phase.attente_plan": "Plan à générer",
+  "atelier.pc.phase.verification": "Vérification",
+  "atelier.pc.phase.corrections": "Corrections ciblées en cours",
+  "atelier.pc.phase.verification_finale": "Vérification finale",
+  "atelier.pc.phase.validation_requise": "Votre validation est requise",
+  "atelier.pc.phase.arbitrage_requis": "Arbitrage requis",
+  "atelier.pc.planGenerated": "Plan généré",
+  "atelier.pc.currentPlan": "Plan courant",
+  "atelier.pc.version": "version",
+  "atelier.pc.blocking": "écarts bloquants",
+  "atelier.pc.warnings": "signalements",
+  "atelier.pc.criteria": "critères tenus",
+  "atelier.pc.round": "Contrôle",
+  "atelier.pc.start": "Vérifier ce plan",
+  "atelier.pc.running": "Vérification en cours… l'écran se met à jour tout seul.",
+  "atelier.pc.rewriting": "Corrections ciblées en cours… l'écran se met à jour tout seul.",
+  "atelier.pc.compare": "Comparaison du plan précédent et du plan corrigé",
+  "atelier.pc.chapter": "Chapitre",
+  "atelier.pc.state.identique": "inchangé",
+  "atelier.pc.state.modifie": "modifié",
+  "atelier.pc.state.ajoute": "ajouté",
+  "atelier.pc.state.retire": "retiré",
+  "atelier.pc.pages": "pages",
+  "atelier.pc.noBlocking": "Aucun écart bloquant : le plan vous revient.",
+  "atelier.pc.details": "Voir le détail des critères",
+  "atelier.pc.hideDetails": "Masquer le détail des critères",
+  "atelier.pc.measured": "mesuré par le code",
+  "atelier.pc.judged": "jugé par le contrôleur",
+  "atelier.pc.ok": "tenu",
+  "atelier.pc.failed": "non tenu",
 } as const;
+
 
 export type DictKey = keyof typeof fr;
 
@@ -917,8 +949,39 @@ const en: Record<DictKey, string> = {
   "companion.loading": "Opening…",
   "companion.words": "words",
 
-
+  "atelier.pc.title": "Plan check",
+  "atelier.pc.phase.attente_plan": "Plan to be generated",
+  "atelier.pc.phase.verification": "Checking",
+  "atelier.pc.phase.corrections": "Targeted corrections under way",
+  "atelier.pc.phase.verification_finale": "Final check",
+  "atelier.pc.phase.validation_requise": "Your approval is required",
+  "atelier.pc.phase.arbitrage_requis": "Your decision is required",
+  "atelier.pc.planGenerated": "Plan generated",
+  "atelier.pc.currentPlan": "Current plan",
+  "atelier.pc.version": "version",
+  "atelier.pc.blocking": "blocking gaps",
+  "atelier.pc.warnings": "flags",
+  "atelier.pc.criteria": "criteria met",
+  "atelier.pc.round": "Check",
+  "atelier.pc.start": "Check this plan",
+  "atelier.pc.running": "Check under way… the screen updates on its own.",
+  "atelier.pc.rewriting": "Targeted corrections under way… the screen updates on its own.",
+  "atelier.pc.compare": "Previous plan compared with the corrected plan",
+  "atelier.pc.chapter": "Chapter",
+  "atelier.pc.state.identique": "unchanged",
+  "atelier.pc.state.modifie": "changed",
+  "atelier.pc.state.ajoute": "added",
+  "atelier.pc.state.retire": "removed",
+  "atelier.pc.pages": "pages",
+  "atelier.pc.noBlocking": "No blocking gap: the plan is back with you.",
+  "atelier.pc.details": "Show each criterion",
+  "atelier.pc.hideDetails": "Hide each criterion",
+  "atelier.pc.measured": "measured by the code",
+  "atelier.pc.judged": "judged by the controller",
+  "atelier.pc.ok": "met",
+  "atelier.pc.failed": "not met",
 };
+
 
 export const dictionaries: Record<Lang, Record<DictKey, string>> = { fr, en };
 
