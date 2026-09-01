@@ -1,65 +1,40 @@
-# Audit page par page — état d'avancement du site Ulpan Story
+# Connexion à l'atelier : « Identifiant incorrect »
 
-Date : 26 août 2026. Site non publié (préproduction uniquement).
+## Ce que disent les vérifications
 
-## Vue d'ensemble
+- Votre compte existe, est confirmé, a bien un mot de passe, et porte le rôle `admin`. Rien n'est bloqué ni banni.
+- La dernière connexion réussie enregistrée date du 31 août à 14 h 31.
+- Le registre des tentatives ratées (`admin_login_attempts`) est **entièrement vide** : zéro ligne, jamais.
 
-| Domaine | État |
-| --- | --- |
-| Identité visuelle, typographie hébraïque, bilingue FR/EN | En place |
-| Double page du livre (format A5 fidèle, 4 étapes) | En place |
-| Page méthode pilotée par la base | En place (français) |
-| Catalogue (collections, fiche livre) | En place, un seul tome |
-| Parcours QR → email → code d'accès | En place, jamais testé par un vrai lecteur |
-| Espace lecteur (glossaire, quiz) | En place ; audio et conversation absents |
-| Boutique / achat | Non commencé |
-| Pages légales | Coquilles vides |
-| Version anglaise publique | Non rédigée |
+C'est le point important. Le code n'affiche « identifiant incorrect » qu'après avoir écrit une ligne de tentative ratée. Le registre vide veut dire que, très probablement, la fonction de connexion **plante avant** d'arriver au test du mot de passe : l'écran affiche alors le même message générique, alors que vos identifiants ne sont pas en cause. Cause exacte non encore confirmée — c'est la première étape ci-dessous.
 
-## Page par page
+## Étape 1 — Faire parler l'erreur (avant toute correction)
 
-**Accueil `/`** — Fait. Promesse, double page de démonstration, accès aux collections. Manque : lien d'achat.
+- Appeler la fonction de connexion telle quelle avec une adresse bidon et lire la réponse réelle du serveur + les journaux serveur.
+- Cela tranche entre trois hypothèses : (a) la fonction lève une exception (clé serveur, client Supabase, écriture du registre), (b) le mot de passe est réellement refusé, (c) le compteur d'échecs bloque.
 
-**La méthode `/methode`** — Fait et alimenté par la base : 10 sections, dont la double page réelle du chapitre 1, le bloc de chiffres et « Nos choix d'éditeur » (français seulement). Décision actée : cette page ne se traduit jamais automatiquement, elle se rédige à la main dans chaque langue. Version anglaise : à rédiger (0 section anglaise).
+## Étape 2 — Corriger la cause trouvée
 
-**Les collections `/collections`** — Fait. Une seule collection, « Héros d'Israël ».
+Selon le résultat :
+- Si la fonction plante : réparer le point fautif (création du client de connexion, ou écriture du registre dont l'erreur est aujourd'hui ignorée).
+- Si le mot de passe est réellement refusé : le réinitialiser pour votre compte.
 
-**Fiche collection `/collections/:slug`** — Fait : présentation, pour qui, liste des tomes avec couverture.
+## Étape 3 — Que l'écran cesse de mentir
 
-**Fiche livre `/livres/:slug`** — Fait : couverture, titre, blurb, ce qu'on apprend, chiffres, double page. Manque : bouton d'achat (aucun lien Amazon en base), extrait PDF.
+Aujourd'hui, trois situations très différentes affichent le même texte :
+- adresse ou mot de passe faux ;
+- panne interne de la fonction de connexion ;
+- exception réseau côté navigateur.
 
-**Double page du livre** (utilisée sur `/methode` et la fiche livre) — Fait, c'est la pièce la plus avancée : format A5 réel, marges réelles, alignement des lignes de base d'une page à l'autre, quatre étapes (traduction, trous, clés, sans nekoudot), glossaire de fin de livre, lecture séquentielle sur téléphone, zoom. Contenu réel : chapitre 1 saisi (19 blocs, 5 clés, 10 entrées de glossaire) ; les autres chapitres restent à saisir.
+Distinguer proprement :
+- identifiants faux → « Adresse ou mot de passe incorrect » (volontairement identique dans les deux cas, pour ne pas révéler l'existence d'un compte) ;
+- panne interne → « La connexion n'a pas pu aboutir (erreur technique) » ;
+- trop de tentatives → message dédié, déjà existant.
 
-**Accès par QR `/b/:qr_code`** — Fait techniquement : la page reconnaît le code du livre et recueille l'email.
+Et ne plus ignorer l'erreur d'écriture du registre des tentatives : si elle échoue, elle doit être visible dans les journaux serveur.
 
-**Activation `/activation`** — Fait : double opt-in, lien magique et code à 6 chiffres, emails envoyés depuis notify.ulpanstory.com avec la charte maison. À éprouver en conditions réelles (0 inscription enregistrée à ce jour).
+## Détails techniques
 
-**Connexion `/connexion`** — Coquille : affiche « bientôt ». La connexion passe aujourd'hui par `/activation`. À trancher : garder une page dédiée ou rediriger.
-
-**Espace lecteur `/compagnon`** — Fait : liste des livres débloqués, invite à s'identifier sinon.
-
-**Compagnon d'un livre `/compagnon/:book_slug`** — Partiellement fait : glossaire du livre et quiz interactif (10 questions saisies, correction immédiate, progression enregistrée). Audio annoncé mais aucune piste en base ; conversation en hébreu non commencée.
-
-**Contact `/contact`** — Adresse email seulement, pas de texte ni de formulaire.
-
-**Confidentialité `/confidentialite`** — Vide (texte juridique à écrire).
-
-**Mentions légales `/mentions-legales`** — Vide (éditeur, hébergeur, SIRET à écrire).
-
-**Administration `/admin`** — Trois outils en place : double page de démonstration (`/admin/extraits`), pages éditoriales avec versions, traduction assistée et choix de langue par section (`/admin/pages`), chiffres des livres avec avertissement de recalcul (`/admin/chiffres`). Manquent : saisie des pages du livre (blocs et clés) avec le validateur de parité, gestion du glossaire et des quiz, réserve de QR codes.
-
-## Points d'attention à remonter
-
-1. **Aucun compte administrateur n'est encore attribué** : la table des rôles est vide, donc l'administration est inaccessible tant qu'un compte n'est pas nommé éditeur.
-2. **Aucun lien d'achat** en base : le site présente les livres mais ne permet pas de les acheter.
-3. **Pages légales vides** : bloquant pour une mise en ligne publique (obligation légale + collecte d'emails).
-4. **Version anglaise non rédigée** : 9 sections sur 10 attendent leur texte anglais, écrit à la main par choix éditorial.
-5. **Contenu du livre** : un seul chapitre saisi sur les quatre étapes ; il faut l'outil de saisie avant d'industrialiser.
-
-## Prochaines étapes proposées, dans l'ordre
-
-1. Nommer un compte éditeur et rédiger les trois pages légales.
-2. Éditeur d'administration des pages du livre (blocs, clés, validateur de parité) — condition pour saisir les chapitres suivants.
-3. Achat : liens Amazon par tome et extrait PDF.
-4. Audio du compagnon, puis conversation en hébreu.
-5. Rédaction de la méthode anglaise et bascule du site .com.
+- `src/lib/admin-auth.functions.ts` : l'insertion dans `admin_login_attempts` n'est pas vérifiée (`error` ignoré) ; ajouter le contrôle et la journalisation. Séparer le retour `refused` d'un nouveau retour `erreur_interne` au lieu de laisser l'exception remonter en message générique.
+- `src/routes/atelier_.connexion.tsx` : afficher les trois messages distincts selon `result.reason`, et un message technique dans le `catch`.
+- Aucun changement de schéma prévu, sauf si l'étape 1 révèle un problème de droits sur `admin_login_attempts`.
