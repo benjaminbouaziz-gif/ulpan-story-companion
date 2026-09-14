@@ -308,7 +308,7 @@ export function LecteurLivre({ pages, requestAudioUrl }: Props) {
               aria-pressed={Math.abs(speed - v) < 0.001}
               onClick={() => changeSpeed(v)}
             >
-              {formatSpeed(v)}
+              <span className="tabular-nums">{v.toFixed(2).replace(".", ",")}</span>
             </button>
           ))}
         </div>
