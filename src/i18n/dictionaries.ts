@@ -657,7 +657,8 @@ const fr = {
   // Salle Site : sommaire et trois outils
   "atelier.site.summary": "Le contenu du site",
   "atelier.site.pages.desc": "Les textes des pages publiques, section par section.",
-  "atelier.site.excerpt.desc": "Le texte de démonstration montré aux visiteurs, paragraphe par paragraphe.",
+  "atelier.site.excerpt.desc":
+    "Le texte de démonstration montré aux visiteurs, paragraphe par paragraphe.",
   "atelier.site.excerpt.warning":
     "Cette démonstration est le texte montré aux visiteurs du site. Ce n\u2019est pas une page du livre.",
   "atelier.site.figures.desc": "Les chiffres annoncés pour chaque tome.",
