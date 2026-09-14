@@ -21,7 +21,7 @@ const KINDS: { value: SupportKind; label: string }[] = [
   { value: "nikud", label: "Hébreu vocalisé" },
 ];
 
-export const Route = createFileRoute("/admin/extraits")({
+export const Route = createFileRoute("/atelier/site/extraits")({
   head: () => ({
     meta: [
       { title: "Double page de démonstration — Administration" },

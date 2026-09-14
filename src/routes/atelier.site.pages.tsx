@@ -32,7 +32,7 @@ function Badge({ state }: { state: string | undefined }) {
 }
 
 
-export const Route = createFileRoute("/admin/pages")({
+export const Route = createFileRoute("/atelier/site/pages")({
   head: () => ({
     meta: [
       { title: "Pages éditoriales — Administration" },

@@ -11,7 +11,7 @@ import {
   adminTranslateBook,
 } from "@/lib/admin-books.functions";
 
-export const Route = createFileRoute("/admin/chiffres")({
+export const Route = createFileRoute("/atelier/site/chiffres")({
   head: () => ({
     meta: [
       { title: "Chiffres des livres — Administration" },
