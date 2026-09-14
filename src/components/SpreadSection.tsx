@@ -9,10 +9,6 @@ import { ExtraitLecture } from "./ExtraitLecture";
  */
 export function SpreadSection({
   paragraphs,
-  color = null,
-  runningHead,
-  chapter,
-  folio = 42,
   claim,
   note,
 }: {

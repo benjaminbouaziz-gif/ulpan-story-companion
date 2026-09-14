@@ -1425,6 +1425,8 @@ const en: Record<DictKey, string> = {
   "atelier.site.excerpt.supportEn": "Support EN",
   "atelier.site.excerpt.choose": "Choose a paragraph to edit it.",
   "atelier.site.excerpt.preview": "Preview of the spread",
+  "atelier.site.excerpt.paperPreview": "Print preview",
+  "atelier.site.excerpt.sitePreview": "Site preview",
   "atelier.site.excerpt.saveError": "Could not save.",
 
   "atelier.site.figures.note":
