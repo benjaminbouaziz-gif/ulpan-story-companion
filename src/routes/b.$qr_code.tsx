@@ -27,8 +27,7 @@ export const Route = createFileRoute("/b/$qr_code")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(qrQuery(params.qr_code)),
+  loader: ({ context, params }) => context.queryClient.ensureQueryData(qrQuery(params.qr_code)),
   component: QrEntry,
   errorComponent: () => (
     <PageShell>
@@ -51,19 +50,14 @@ function QrEntry() {
       {book ? (
         <section className="border-line mt-2 border-b pb-6">
           <p className="label text-secondary-text">{t("access.yourBook")}</p>
-          <h1 className="mt-2 text-[28px]">
-            {pickLang(lang, book.title_fr, book.title_en) ?? ""}
-          </h1>
+          <h1 className="mt-2 text-[28px]">{pickLang(lang, book.title_fr, book.title_en) ?? ""}</h1>
           {pickLang(lang, book.subtitle_fr, book.subtitle_en) ? (
             <p className="body-text text-secondary-text mt-2">
               {pickLang(lang, book.subtitle_fr, book.subtitle_en)}
             </p>
           ) : null}
           {data.collection ? (
-            <p
-              className="label mt-3"
-              style={{ color: data.collection.color_hex }}
-            >
+            <p className="label mt-3" style={{ color: data.collection.color_hex }}>
               {pickLang(lang, data.collection.name_fr, data.collection.name_en) ?? ""}
               {book.tome_no ? ` · ${t("books.volume")} ${book.tome_no}` : ""}
             </p>

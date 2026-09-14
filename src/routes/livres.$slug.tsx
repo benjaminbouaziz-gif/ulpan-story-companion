@@ -74,8 +74,11 @@ function BookPage() {
         {t("books.volume")} {book.tome_no}
       </p>
       <h1 className="mt-1 text-[30px]">{pickLang(lang, book.title_fr, book.title_en)}</h1>
-      {book.title_he ? <HebrewText className="mt-3" size="lg">{book.title_he}</HebrewText> : null}
-
+      {book.title_he ? (
+        <HebrewText className="mt-3" size="lg">
+          {book.title_he}
+        </HebrewText>
+      ) : null}
 
       {collection ? (
         <div className="mt-5">
@@ -101,7 +104,6 @@ function BookPage() {
           <SpreadSection paragraphs={data.paragraphs} />
         )}
       </section>
-
 
       {learnList.length > 0 ? (
         <section className="border-line mt-8 border-t pt-6">

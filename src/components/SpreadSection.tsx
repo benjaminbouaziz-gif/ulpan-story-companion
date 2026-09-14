@@ -26,9 +26,7 @@ export function SpreadSection({
   return (
     <section className="mt-8">
       {claimText ? (
-        <p style={{ fontSize: "calc(19px * var(--text-scale))", lineHeight: 1.55 }}>
-          {claimText}
-        </p>
+        <p style={{ fontSize: "calc(19px * var(--text-scale))", lineHeight: 1.55 }}>{claimText}</p>
       ) : null}
 
       <div className="mt-8">

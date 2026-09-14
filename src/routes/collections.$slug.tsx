@@ -22,7 +22,8 @@ export const Route = createFileRoute("/collections/$slug")({
       },
     ],
   }),
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(collectionQuery(params.slug)),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(collectionQuery(params.slug)),
   component: CollectionPage,
 });
 
@@ -82,7 +83,11 @@ function CollectionPage() {
           <ul className="mt-4 flex flex-col gap-3">
             {data.books.map((b) => (
               <li key={b.id} className="border-line border p-4">
-                <Link to="/livres/$slug" params={{ slug: b.slug }} className="flex items-start gap-4">
+                <Link
+                  to="/livres/$slug"
+                  params={{ slug: b.slug }}
+                  className="flex items-start gap-4"
+                >
                   {b.cover_url ? (
                     <img
                       src={b.cover_url}
@@ -99,7 +104,6 @@ function CollectionPage() {
                     {b.title_he ? <HebrewText className="mt-2">{b.title_he}</HebrewText> : null}
                   </span>
                 </Link>
-
               </li>
             ))}
           </ul>
