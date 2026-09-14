@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/SiteChrome";
 import { useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
+import { bySlot, Copy } from "@/components/SiteCopy";
 import { listMyBooks } from "@/lib/companion.functions";
+import { pageQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/compagnon/")({
   head: () => ({
@@ -23,11 +25,13 @@ export const Route = createFileRoute("/compagnon/")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("compagnon")),
   component: CompanionHome,
 });
 
 function CompanionHome() {
   const { t } = useI18n();
+  const { data: pageData } = useSuspenseQuery(pageQuery("compagnon"));
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const fetchBooks = useServerFn(listMyBooks);
 
@@ -53,11 +57,10 @@ function CompanionHome() {
 
       {signedIn === false ? (
         <>
-          <p className="body-text mt-4">{t("companion.signedOut")}</p>
-          <Link
-            to="/activation"
-            className="label touch mt-6 inline-flex border-b border-current"
-          >
+          <div className="mt-4">
+            <Copy sections={bySlot(pageData.sections, "hors-session")} />
+          </div>
+          <Link to="/activation" className="label touch mt-6 inline-flex border-b border-current">
             {t("companion.signIn")}
           </Link>
         </>

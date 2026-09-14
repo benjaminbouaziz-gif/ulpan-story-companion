@@ -3,7 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { pickLang, useI18n } from "@/i18n/context";
-import { collectionsQuery } from "@/lib/queries";
+import { Copy } from "@/components/SiteCopy";
+import { collectionsQuery, pageQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/collections/")({
   head: () => ({
@@ -21,17 +22,28 @@ export const Route = createFileRoute("/collections/")({
       },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(collectionsQuery),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(collectionsQuery),
+      context.queryClient.ensureQueryData(pageQuery("collections")),
+    ]);
+  },
   component: CollectionsPage,
 });
 
 function CollectionsPage() {
   const { t, lang } = useI18n();
   const { data } = useSuspenseQuery(collectionsQuery);
+  const { data: pageData } = useSuspenseQuery(pageQuery("collections"));
 
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("nav.collections")}</h1>
+      {pageData.sections.length > 0 ? (
+        <div className="mt-6">
+          <Copy sections={pageData.sections} />
+        </div>
+      ) : null}
       {data.collections.length === 0 ? (
         <p className="body-text text-secondary-text mt-6">{t("collections.empty")}</p>
       ) : (

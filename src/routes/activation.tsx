@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/SiteChrome";
 import { QR_KEY } from "@/components/AccessForm";
 import { useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
+import { Copy } from "@/components/SiteCopy";
 import { confirmAccess } from "@/lib/access.functions";
+import { pageQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/activation")({
   head: () => ({
@@ -22,11 +24,13 @@ export const Route = createFileRoute("/activation")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("activation")),
   component: ActivationPage,
 });
 
 function ActivationPage() {
   const { t } = useI18n();
+  const { data: pageData } = useSuspenseQuery(pageQuery("activation"));
   const navigate = useNavigate();
   const confirm = useServerFn(confirmAccess);
   const [state, setState] = useState<"idle" | "opening" | "done">("idle");
@@ -67,7 +71,6 @@ function ActivationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
   const codeMutation = useMutation({
     mutationFn: async () => {
       setError(null);
@@ -85,7 +88,9 @@ function ActivationPage() {
   if (state !== "idle") {
     return (
       <PageShell>
-        <p className="body-text">{state === "opening" ? t("access.opening") : t("access.opened")}</p>
+        <p className="body-text">
+          {state === "opening" ? t("access.opening") : t("access.opened")}
+        </p>
       </PageShell>
     );
   }
@@ -93,6 +98,11 @@ function ActivationPage() {
   return (
     <PageShell>
       <h1 className="text-[28px]">{t("access.codeTitle")}</h1>
+      {pageData.sections.length > 0 ? (
+        <div className="mt-6">
+          <Copy sections={pageData.sections} />
+        </div>
+      ) : null}
       <form
         className="mt-8"
         onSubmit={(e) => {
