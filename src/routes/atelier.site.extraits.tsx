@@ -54,7 +54,10 @@ function SpreadEditor() {
     retry: false,
   });
 
-  const paragraphs: SpreadParagraph[] = listQuery.data?.paragraphs ?? [];
+  const paragraphs: SpreadParagraph[] = useMemo(
+    () => listQuery.data?.paragraphs ?? [],
+    [listQuery.data?.paragraphs],
+  );
   const book = listQuery.data?.book ?? null;
   const current = useMemo(
     () => paragraphs.find((p) => p.id === selected) ?? null,
