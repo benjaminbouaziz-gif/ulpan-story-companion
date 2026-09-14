@@ -42,6 +42,7 @@ import { Route as AtelierSiteIndexRouteImport } from './routes/atelier.site.inde
 import { Route as AtelierSiteChiffresRouteImport } from './routes/atelier.site.chiffres'
 import { Route as AtelierSiteExtraitsRouteImport } from './routes/atelier.site.extraits'
 import { Route as AtelierSitePagesRouteImport } from './routes/atelier.site.pages'
+import { Route as AtelierLivresSlugCollerRouteImport } from './routes/atelier.livres_.$slug_.coller'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as AtelierLivresSlugPagePageIdRouteImport } from './routes/atelier.livres_.$slug_.page.$pageId'
@@ -211,6 +212,11 @@ const AtelierSitePagesRoute = AtelierSitePagesRouteImport.update({
   path: '/pages',
   getParentRoute: () => AtelierSiteRoute,
 } as any)
+const AtelierLivresSlugCollerRoute = AtelierLivresSlugCollerRouteImport.update({
+  id: '/livres_/$slug_/coller',
+  path: '/livres/$slug/coller',
+  getParentRoute: () => AtelierRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/atelier/site/extraits': typeof AtelierSiteExtraitsRoute
   '/atelier/site/pages': typeof AtelierSitePagesRoute
   '/atelier/site/': typeof AtelierSiteIndexRoute
+  '/atelier/livres/$slug/coller': typeof AtelierLivresSlugCollerRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/atelier/livres/$slug/page/$pageId': typeof AtelierLivresSlugPagePageIdRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/atelier/site/extraits': typeof AtelierSiteExtraitsRoute
   '/atelier/site/pages': typeof AtelierSitePagesRoute
   '/atelier/site': typeof AtelierSiteIndexRoute
+  '/atelier/livres/$slug/coller': typeof AtelierLivresSlugCollerRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/atelier/livres/$slug/page/$pageId': typeof AtelierLivresSlugPagePageIdRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/atelier/site/extraits': typeof AtelierSiteExtraitsRoute
   '/atelier/site/pages': typeof AtelierSitePagesRoute
   '/atelier/site/': typeof AtelierSiteIndexRoute
+  '/atelier/livres_/$slug_/coller': typeof AtelierLivresSlugCollerRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/atelier/livres_/$slug_/page/$pageId': typeof AtelierLivresSlugPagePageIdRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/atelier/site/extraits'
     | '/atelier/site/pages'
     | '/atelier/site/'
+    | '/atelier/livres/$slug/coller'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/atelier/livres/$slug/page/$pageId'
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/atelier/site/extraits'
     | '/atelier/site/pages'
     | '/atelier/site'
+    | '/atelier/livres/$slug/coller'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/atelier/livres/$slug/page/$pageId'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/atelier/site/extraits'
     | '/atelier/site/pages'
     | '/atelier/site/'
+    | '/atelier/livres_/$slug_/coller'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/atelier/livres_/$slug_/page/$pageId'
@@ -711,6 +723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierSitePagesRouteImport
       parentRoute: typeof AtelierSiteRoute
     }
+    '/atelier/livres_/$slug_/coller': {
+      id: '/atelier/livres_/$slug_/coller'
+      path: '/livres/$slug/coller'
+      fullPath: '/atelier/livres/$slug/coller'
+      preLoaderRoute: typeof AtelierLivresSlugCollerRouteImport
+      parentRoute: typeof AtelierRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -766,6 +785,7 @@ interface AtelierRouteChildren {
   AtelierIndexRoute: typeof AtelierIndexRoute
   AtelierEtapeIdRoute: typeof AtelierEtapeIdRoute
   AtelierLivresSlugRoute: typeof AtelierLivresSlugRoute
+  AtelierLivresSlugCollerRoute: typeof AtelierLivresSlugCollerRoute
   AtelierLivresSlugPagePageIdRoute: typeof AtelierLivresSlugPagePageIdRoute
 }
 
@@ -782,6 +802,7 @@ const AtelierRouteChildren: AtelierRouteChildren = {
   AtelierIndexRoute: AtelierIndexRoute,
   AtelierEtapeIdRoute: AtelierEtapeIdRoute,
   AtelierLivresSlugRoute: AtelierLivresSlugRoute,
+  AtelierLivresSlugCollerRoute: AtelierLivresSlugCollerRoute,
   AtelierLivresSlugPagePageIdRoute: AtelierLivresSlugPagePageIdRoute,
 }
 

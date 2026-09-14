@@ -28,13 +28,22 @@ export function LivrePagesTable({ bookId, slug }: { bookId: string; slug: string
 
   return (
     <div className="mt-6">
-      <button
-        type="button"
-        className="border-line border px-2 py-0.5 text-[13px]"
-        onClick={() => void nouvelle()}
-      >
-        {t("atelier.livre.pages.new")}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="border-line border px-2 py-0.5 text-[13px]"
+          onClick={() => void nouvelle()}
+        >
+          {t("atelier.livre.pages.new")}
+        </button>
+        <Link
+          to="/atelier/livres/$slug/coller"
+          params={{ slug }}
+          className="border-line border px-2 py-0.5 text-[13px]"
+        >
+          {t("atelier.livre.coller.open")}
+        </Link>
+      </div>
 
       {pages.isLoading ? (
         <p className="mt-4 text-[13px]">{t("atelier.loading")}</p>
