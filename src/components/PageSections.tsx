@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { pickLang, useI18n } from "@/i18n/context";
 import type { Book, PageSection, SpreadBundle } from "@/lib/catalog.functions";
-import { BookPagesSection } from "./BookPagesSection";
 import { SpreadSection } from "./SpreadSection";
 
 /**
@@ -137,7 +136,6 @@ export function PageSections({
           const bundle = bookId ? spreads[bookId] : undefined;
           if (!bundle) return null;
           const b = bundle.book;
-          const bookTitle = pickLang(lang, b.title_fr, b.title_en) ?? "";
           return (
             <Block key={s.id} rule={separator} first={si === 0}>
               {title ? (
