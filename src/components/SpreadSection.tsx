@@ -2,11 +2,7 @@ import { useI18n } from "@/i18n/context";
 import type { SpreadParagraph } from "@/lib/spread";
 import { ExtraitLecture } from "./ExtraitLecture";
 
-/**
- * La double page sur le site : l'affirmation, la page, la mention de
- * démonstration, puis la lecture en grand. Aucun texte ne décrit ce que la
- * double page montre.
- */
+/** L'extrait lisible du site, précédé et suivi des mentions éditoriales. */
 export function SpreadSection({
   paragraphs,
   claim,

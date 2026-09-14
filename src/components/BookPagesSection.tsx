@@ -126,7 +126,6 @@ export function BookPagesSection({
   pages,
   words = [],
   color = null,
-  bookTitle,
   claim,
   note,
   showGlossary = false,
@@ -142,7 +141,6 @@ export function BookPagesSection({
 }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
-  const [zoom, setZoom] = useState(1);
 
 
   if (pages.length === 0) return null;
@@ -195,9 +193,7 @@ export function BookPagesSection({
         <div className="border-line mt-12 border-t pt-8">
           <h3 className="text-[22px]">{t("gloss.title")}</h3>
           <div className="mt-6 overflow-x-auto">
-            <div style={{ width: `${zoom * 100}%` }}>
-              <GlossaryPage words={words} color={color} maxPxPerMm={3.78 * zoom} />
-            </div>
+            <GlossaryPage words={words} color={color} />
           </div>
         </div>
       ) : null}
