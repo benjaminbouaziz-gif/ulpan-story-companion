@@ -626,6 +626,28 @@ export const removeAtelierPageAudio = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * BRIQUE 8 — publier depuis le tableau. Écriture minimale : un identifiant, un
+ * booléen. Ni blocs, ni autres colonnes ne sont touchés (à la différence de
+ * `saveAtelierPage`, qui réécrit la page entière et ses paragraphes).
+ */
+export const setAtelierPagePublished = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({ pageId: z.string().uuid(), isPublished: z.boolean() }).parse(data),
+  )
+  .handler(async ({ context, data }): Promise<{ ok: true }> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+
+    const { error } = await admin
+      .from("book_pages")
+      .update({ is_published: data.isPublished })
+      .eq("id", data.pageId);
+    if (error) throw new Error(texteErreurBase("SAVE_REFUSED", error));
+    return { ok: true };
+  });
+
 /** Lien de contrôle : signé à la demande, valable 60 secondes, jamais stocké. */
 export const atelierPageAudioUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
