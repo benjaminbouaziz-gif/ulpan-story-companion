@@ -24,7 +24,7 @@ const KINDS: { value: SupportKind; label: string }[] = [
 export const Route = createFileRoute("/atelier/site/extraits")({
   head: () => ({
     meta: [
-      { title: "Double page de démonstration — Atelier Ulpan Story" },
+      { title: "Démonstration — Atelier Ulpan Story" },
       { name: "description", content: "Édition paragraphe par paragraphe de la double page." },
       { name: "robots", content: "noindex" },
     ],
@@ -132,7 +132,7 @@ function SpreadEditor() {
   if (!meQuery.data?.isEditor) {
     return (
       <div className="w-full">
-        <h1 className="text-[26px]">{t("admin.excerpt")}</h1>
+        <h1 className="text-[26px]">{t("atelier.site.excerpt")}</h1>
         <p className="body-text text-secondary-text mt-4">{t("admin.forbidden")}</p>
       </div>
     );
@@ -144,7 +144,8 @@ function SpreadEditor() {
 
   return (
     <div className="w-full">
-      <h1 className="text-[26px]">{t("admin.excerpt")}</h1>
+      <h1 className="text-[26px]">{t("atelier.site.excerpt")}</h1>
+      <p className="body-text text-secondary-text mt-2">{t("atelier.site.excerpt.warning")}</p>
 
       <div className="mt-6 flex flex-wrap items-end gap-3">
         <label className="label text-secondary-text flex flex-col gap-1">

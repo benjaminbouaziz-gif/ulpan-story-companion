@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { pickLang, useI18n } from "@/i18n/context";
 import type { Book, PageSection, SpreadBundle } from "@/lib/catalog.functions";
-import { BookPagesSection } from "./BookPagesSection";
 import { SpreadSection } from "./SpreadSection";
 
 /**
@@ -136,8 +135,6 @@ export function PageSections({
         if (s.kind === "book_spread") {
           const bundle = bookId ? spreads[bookId] : undefined;
           if (!bundle) return null;
-          const b = bundle.book;
-          const bookTitle = pickLang(lang, b.title_fr, b.title_en) ?? "";
           return (
             <Block key={s.id} rule={separator} first={si === 0}>
               {title ? (
@@ -147,18 +144,8 @@ export function PageSections({
                   </p>
                 </Column>
               ) : null}
-              {bundle.pages.length > 0 ? (
-                <BookPagesSection
-                  pages={bundle.pages}
-                  words={bundle.words}
-                  color={bundle.collection?.color_hex ?? null}
-                  bookTitle={bookTitle}
-                  claim={null}
-                  note={body}
-                />
-              ) : (
-                <SpreadSection paragraphs={bundle.paragraphs} claim={null} note={body} />
-              )}
+              {/* La démonstration vient de spread_paragraphs, jamais des pages du livre. */}
+              <SpreadSection paragraphs={bundle.paragraphs} claim={null} note={body} />
             </Block>
           );
         }

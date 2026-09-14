@@ -199,7 +199,7 @@ const fr = {
   "atelier.room.settings": "Réglages",
   "atelier.room.settings.desc": "Mon compte, clés d'API, voix gelées.",
   "atelier.site.legacy": "ancien outil, sera réinstallé ici",
-  "atelier.site.excerpt": "Double page de démonstration",
+  "atelier.site.excerpt": "Démonstration",
   "atelier.site.pages": "Pages éditoriales",
   "atelier.site.figures": "Chiffres des livres",
   "atelier.none": "aucun",
@@ -657,7 +657,10 @@ const fr = {
   // Salle Site : sommaire et trois outils
   "atelier.site.summary": "Le contenu du site",
   "atelier.site.pages.desc": "Les textes des pages publiques, section par section.",
-  "atelier.site.excerpt.desc": "La double page de démonstration, paragraphe par paragraphe.",
+  "atelier.site.excerpt.desc":
+    "Le texte de démonstration montré aux visiteurs, paragraphe par paragraphe.",
+  "atelier.site.excerpt.warning":
+    "Cette démonstration est le texte montré aux visiteurs du site. Ce n\u2019est pas une page du livre.",
   "atelier.site.figures.desc": "Les chiffres annoncés pour chaque tome.",
   "atelier.site.open": "Ouvrir",
   "atelier.site.save": "Enregistrer",
@@ -939,7 +942,7 @@ const en: Record<DictKey, string> = {
   "atelier.room.settings": "Settings",
   "atelier.room.settings.desc": "My account, API keys, frozen voices.",
   "atelier.site.legacy": "legacy tool, will be reinstalled here",
-  "atelier.site.excerpt": "Demonstration double page",
+  "atelier.site.excerpt": "Demonstration",
   "atelier.site.pages": "Editorial pages",
   "atelier.site.figures": "Book figures",
   "atelier.none": "none",
@@ -1388,7 +1391,9 @@ const en: Record<DictKey, string> = {
   "atelier.livre.audio.err.failed": "The upload failed.",
   "atelier.site.summary": "Site content",
   "atelier.site.pages.desc": "The text of the public pages, section by section.",
-  "atelier.site.excerpt.desc": "The demonstration spread, paragraph by paragraph.",
+  "atelier.site.excerpt.desc": "The demonstration text shown to visitors, paragraph by paragraph.",
+  "atelier.site.excerpt.warning":
+    "This demonstration is the text shown to site visitors. It is not a page of the book.",
   "atelier.site.figures.desc": "The figures announced for each volume.",
   "atelier.site.open": "Open",
   "atelier.site.save": "Save",

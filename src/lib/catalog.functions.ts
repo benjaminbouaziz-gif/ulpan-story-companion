@@ -2,20 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import {
-  loadBookPages,
   loadGlossaryWords,
   publicClient,
   toGlossaryItem,
   toSpreadParagraph,
 } from "./catalog.server";
-import type { BookPage, GlossaryWord } from "./book-page";
+import type { GlossaryWord } from "./book-page";
 import type { GlossaryItem, SpreadParagraph } from "./spread";
 
 export type Collection = Database["public"]["Tables"]["collections"]["Row"];
 export type Book = Database["public"]["Tables"]["books"]["Row"];
 export type Page = Database["public"]["Tables"]["pages"]["Row"];
 export type PageSection = Database["public"]["Tables"]["page_sections"]["Row"];
-
 
 export const getCollections = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
@@ -92,7 +90,7 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         collection: null as Collection | null,
         paragraphs: [] as SpreadParagraph[],
         glossary: [] as GlossaryItem[],
-        pages: [] as BookPage[],
+
         words: [] as GlossaryWord[],
       };
     let collection: Collection | null = null;
@@ -104,7 +102,7 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         .maybeSingle();
       collection = (c as Collection) ?? null;
     }
-    const [{ data: rows }, { data: gloss }, pages, words] = await Promise.all([
+    const [{ data: rows }, { data: gloss }, words] = await Promise.all([
       supabase
         .from("spread_paragraphs")
         .select("*")
@@ -115,7 +113,6 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         .select("*")
         .eq("book_id", book.id)
         .order("sort_order", { ascending: true }),
-      loadBookPages(supabase, book.id),
       loadGlossaryWords(supabase, book.id),
     ]);
     return {
@@ -123,7 +120,6 @@ export const getBookBySlug = createServerFn({ method: "GET" })
       collection,
       paragraphs: (rows ?? []).map(toSpreadParagraph),
       glossary: (gloss ?? []).map(toGlossaryItem),
-      pages,
       words,
     };
   });
@@ -132,10 +128,8 @@ export type SpreadBundle = {
   book: Book;
   collection: Collection | null;
   paragraphs: SpreadParagraph[];
-  pages: BookPage[];
   words: GlossaryWord[];
 };
-
 
 export const getPageBySlug = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
@@ -211,17 +205,13 @@ export const getPageBySlug = createServerFn({ method: "GET" })
           book,
           collection: (book.collection_id ? collections[book.collection_id] : null) ?? null,
           paragraphs: (rows ?? []).map(toSpreadParagraph),
-          pages: await loadBookPages(supabase, id),
           words: await loadGlossaryWords(supabase, id),
         };
-
       }
     }
 
     return { page: page as Page | null, sections, books, colors, spreads };
-
   });
-
 
 /** La double page de référence : celle du premier tome publié. */
 export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async () => {
@@ -237,7 +227,6 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
       book: null as Book | null,
       collection: null as Collection | null,
       paragraphs: [] as SpreadParagraph[],
-      pages: [] as BookPage[],
       words: [] as GlossaryWord[],
     };
   let collection: Collection | null = null;
@@ -249,21 +238,18 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
       .maybeSingle();
     collection = (c as Collection) ?? null;
   }
-  const [{ data: rows }, pages, words] = await Promise.all([
+  const [{ data: rows }, words] = await Promise.all([
     supabase
       .from("spread_paragraphs")
       .select("*")
       .eq("book_id", book.id)
       .order("sort_order", { ascending: true }),
-    loadBookPages(supabase, book.id),
     loadGlossaryWords(supabase, book.id),
   ]);
   return {
     book: book as Book | null,
     collection,
     paragraphs: (rows ?? []).map(toSpreadParagraph),
-    pages,
     words,
   };
-
 });
