@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX book_pages_book_page_uniq ON public.book_pages (book_id, page_no);
