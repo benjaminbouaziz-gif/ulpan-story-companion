@@ -28,8 +28,7 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
       ) : null}
       {visibleBlocks.map((b, index) => {
         const he = leftHebrew(b, page.support_kind);
-        const support =
-          page.support_kind === "nikud" ? b.he_nikud : blockSupport(b, lang);
+        const support = page.support_kind === "nikud" ? b.he_nikud : blockSupport(b, lang);
         return (
           <div key={b.id} className={index === 0 ? "" : "mt-[1.6em]"}>
             {he ? (
@@ -39,9 +38,9 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
                 className="text-right"
                 style={{
                   fontFamily: "var(--font-hebrew)",
-                    fontSize: "calc(21px * var(--text-scale))",
-                    lineHeight: 1.95,
-                    letterSpacing: "normal",
+                  fontSize: "calc(21px * var(--text-scale))",
+                  lineHeight: 1.95,
+                  letterSpacing: "normal",
                 }}
               >
                 {he}
@@ -105,7 +104,10 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
                 <span
                   dir="rtl"
                   lang="he"
-                  style={{ fontFamily: "var(--font-hebrew)", fontSize: "calc(21px * var(--text-scale))" }}
+                  style={{
+                    fontFamily: "var(--font-hebrew)",
+                    fontSize: "calc(21px * var(--text-scale))",
+                  }}
                 >
                   {k.he_nikud}
                 </span>
@@ -141,7 +143,6 @@ export function BookPagesSection({
 }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
-
 
   if (pages.length === 0) return null;
   const page = pages[Math.min(index, pages.length - 1)];

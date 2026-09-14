@@ -336,7 +336,9 @@ function SpreadEditor() {
         <div className="min-w-0 flex-[2]">
           <div className="grid gap-8 xl:grid-cols-2">
             <section className="min-w-0">
-              <h2 className="label text-secondary-text">{t("atelier.site.excerpt.paperPreview")}</h2>
+              <h2 className="label text-secondary-text">
+                {t("atelier.site.excerpt.paperPreview")}
+              </h2>
               <div className="mt-3">
                 <Spread
                   paragraphs={preview}
