@@ -12,6 +12,7 @@ export function cleErreurAtelier(error: unknown): DictKey {
   if (message.includes("AUDIO_BAD_FORMAT")) return "atelier.livre.audio.err.format";
   if (message.includes("AUDIO_TOO_BIG")) return "atelier.livre.audio.err.tooBig";
   if (message.includes("AUDIO_")) return "atelier.livre.audio.err.failed";
+  if (message.includes("PASTE_INVALID")) return "atelier.livre.coller.err.invalid";
   if (message.includes("PAGE_NOT_FOUND")) return "atelier.livre.page.notFound";
   return "atelier.livre.err.save";
 }

@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertEditor } from "./editor-context.server";
 import { getAdminClient } from "./supabase-admin.server";
 import { texteErreurBase } from "./db-error";
+import { analyserColle, natureDuBloc, parseColle } from "./coller-livre";
 
 /**
  * BRIQUE 1 — L'ONGLET LIVRE.
@@ -659,4 +660,145 @@ export const atelierLivreCollections = createServerFn({ method: "GET" })
       .select("id, name_fr, sort_order")
       .order("sort_order", { ascending: true });
     return (data ?? []).map((c) => ({ id: c.id, nameFr: c.name_fr }));
+  });
+
+/* ————————————————— BRIQUE 7 : coller un livre entier ————————————————— */
+
+/**
+ * Les quatre valeurs que la contrainte `book_pages_support_kind_check` accepte
+ * réellement en base, lues sur la contrainte elle-même :
+ * CHECK (support_kind = ANY (ARRAY['translation','cloze','keys','nikud'])).
+ */
+export const SUPPORT_KINDS_BASE = ["translation", "cloze", "keys", "nikud"] as const;
+export type SupportKindBase = (typeof SUPPORT_KINDS_BASE)[number];
+
+export type ColleResultat = { pages: number; blocks: number };
+
+/**
+ * L'écriture d'un livre collé. Elle refait elle-même le découpage et
+ * l'appariement : l'écran ne fait que montrer, le serveur seul décide.
+ * Écriture par lots : une requête pour les pages, une requête pour les
+ * paragraphes — pas une requête par paragraphe. Tout ou rien : si les
+ * paragraphes échouent, les pages qui venaient d'être créées sont retirées.
+ */
+export const collerLivre = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        bookId: z.string().uuid(),
+        nikud: z.string().max(500000),
+        plain: z.string().max(500000),
+        runningHeadFr: optText,
+        runningHeadEn: optText,
+        supportKind: z.enum(SUPPORT_KINDS_BASE),
+        remplacer: z.boolean(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }): Promise<ColleResultat> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+
+    const { data: existantes } = await admin
+      .from("book_pages")
+      .select("id, page_no")
+      .eq("book_id", data.bookId);
+    const dejaLa = new Map((existantes ?? []).map((p) => [p.page_no, p.id]));
+
+    const analyse = analyserColle(data.nikud, data.plain, [...dejaLa.keys()], data.remplacer);
+    if (!analyse.ok) throw new Error("PASTE_INVALID");
+
+    const gauche = new Map(parseColle(data.nikud).pages.map((p) => [p.pageNo, p]));
+    const droite = new Map(parseColle(data.plain).pages.map((p) => [p.pageNo, p]));
+
+    const reprises = analyse.lignes
+      .filter((l) => l.verdict === "remplacement")
+      .map((l) => dejaLa.get(l.pageNo)!)
+      .filter(Boolean);
+    const neuves = analyse.lignes.filter((l) => l.verdict === "ok");
+
+    // Les pages reprises : les champs de tête suivent le formulaire, l'audio reste.
+    for (const ligne of analyse.lignes.filter((l) => l.verdict === "remplacement")) {
+      const { error } = await admin
+        .from("book_pages")
+        .update({
+          chapter_no: ligne.chapterNo,
+          folio: ligne.pageNo,
+          support_kind: data.supportKind,
+          running_head_fr: nullish(data.runningHeadFr),
+          running_head_en: nullish(data.runningHeadEn),
+        })
+        .eq("id", dejaLa.get(ligne.pageNo)!);
+      if (error) throw new Error(texteErreurBase("SAVE_REFUSED", error));
+    }
+    if (reprises.length > 0) {
+      await admin.from("page_blocks").delete().in("page_id", reprises);
+    }
+
+    let creees: { id: string; page_no: number }[] = [];
+    if (neuves.length > 0) {
+      const { data: inserted, error } = await admin
+        .from("book_pages")
+        .insert(
+          neuves.map((l) => ({
+            book_id: data.bookId,
+            page_no: l.pageNo,
+            chapter_no: l.chapterNo,
+            folio: l.pageNo,
+            support_kind: data.supportKind,
+            running_head_fr: nullish(data.runningHeadFr),
+            running_head_en: nullish(data.runningHeadEn),
+            is_published: false,
+          })),
+        )
+        .select("id, page_no");
+      if (error || !inserted) {
+        if (error?.code === "23505") throw new Error("PAGE_NO_TAKEN");
+        throw new Error(texteErreurBase("CREATE_REFUSED", error));
+      }
+      creees = inserted;
+    }
+
+    const idParPage = new Map<number, string>(dejaLa);
+    for (const p of creees) idParPage.set(p.page_no, p.id);
+
+    const blocs: {
+      page_id: string;
+      sort_order: number;
+      block_kind: BlockKindValue;
+      he_nikud: string;
+      he_plain: string;
+    }[] = [];
+    for (const ligne of analyse.lignes) {
+      const pageId = idParPage.get(ligne.pageNo)!;
+      const g = gauche.get(ligne.pageNo)!;
+      const d = droite.get(ligne.pageNo)!;
+      for (let i = 0; i < g.paragraphs.length; i += 1) {
+        blocs.push({
+          page_id: pageId,
+          sort_order: i + 1,
+          block_kind: natureDuBloc(g.paragraphs[i]!),
+          he_nikud: g.paragraphs[i]!,
+          he_plain: d.paragraphs[i]!,
+        });
+      }
+    }
+
+    try {
+      for (let i = 0; i < blocs.length; i += 500) {
+        const { error } = await admin.from("page_blocks").insert(blocs.slice(i, i + 500));
+        if (error) throw new Error(texteErreurBase("SAVE_REFUSED", error));
+      }
+    } catch (e) {
+      // Tout ou rien : on retire ce que cette opération vient de créer.
+      const ids = creees.map((p) => p.id);
+      if (ids.length > 0) {
+        await admin.from("page_blocks").delete().in("page_id", ids);
+        await admin.from("book_pages").delete().in("id", ids);
+      }
+      throw e;
+    }
+
+    return { pages: analyse.lignes.length, blocks: blocs.length };
   });
