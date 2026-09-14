@@ -3,8 +3,11 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
+import { bySlot, Copy } from "@/components/SiteCopy";
 import { useI18n, pickLang } from "@/i18n/context";
-import { collectionsQuery, publishedBooksQuery } from "@/lib/queries";
+import { collectionsQuery, pageQuery, publishedBooksQuery } from "@/lib/queries";
+
+const PAGE = "accueil";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,6 +29,7 @@ export const Route = createFileRoute("/")({
     await Promise.all([
       context.queryClient.ensureQueryData(collectionsQuery),
       context.queryClient.ensureQueryData(publishedBooksQuery),
+      context.queryClient.ensureQueryData(pageQuery(PAGE)),
     ]);
   },
   component: Home,
@@ -35,24 +39,27 @@ function Home() {
   const { t, lang } = useI18n();
   const { data: collectionsData } = useSuspenseQuery(collectionsQuery);
   const { data: booksData } = useSuspenseQuery(publishedBooksQuery);
+  const { data: pageData } = useSuspenseQuery(pageQuery(PAGE));
   const collections = collectionsData.collections;
   const books = booksData.books;
+  const sections = pageData.sections;
 
   return (
     <PageShell>
-      <h1 className="text-[34px]">{t("site.motto")}</h1>
-      <p className="body-text mt-4">{t("site.tagline")}</p>
-      <p className="body-text text-secondary-text mt-6">{t("home.lede")}</p>
+      <Copy sections={bySlot(sections, "intro")} level="h1" />
 
       <section className="border-line mt-12 border-t pt-8">
-        <h2 className="text-[24px]">{t("home.method.title")}</h2>
-        <Link to="/methode" className="label touch mt-4 inline-flex items-center border-b border-current">
+        <Copy sections={bySlot(sections, "methode")} />
+        <Link
+          to="/methode"
+          className="label touch mt-4 inline-flex items-center border-b border-current"
+        >
           {t("home.method.link")}
         </Link>
       </section>
 
       <section className="border-line mt-12 border-t pt-8">
-        <h2 className="text-[24px]">{t("home.collections.title")}</h2>
+        <Copy sections={bySlot(sections, "collections")} />
         {collections.length === 0 ? (
           <p className="body-text text-secondary-text mt-4">{t("collections.empty")}</p>
         ) : (
@@ -79,7 +86,7 @@ function Home() {
       </section>
 
       <section className="border-line mt-12 border-t pt-8">
-        <h2 className="text-[24px]">{t("home.books.title")}</h2>
+        <Copy sections={bySlot(sections, "livres")} />
         {books.length === 0 ? (
           <p className="body-text text-secondary-text mt-4">{t("books.empty")}</p>
         ) : (
@@ -104,8 +111,7 @@ function Home() {
       </section>
 
       <section className="border-line mt-12 border-t pt-8">
-        <h2 className="text-[24px]">{t("home.qr.title")}</h2>
-        <p className="body-text mt-3">{t("home.qr.body")}</p>
+        <Copy sections={bySlot(sections, "qr")} />
       </section>
     </PageShell>
   );

@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
+import { Copy } from "@/components/SiteCopy";
 import { useI18n } from "@/i18n/context";
+import { pageQuery } from "@/lib/queries";
+
+const PAGE = "mentions-legales";
 
 export const Route = createFileRoute("/mentions-legales")({
   head: () => ({
@@ -14,16 +19,19 @@ export const Route = createFileRoute("/mentions-legales")({
       { property: "og:description", content: "Éditeur, hébergement et contact." },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
   component: LegalPage,
 });
 
 function LegalPage() {
   const { t } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE));
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("footer.legal")}</h1>
-      <p className="body-text text-secondary-text mt-6">{t("empty.page")}</p>
-      <p className="body-text mt-6">contact@oulpanstory.com</p>
+      <div className="mt-6">
+        <Copy sections={data.sections} />
+      </div>
     </PageShell>
   );
 }
