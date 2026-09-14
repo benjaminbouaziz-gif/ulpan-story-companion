@@ -708,6 +708,8 @@ const fr = {
   "atelier.site.excerpt.supportEn": "Soutien EN",
   "atelier.site.excerpt.choose": "Choisissez un paragraphe pour l'éditer.",
   "atelier.site.excerpt.preview": "Aperçu de la double page",
+  "atelier.site.excerpt.previewPaper": "Aperçu papier",
+  "atelier.site.excerpt.previewSite": "Aperçu site",
   "atelier.site.excerpt.saveError": "Erreur d'enregistrement.",
 
   "atelier.site.figures.note":
@@ -1423,6 +1425,8 @@ const en: Record<DictKey, string> = {
   "atelier.site.excerpt.supportEn": "Support EN",
   "atelier.site.excerpt.choose": "Choose a paragraph to edit it.",
   "atelier.site.excerpt.preview": "Preview of the spread",
+  "atelier.site.excerpt.previewPaper": "Print preview",
+  "atelier.site.excerpt.previewSite": "Website preview",
   "atelier.site.excerpt.saveError": "Could not save.",
 
   "atelier.site.figures.note":
