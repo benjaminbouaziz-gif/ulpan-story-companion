@@ -464,8 +464,6 @@ export function PageEditor({ pageId }: { pageId: string }) {
           {t("atelier.livre.page.delete")}
         </button>
       </div>
-
-      <PageAudio pageId={pageId} audioPath={data.audioPath} onChanged={() => void page.refetch()} />
     </div>
   );
 }
