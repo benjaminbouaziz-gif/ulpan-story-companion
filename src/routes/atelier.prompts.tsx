@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useI18n } from "@/i18n/context";
@@ -27,6 +27,10 @@ import {
  * L'axe langue reste en sommeil : aucun sélecteur de langue.
  */
 export const Route = createFileRoute("/atelier/prompts")({
+  // Salle retirée du menu : l'adresse ramène aux livres. Le code reste en place.
+  beforeLoad: () => {
+    throw redirect({ to: "/atelier/livres" });
+  },
   head: () => ({
     meta: [{ title: "Prompts — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),

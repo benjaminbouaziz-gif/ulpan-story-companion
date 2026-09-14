@@ -391,6 +391,7 @@ export type Database = {
       }
       book_pages: {
         Row: {
+          audio_path: string | null
           book_id: string
           chapter_no: number | null
           chapter_title_en: string | null
@@ -408,6 +409,7 @@ export type Database = {
           validated_at: string | null
         }
         Insert: {
+          audio_path?: string | null
           book_id: string
           chapter_no?: number | null
           chapter_title_en?: string | null
@@ -425,6 +427,7 @@ export type Database = {
           validated_at?: string | null
         }
         Update: {
+          audio_path?: string | null
           book_id?: string
           chapter_no?: number | null
           chapter_title_en?: string | null
