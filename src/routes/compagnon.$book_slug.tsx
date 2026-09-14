@@ -4,8 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/SiteChrome";
 import { HebrewText } from "@/components/HebrewText";
 import { QuizRound } from "@/components/QuizRound";
+import { LecteurLivre } from "@/components/LecteurLivre";
 import { useI18n } from "@/i18n/context";
-import { getCompanionBook, saveQuizRound } from "@/lib/companion.functions";
+import {
+  getCompanionBook,
+  getCompanionPageAudioUrl,
+  getCompanionPages,
+  saveQuizRound,
+} from "@/lib/companion.functions";
 import { glossarySense } from "@/lib/spread";
 
 export const Route = createFileRoute("/compagnon/$book_slug")({
@@ -87,6 +93,17 @@ function CompanionBook() {
         </p>
       ) : null}
 
+      {/* Le lecteur : c'est le corps de la page, tout de suite. */}
+      <section className="mt-8">
+        {pages.isPending ? (
+          <p className="label text-secondary-text">{t("companion.loading")}</p>
+        ) : (pages.data?.pages.length ?? 0) > 0 ? (
+          <LecteurLivre pages={pages.data!.pages} requestAudioUrl={requestAudioUrl} />
+        ) : (
+          <p className="body-text text-secondary-text">{t("companion.audioSoon")}</p>
+        )}
+      </section>
+
       {/* L'entraînement */}
       <section className="mt-12">
         <h2 className="text-[22px]">{t("companion.quiz")}</h2>
@@ -122,24 +139,8 @@ function CompanionBook() {
         </ul>
       </section>
 
-      {/* La lecture audio */}
-      <section className="mt-16">
-        <h2 className="text-[22px]">{t("companion.audio")}</h2>
-        {data.audio.length > 0 ? (
-          <ul className="border-line mt-6 border-t">
-            {data.audio.map((track) => (
-              <li key={track.id} className="border-line border-b py-3">
-                <span className="body-text">
-                  {(lang === "en" ? track.label_en : track.label_fr) ??
-                    `${t("companion.audio")} ${track.chapter_no ?? ""}`}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="body-text text-secondary-text mt-4">{t("companion.audioSoon")}</p>
-        )}
-      </section>
+      {/* La lecture audio vit désormais dans le lecteur, page par page.
+          `audio_tracks` et sa requête dorment, sans être supprimés. */}
     </PageShell>
   );
 }
