@@ -2,20 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import {
-  loadBookPages,
   loadGlossaryWords,
   publicClient,
   toGlossaryItem,
   toSpreadParagraph,
 } from "./catalog.server";
-import type { BookPage, GlossaryWord } from "./book-page";
+import type { GlossaryWord } from "./book-page";
 import type { GlossaryItem, SpreadParagraph } from "./spread";
 
 export type Collection = Database["public"]["Tables"]["collections"]["Row"];
 export type Book = Database["public"]["Tables"]["books"]["Row"];
 export type Page = Database["public"]["Tables"]["pages"]["Row"];
 export type PageSection = Database["public"]["Tables"]["page_sections"]["Row"];
-
 
 export const getCollections = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
@@ -92,7 +90,7 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         collection: null as Collection | null,
         paragraphs: [] as SpreadParagraph[],
         glossary: [] as GlossaryItem[],
-        
+
         words: [] as GlossaryWord[],
       };
     let collection: Collection | null = null;
@@ -132,7 +130,6 @@ export type SpreadBundle = {
   paragraphs: SpreadParagraph[];
   words: GlossaryWord[];
 };
-
 
 export const getPageBySlug = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
@@ -210,14 +207,11 @@ export const getPageBySlug = createServerFn({ method: "GET" })
           paragraphs: (rows ?? []).map(toSpreadParagraph),
           words: await loadGlossaryWords(supabase, id),
         };
-
       }
     }
 
     return { page: page as Page | null, sections, books, colors, spreads };
-
   });
-
 
 /** La double page de référence : celle du premier tome publié. */
 export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async () => {
@@ -258,5 +252,4 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
     paragraphs: (rows ?? []).map(toSpreadParagraph),
     words,
   };
-
 });
