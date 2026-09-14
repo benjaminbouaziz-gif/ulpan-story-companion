@@ -263,7 +263,7 @@ const fr = {
   "atelier.robot.unblock": "Débloquer cette étape",
   "atelier.robot.unblockConfirm": "Débloquer cette étape :",
   "atelier.robot.unblocked":
-    "Le lancement abandonné a été clos : l\'étape est de nouveau lançable.",
+    "Le lancement abandonné a été clos : l'étape est de nouveau lançable.",
   "atelier.prompts.save": "Enregistrer",
   "atelier.prompts.cancel": "Annuler",
   "atelier.prompts.notFound": "Prompt introuvable.",
