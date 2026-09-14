@@ -71,6 +71,8 @@ const fr = {
   "spread.note":
     "Les quatre étapes sont réunies ici pour la démonstration. Dans le livre, chaque double page appartient à une seule étape.",
   "spread.readBig": "Lire cette page en grand",
+  "spread.more": "Lire la suite de la page",
+  "spread.less": "Replier",
   "spread.stage": "Étape",
   "spread.of": "sur",
   "spread.next": "Étape suivante",
@@ -706,6 +708,8 @@ const fr = {
   "atelier.site.excerpt.supportEn": "Soutien EN",
   "atelier.site.excerpt.choose": "Choisissez un paragraphe pour l'éditer.",
   "atelier.site.excerpt.preview": "Aperçu de la double page",
+  "atelier.site.excerpt.previewPaper": "Aperçu papier",
+  "atelier.site.excerpt.previewSite": "Aperçu site",
   "atelier.site.excerpt.saveError": "Erreur d'enregistrement.",
 
   "atelier.site.figures.note":
@@ -795,6 +799,8 @@ const en: Record<DictKey, string> = {
   "spread.note":
     "The four stages are gathered here for the demonstration. In the book, each double page belongs to a single stage.",
   "spread.readBig": "Read this page at full size",
+  "spread.more": "Read the rest of the page",
+  "spread.less": "Collapse",
   "spread.stage": "Stage",
   "spread.of": "of",
   "spread.next": "Next stage",
@@ -1419,6 +1425,8 @@ const en: Record<DictKey, string> = {
   "atelier.site.excerpt.supportEn": "Support EN",
   "atelier.site.excerpt.choose": "Choose a paragraph to edit it.",
   "atelier.site.excerpt.preview": "Preview of the spread",
+  "atelier.site.excerpt.previewPaper": "Print preview",
+  "atelier.site.excerpt.previewSite": "Website preview",
   "atelier.site.excerpt.saveError": "Could not save.",
 
   "atelier.site.figures.note":

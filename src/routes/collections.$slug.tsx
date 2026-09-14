@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { Spread } from "@/components/Spread";
+import { ExtraitLecture } from "@/components/ExtraitLecture";
 import { pickLang, useI18n } from "@/i18n/context";
 import { collectionQuery } from "@/lib/queries";
 
@@ -22,7 +22,8 @@ export const Route = createFileRoute("/collections/$slug")({
       },
     ],
   }),
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(collectionQuery(params.slug)),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(collectionQuery(params.slug)),
   component: CollectionPage,
 });
 
@@ -68,20 +69,9 @@ function CollectionPage() {
 
       {data.paragraphs.length > 0 ? (
         <section className="border-line mt-8 border-t pt-6">
-          <div className="pointer-events-none mx-auto mt-2 max-w-[420px] select-none">
-            <Spread
-              paragraphs={data.paragraphs}
-              color={collection.color_hex}
-              runningHead={pickLang(lang, collection.name_fr, collection.name_en) ?? ""}
-              chapter=""
-            />
+          <div className="mt-2">
+            <ExtraitLecture paragraphs={data.paragraphs} />
           </div>
-          <Link
-            to="/methode"
-            className="label touch mt-4 inline-flex border-b border-current"
-          >
-            {t("spread.readBig")}
-          </Link>
         </section>
       ) : null}
 
@@ -93,7 +83,11 @@ function CollectionPage() {
           <ul className="mt-4 flex flex-col gap-3">
             {data.books.map((b) => (
               <li key={b.id} className="border-line border p-4">
-                <Link to="/livres/$slug" params={{ slug: b.slug }} className="flex items-start gap-4">
+                <Link
+                  to="/livres/$slug"
+                  params={{ slug: b.slug }}
+                  className="flex items-start gap-4"
+                >
                   {b.cover_url ? (
                     <img
                       src={b.cover_url}
@@ -110,7 +104,6 @@ function CollectionPage() {
                     {b.title_he ? <HebrewText className="mt-2">{b.title_he}</HebrewText> : null}
                   </span>
                 </Link>
-
               </li>
             ))}
           </ul>

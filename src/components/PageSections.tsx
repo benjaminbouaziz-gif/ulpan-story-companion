@@ -4,7 +4,6 @@ import type { Book, PageSection, SpreadBundle } from "@/lib/catalog.functions";
 import { BookPagesSection } from "./BookPagesSection";
 import { SpreadSection } from "./SpreadSection";
 
-
 /**
  * Le rendu des sections d'une page éditoriale. Aucune phrase n'est écrite ici :
  * tout vient de page_sections, et se modifie depuis l'administration. Vider la
@@ -121,11 +120,9 @@ export function PageSections({
       </Column>
     );
 
-
   return (
     <div>
       {visible.map((s, si) => {
-
         const d = sectionData(s);
         const bookId = str(d["book_id"]);
         const book = bookId ? books[bookId] : undefined;
@@ -160,23 +157,11 @@ export function PageSections({
                   note={body}
                 />
               ) : (
-                <SpreadSection
-                  paragraphs={bundle.paragraphs}
-                  color={bundle.collection?.color_hex ?? null}
-                  runningHead={
-                    pickLang(lang, b.spread_running_head_fr, b.spread_running_head_en) ??
-                    bookTitle
-                  }
-                  chapter={pickLang(lang, b.spread_chapter_fr, b.spread_chapter_en) ?? ""}
-                  folio={b.spread_folio_left ?? 42}
-                  claim={null}
-                  note={body}
-                />
+                <SpreadSection paragraphs={bundle.paragraphs} claim={null} note={body} />
               )}
             </Block>
           );
         }
-
 
         if (s.kind === "facts") {
           const facts = Array.isArray(d["facts"]) ? (d["facts"] as Json[]) : [];
