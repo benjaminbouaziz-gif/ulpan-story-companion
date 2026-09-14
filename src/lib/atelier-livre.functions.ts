@@ -304,9 +304,17 @@ export const atelierLivrePages = createServerFn({ method: "GET" })
     }));
   });
 
+/**
+ * La base n'accepte que ces deux natures de bloc : un paragraphe de récit et
+ * une réplique de dialogue. La composition imprimée les distingue.
+ */
+export const BLOCK_KINDS = ["narrative", "dialogue"] as const;
+export type BlockKindValue = (typeof BLOCK_KINDS)[number];
+
 export type AtelierBlock = {
   id: string | null;
   sortOrder: number;
+  blockKind: BlockKindValue;
   heNikud: string;
   hePlain: string;
   supportFr: string;
@@ -379,7 +387,7 @@ export const atelierPage = createServerFn({ method: "GET" })
       admin.from("books").select("slug").eq("id", page.book_id).maybeSingle(),
       admin
         .from("page_blocks")
-        .select("id, sort_order, he_nikud, he_plain, support_fr, support_en")
+        .select("id, sort_order, block_kind, he_nikud, he_plain, support_fr, support_en")
         .eq("page_id", page.id)
         .order("sort_order", { ascending: true }),
     ]);
