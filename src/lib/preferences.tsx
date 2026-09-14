@@ -23,12 +23,15 @@ const PrefsContext = createContext<PrefsValue | null>(null);
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [textSize, setSize] = useState<TextSize>("normal");
   const [theme, setThemeState] = useState<Theme>("ivory");
+  const [speed, setSpeedState] = useState<number>(SPEED_FALLBACK);
 
   useEffect(() => {
     const s = window.localStorage.getItem(KEY_SIZE);
     if (s === "normal" || s === "grand" || s === "tres-grand") setSize(s);
     const t = window.localStorage.getItem(KEY_THEME);
     if (t === "ivory" || t === "night") setThemeState(t);
+    const v = Number(window.localStorage.getItem(KEY_SPEED));
+    if (Number.isFinite(v) && v >= 0.75 && v <= 1) setSpeedState(v);
   }, []);
 
   useEffect(() => {
@@ -49,8 +52,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setThemeState(v);
   }, []);
 
+  const setSpeed = useCallback((v: number) => {
+    window.localStorage.setItem(KEY_SPEED, String(v));
+    setSpeedState(v);
+  }, []);
+
   return (
-    <PrefsContext.Provider value={{ textSize, theme, setTextSize, setTheme }}>
+    <PrefsContext.Provider value={{ textSize, theme, speed, setTextSize, setTheme, setSpeed }}>
       {children}
     </PrefsContext.Provider>
   );
