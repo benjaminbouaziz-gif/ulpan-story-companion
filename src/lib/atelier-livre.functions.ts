@@ -439,6 +439,8 @@ export const saveAtelierPage = createServerFn({ method: "POST" })
           .array(
             z.object({
               id: z.string().uuid().nullable(),
+              // Toute autre valeur est refusée ici, avant d'atteindre la base.
+              blockKind: z.enum(BLOCK_KINDS),
               heNikud: z.string().max(20000),
               hePlain: z.string().max(20000),
               supportFr: z.string().max(20000),
@@ -504,9 +506,7 @@ export const saveAtelierPage = createServerFn({ method: "POST" })
       const row = {
         page_id: page.id,
         sort_order: i + 1,
-        // La base n'accepte que 'narrative' ou 'dialogue' : le paragraphe est
-        // 'narrative', et cette brique n'offre pas d'autre choix.
-        block_kind: "narrative",
+        block_kind: b.blockKind,
         he_nikud: nullish(b.heNikud),
         he_plain: nullish(b.hePlain),
         support_fr: nullish(b.supportFr),
