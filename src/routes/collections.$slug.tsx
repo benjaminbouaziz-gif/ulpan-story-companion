@@ -67,9 +67,6 @@ function CollectionPage() {
         </p>
       </section>
 
-
-
-
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("collections.volumes")}</h2>
         {data.books.length === 0 ? (
