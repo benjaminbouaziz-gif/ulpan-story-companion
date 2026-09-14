@@ -365,7 +365,11 @@ export const createAtelierPage = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error || !inserted) throw new Error(texteErreurBase("CREATE_REFUSED", error));
+    if (error || !inserted) {
+      // L'index unique de la base parle le même langage que le contrôle applicatif.
+      if (error?.code === "23505") throw new Error("PAGE_NO_TAKEN");
+      throw new Error(texteErreurBase("CREATE_REFUSED", error));
+    }
     return { id: inserted.id };
   });
 
