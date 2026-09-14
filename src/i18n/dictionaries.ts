@@ -660,7 +660,7 @@ const fr = {
   "atelier.site.excerpt.desc":
     "Le texte de démonstration montré aux visiteurs, paragraphe par paragraphe.",
   "atelier.site.excerpt.warning":
-    "Cette démonstration est le texte montré aux visiteurs du site. Ce n\u2019est pas une page du livre.",
+    "Cette démonstration est le texte montré aux visiteurs du site. Ce n’est pas une page du livre.",
   "atelier.site.figures.desc": "Les chiffres annoncés pour chaque tome.",
   "atelier.site.open": "Ouvrir",
   "atelier.site.save": "Enregistrer",
