@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
+import { ExtraitLecture } from "@/components/ExtraitLecture";
 import { Spread } from "@/components/Spread";
 import { useI18n } from "@/i18n/context";
 import {
@@ -333,7 +334,7 @@ function SpreadEditor() {
         </div>
 
         <div className="flex-1">
-          <h2 className="label text-secondary-text">Aperçu de la double page</h2>
+          <h2 className="label text-secondary-text">{t("atelier.site.excerpt.previewPaper")}</h2>
           <div className="mt-3">
             <Spread
               paragraphs={preview}
@@ -342,6 +343,13 @@ function SpreadEditor() {
               folio={book?.spread_folio_left ?? 42}
               showGrid={showGrid}
             />
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <h2 className="label text-secondary-text">{t("atelier.site.excerpt.previewSite")}</h2>
+          <div className="border-line mt-3 border p-4">
+            <ExtraitLecture paragraphs={preview} />
           </div>
         </div>
       </div>
