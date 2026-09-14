@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
+import { ExtraitLecture } from "@/components/ExtraitLecture";
 import { Spread } from "@/components/Spread";
 import { useI18n } from "@/i18n/context";
 import {
@@ -332,16 +333,26 @@ function SpreadEditor() {
           )}
         </div>
 
-        <div className="flex-1">
-          <h2 className="label text-secondary-text">Aperçu de la double page</h2>
-          <div className="mt-3">
-            <Spread
-              paragraphs={preview}
-              runningHead={book?.spread_running_head_fr ?? book?.title_fr ?? ""}
-              chapter={book?.spread_chapter_fr ?? ""}
-              folio={book?.spread_folio_left ?? 42}
-              showGrid={showGrid}
-            />
+        <div className="min-w-0 flex-[2]">
+          <div className="grid gap-8 xl:grid-cols-2">
+            <section className="min-w-0">
+              <h2 className="label text-secondary-text">{t("atelier.site.excerpt.paperPreview")}</h2>
+              <div className="mt-3">
+                <Spread
+                  paragraphs={preview}
+                  runningHead={book?.spread_running_head_fr ?? book?.title_fr ?? ""}
+                  chapter={book?.spread_chapter_fr ?? ""}
+                  folio={book?.spread_folio_left ?? 42}
+                  showGrid={showGrid}
+                />
+              </div>
+            </section>
+            <section className="min-w-0">
+              <h2 className="label text-secondary-text">{t("atelier.site.excerpt.sitePreview")}</h2>
+              <div className="mt-3">
+                <ExtraitLecture paragraphs={preview} />
+              </div>
+            </section>
           </div>
         </div>
       </div>

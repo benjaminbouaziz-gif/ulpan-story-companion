@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { useI18n } from "@/i18n/context";
 import type { SpreadParagraph } from "@/lib/spread";
-import { Spread } from "./Spread";
-import { SpreadReader } from "./SpreadReader";
+import { ExtraitLecture } from "./ExtraitLecture";
 
 /**
  * La double page sur le site : l'affirmation, la page, la mention de
@@ -28,8 +26,6 @@ export function SpreadSection({
   note?: string | null;
 }) {
   const { t } = useI18n();
-  const [reading, setReading] = useState(false);
-
   if (paragraphs.length === 0) return null;
 
   const claimText = claim === undefined ? t("spread.claim") : claim;
@@ -44,31 +40,10 @@ export function SpreadSection({
       ) : null}
 
       <div className="mt-8">
-        <Spread
-          paragraphs={paragraphs}
-          color={color}
-          runningHead={runningHead}
-          chapter={chapter}
-          folio={folio}
-        />
+        <ExtraitLecture paragraphs={paragraphs} />
       </div>
 
       {noteText ? <p className="label text-secondary-text mt-4">{noteText}</p> : null}
-
-
-      {reading ? (
-        <div className="border-line mt-8 border-t pt-8">
-          <SpreadReader paragraphs={paragraphs} color={color} />
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setReading(true)}
-          className="label touch bg-foreground text-background mt-6 w-full"
-        >
-          {t("spread.readBig")}
-        </button>
-      )}
     </section>
   );
 }

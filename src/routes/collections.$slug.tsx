@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { Spread } from "@/components/Spread";
+import { ExtraitLecture } from "@/components/ExtraitLecture";
 import { pickLang, useI18n } from "@/i18n/context";
 import { collectionQuery } from "@/lib/queries";
 
@@ -68,20 +68,9 @@ function CollectionPage() {
 
       {data.paragraphs.length > 0 ? (
         <section className="border-line mt-8 border-t pt-6">
-          <div className="pointer-events-none mx-auto mt-2 max-w-[420px] select-none">
-            <Spread
-              paragraphs={data.paragraphs}
-              color={collection.color_hex}
-              runningHead={pickLang(lang, collection.name_fr, collection.name_en) ?? ""}
-              chapter=""
-            />
+          <div className="mt-2">
+            <ExtraitLecture paragraphs={data.paragraphs} />
           </div>
-          <Link
-            to="/methode"
-            className="label touch mt-4 inline-flex border-b border-current"
-          >
-            {t("spread.readBig")}
-          </Link>
         </section>
       ) : null}
 

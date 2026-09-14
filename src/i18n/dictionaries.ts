@@ -66,6 +66,8 @@ const fr = {
   "excerpt.glossary": "Glossaire du passage",
   "excerpt.glossaryFull":
     "La liste complète du chapitre est dans le compagnon, avec sa version imprimable.",
+  "excerpt.readMore": "Lire la suite de la page",
+  "excerpt.collapse": "Replier",
   "spread.claim":
     "C'est la double page du livre. Pas une illustration, pas une maquette pour le site : le format, les marges, la typographie et la mise en page sont exactement ceux que vous aurez entre les mains.",
   "spread.note":
@@ -706,6 +708,8 @@ const fr = {
   "atelier.site.excerpt.supportEn": "Soutien EN",
   "atelier.site.excerpt.choose": "Choisissez un paragraphe pour l'éditer.",
   "atelier.site.excerpt.preview": "Aperçu de la double page",
+  "atelier.site.excerpt.paperPreview": "Aperçu papier",
+  "atelier.site.excerpt.sitePreview": "Aperçu site",
   "atelier.site.excerpt.saveError": "Erreur d'enregistrement.",
 
   "atelier.site.figures.note":
@@ -790,6 +794,8 @@ const en: Record<DictKey, string> = {
   "excerpt.after2": "That is the last page of the book.",
   "excerpt.glossary": "Glossary of this passage",
   "excerpt.glossaryFull": "The full chapter list is in the companion, with a printable version.",
+  "excerpt.readMore": "Read the rest of the page",
+  "excerpt.collapse": "Collapse",
   "spread.claim":
     "This is the book's double page. Not an illustration, not a mock-up for the website: the format, margins, typography and layout are exactly those you will hold in your hands.",
   "spread.note":
