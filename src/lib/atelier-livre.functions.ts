@@ -410,6 +410,7 @@ export const atelierPage = createServerFn({ method: "GET" })
       blocks: (blocks.data ?? []).map((b) => ({
         id: b.id,
         sortOrder: b.sort_order,
+        blockKind: (b.block_kind === "dialogue" ? "dialogue" : "narrative") as BlockKindValue,
         heNikud: b.he_nikud ?? "",
         hePlain: b.he_plain ?? "",
         supportFr: b.support_fr ?? "",
