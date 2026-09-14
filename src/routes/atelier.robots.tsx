@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Room } from "@/components/AtelierRoom";
@@ -82,6 +82,10 @@ function RunsTable() {
 }
 
 export const Route = createFileRoute("/atelier/robots")({
+  // Salle retirée du menu : l'adresse ramène aux livres. Le code reste en place.
+  beforeLoad: () => {
+    throw redirect({ to: "/atelier/livres" });
+  },
   head: () => ({
     meta: [{ title: "Robots — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),

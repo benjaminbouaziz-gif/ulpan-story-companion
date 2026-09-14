@@ -51,12 +51,15 @@ export const Route = createFileRoute("/atelier")({
   component: AtelierShell,
 });
 
+/**
+ * Les salles de fabrication par robots (Prompts, Robots, Dossier d'étape) ne
+ * sont plus au menu : leur code reste en place, leurs adresses ramènent aux
+ * livres.
+ */
 const ROOMS: { to: string; key: DictKey }[] = [
   { to: "/atelier", key: "atelier.room.dashboard" },
   { to: "/atelier/livres", key: "atelier.room.books" },
   { to: "/atelier/collections", key: "atelier.room.collections" },
-  { to: "/atelier/prompts", key: "atelier.room.prompts" },
-  { to: "/atelier/robots", key: "atelier.room.robots" },
   { to: "/atelier/site", key: "atelier.room.site" },
   { to: "/atelier/lecteurs", key: "atelier.room.readers" },
   { to: "/atelier/mesure", key: "atelier.room.measure" },
@@ -109,7 +112,11 @@ function AtelierShell() {
       <div className="min-w-0 flex-1">
         <header className="border-line flex items-center justify-end gap-4 border-b px-8 py-3">
           <span className="text-[13px]">{email}</span>
-          <button type="button" onClick={signOut} className="border-line rounded-[2px] border px-3 py-1 text-[13px]">
+          <button
+            type="button"
+            onClick={signOut}
+            className="border-line rounded-[2px] border px-3 py-1 text-[13px]"
+          >
             {t("atelier.signOut")}
           </button>
         </header>

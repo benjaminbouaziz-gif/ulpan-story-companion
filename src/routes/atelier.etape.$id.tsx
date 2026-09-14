@@ -1,15 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { StepDossier } from "@/components/AtelierStepDossier";
 import { useI18n } from "@/i18n/context";
 
 /**
- * Le dossier d'étape, ouvert depuis la file d'attente ou depuis la chaîne d'un
- * livre. Toute lecture et toute écriture passent par les fonctions serveur du
- * composant (assertEditor en première ligne) : aucun accès direct aux tables.
+ * Le dossier d'étape appartenait à la fabrication par robots : il n'est plus
+ * au menu et son adresse ramène aux livres. Le code reste en place.
  */
 export const Route = createFileRoute("/atelier/etape/$id")({
+  beforeLoad: () => {
+    throw redirect({ to: "/atelier/livres" });
+  },
   head: () => ({
-    meta: [{ title: "Dossier d'étape — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Dossier d'étape — Atelier Ulpan Story" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: StepDossierRoom,
 });

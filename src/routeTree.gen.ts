@@ -41,8 +41,10 @@ import { Route as CompagnonIndexRouteImport } from './routes/compagnon.index'
 import { Route as CompagnonBook_slugRouteImport } from './routes/compagnon.$book_slug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as AtelierEtapeIdRouteImport } from './routes/atelier.etape.$id'
+import { Route as AtelierLivresSlugRouteImport } from './routes/atelier.livres_.$slug'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as AtelierLivresSlugPagePageIdRouteImport } from './routes/atelier.livres_.$slug_.page.$pageId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -204,6 +206,11 @@ const AtelierEtapeIdRoute = AtelierEtapeIdRouteImport.update({
   path: '/etape/$id',
   getParentRoute: () => AtelierRoute,
 } as any)
+const AtelierLivresSlugRoute = AtelierLivresSlugRouteImport.update({
+  id: '/livres_/$slug',
+  path: '/livres/$slug',
+  getParentRoute: () => AtelierRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -214,6 +221,12 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtelierLivresSlugPagePageIdRoute =
+  AtelierLivresSlugPagePageIdRouteImport.update({
+    id: '/livres_/$slug_/page/$pageId',
+    path: '/livres/$slug/page/$pageId',
+    getParentRoute: () => AtelierRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -248,8 +261,10 @@ export interface FileRoutesByFullPath {
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
   '/atelier/etape/$id': typeof AtelierEtapeIdRoute
+  '/atelier/livres/$slug': typeof AtelierLivresSlugRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/atelier/livres/$slug/page/$pageId': typeof AtelierLivresSlugPagePageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -282,8 +297,10 @@ export interface FileRoutesByTo {
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
   '/atelier/etape/$id': typeof AtelierEtapeIdRoute
+  '/atelier/livres/$slug': typeof AtelierLivresSlugRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/atelier/livres/$slug/page/$pageId': typeof AtelierLivresSlugPagePageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -319,8 +336,10 @@ export interface FileRoutesById {
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
   '/atelier/etape/$id': typeof AtelierEtapeIdRoute
+  '/atelier/livres_/$slug': typeof AtelierLivresSlugRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/atelier/livres_/$slug_/page/$pageId': typeof AtelierLivresSlugPagePageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -357,8 +376,10 @@ export interface FileRouteTypes {
     | '/collections/'
     | '/compagnon/'
     | '/atelier/etape/$id'
+    | '/atelier/livres/$slug'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/atelier/livres/$slug/page/$pageId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -391,8 +412,10 @@ export interface FileRouteTypes {
     | '/collections'
     | '/compagnon'
     | '/atelier/etape/$id'
+    | '/atelier/livres/$slug'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/atelier/livres/$slug/page/$pageId'
   id:
     | '__root__'
     | '/'
@@ -427,8 +450,10 @@ export interface FileRouteTypes {
     | '/collections/'
     | '/compagnon/'
     | '/atelier/etape/$id'
+    | '/atelier/livres_/$slug'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/atelier/livres_/$slug_/page/$pageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -678,6 +703,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierEtapeIdRouteImport
       parentRoute: typeof AtelierRoute
     }
+    '/atelier/livres_/$slug': {
+      id: '/atelier/livres_/$slug'
+      path: '/livres/$slug'
+      fullPath: '/atelier/livres/$slug'
+      preLoaderRoute: typeof AtelierLivresSlugRouteImport
+      parentRoute: typeof AtelierRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -691,6 +723,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lovable/email/auth/webhook'
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/atelier/livres_/$slug_/page/$pageId': {
+      id: '/atelier/livres_/$slug_/page/$pageId'
+      path: '/livres/$slug/page/$pageId'
+      fullPath: '/atelier/livres/$slug/page/$pageId'
+      preLoaderRoute: typeof AtelierLivresSlugPagePageIdRouteImport
+      parentRoute: typeof AtelierRoute
     }
   }
 }
@@ -725,6 +764,8 @@ interface AtelierRouteChildren {
   AtelierSiteRoute: typeof AtelierSiteRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
   AtelierEtapeIdRoute: typeof AtelierEtapeIdRoute
+  AtelierLivresSlugRoute: typeof AtelierLivresSlugRoute
+  AtelierLivresSlugPagePageIdRoute: typeof AtelierLivresSlugPagePageIdRoute
 }
 
 const AtelierRouteChildren: AtelierRouteChildren = {
@@ -739,6 +780,8 @@ const AtelierRouteChildren: AtelierRouteChildren = {
   AtelierSiteRoute: AtelierSiteRoute,
   AtelierIndexRoute: AtelierIndexRoute,
   AtelierEtapeIdRoute: AtelierEtapeIdRoute,
+  AtelierLivresSlugRoute: AtelierLivresSlugRoute,
+  AtelierLivresSlugPagePageIdRoute: AtelierLivresSlugPagePageIdRoute,
 }
 
 const AtelierRouteWithChildren =

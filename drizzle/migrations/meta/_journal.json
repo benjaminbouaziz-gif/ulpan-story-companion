@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789405744182,
+      "tag": "0000_book_pages_audio_path_et_politiques_audios",
+      "breakpoints": true
+    }
+  ]
+}
