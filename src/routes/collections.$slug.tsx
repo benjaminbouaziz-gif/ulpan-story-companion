@@ -67,13 +67,8 @@ function CollectionPage() {
         </p>
       </section>
 
-      {data.paragraphs.length > 0 ? (
-        <section className="border-line mt-8 border-t pt-6">
-          <div className="mt-2">
-            <ExtraitLecture paragraphs={data.paragraphs} />
-          </div>
-        </section>
-      ) : null}
+
+
 
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("collections.volumes")}</h2>
