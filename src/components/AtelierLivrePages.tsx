@@ -359,9 +359,7 @@ export function LivrePagesTable({ bookId, slug }: { bookId: string; slug: string
                           </>
                         )}
                         {enCours ? (
-                          <span className="text-[12px]">
-                            {t("atelier.livre.audio.uploading")}
-                          </span>
+                          <span className="text-[12px]">{t("atelier.livre.audio.uploading")}</span>
                         ) : null}
                         <input
                           ref={(el) => {
