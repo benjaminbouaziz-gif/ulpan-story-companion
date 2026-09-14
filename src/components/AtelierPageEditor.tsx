@@ -9,10 +9,12 @@ import { stripNikud } from "@/lib/spread";
 import { PageAudio } from "./AtelierPageAudio";
 import {
   atelierPage,
+  BLOCK_KINDS,
   deleteAtelierPage,
   saveAtelierPage,
   SUPPORT_KINDS,
   type AtelierBlock,
+  type BlockKindValue,
   type SupportKindValue,
 } from "@/lib/atelier-livre.functions";
 
@@ -152,6 +154,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
           isPublished: form.isPublished,
           blocks: blocks.map((b) => ({
             id: b.id,
+            blockKind: b.blockKind,
             heNikud: b.heNikud,
             hePlain: b.hePlain,
             supportFr: b.supportFr,
@@ -296,6 +299,8 @@ export function PageEditor({ pageId }: { pageId: string }) {
                 {
                   id: null,
                   sortOrder: bs.length + 1,
+                  // Un bloc naît en récit ; le dialogue est un choix explicite.
+                  blockKind: "narrative" as BlockKindValue,
                   heNikud: "",
                   hePlain: "",
                   supportFr: "",
