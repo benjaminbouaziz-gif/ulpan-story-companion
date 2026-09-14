@@ -104,7 +104,7 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         .maybeSingle();
       collection = (c as Collection) ?? null;
     }
-    const [{ data: rows }, { data: gloss }, pages, words] = await Promise.all([
+    const [{ data: rows }, { data: gloss }, words] = await Promise.all([
       supabase
         .from("spread_paragraphs")
         .select("*")
@@ -115,7 +115,6 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         .select("*")
         .eq("book_id", book.id)
         .order("sort_order", { ascending: true }),
-      loadBookPages(supabase, book.id),
       loadGlossaryWords(supabase, book.id),
     ]);
     return {
@@ -123,7 +122,6 @@ export const getBookBySlug = createServerFn({ method: "GET" })
       collection,
       paragraphs: (rows ?? []).map(toSpreadParagraph),
       glossary: (gloss ?? []).map(toGlossaryItem),
-      pages,
       words,
     };
   });
@@ -132,7 +130,6 @@ export type SpreadBundle = {
   book: Book;
   collection: Collection | null;
   paragraphs: SpreadParagraph[];
-  pages: BookPage[];
   words: GlossaryWord[];
 };
 
@@ -211,7 +208,6 @@ export const getPageBySlug = createServerFn({ method: "GET" })
           book,
           collection: (book.collection_id ? collections[book.collection_id] : null) ?? null,
           paragraphs: (rows ?? []).map(toSpreadParagraph),
-          pages: await loadBookPages(supabase, id),
           words: await loadGlossaryWords(supabase, id),
         };
 
@@ -237,7 +233,6 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
       book: null as Book | null,
       collection: null as Collection | null,
       paragraphs: [] as SpreadParagraph[],
-      pages: [] as BookPage[],
       words: [] as GlossaryWord[],
     };
   let collection: Collection | null = null;
@@ -249,20 +244,18 @@ export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async
       .maybeSingle();
     collection = (c as Collection) ?? null;
   }
-  const [{ data: rows }, pages, words] = await Promise.all([
+  const [{ data: rows }, words] = await Promise.all([
     supabase
       .from("spread_paragraphs")
       .select("*")
       .eq("book_id", book.id)
       .order("sort_order", { ascending: true }),
-    loadBookPages(supabase, book.id),
     loadGlossaryWords(supabase, book.id),
   ]);
   return {
     book: book as Book | null,
     collection,
     paragraphs: (rows ?? []).map(toSpreadParagraph),
-    pages,
     words,
   };
 

@@ -135,7 +135,6 @@ export function PageSections({
         if (s.kind === "book_spread") {
           const bundle = bookId ? spreads[bookId] : undefined;
           if (!bundle) return null;
-          const b = bundle.book;
           return (
             <Block key={s.id} rule={separator} first={si === 0}>
               {title ? (
