@@ -160,18 +160,7 @@ export function PageSections({
                   note={body}
                 />
               ) : (
-                <SpreadSection
-                  paragraphs={bundle.paragraphs}
-                  color={bundle.collection?.color_hex ?? null}
-                  runningHead={
-                    pickLang(lang, b.spread_running_head_fr, b.spread_running_head_en) ??
-                    bookTitle
-                  }
-                  chapter={pickLang(lang, b.spread_chapter_fr, b.spread_chapter_en) ?? ""}
-                  folio={b.spread_folio_left ?? 42}
-                  claim={null}
-                  note={body}
-                />
+                <SpreadSection paragraphs={bundle.paragraphs} claim={null} note={body} />
               )}
             </Block>
           );

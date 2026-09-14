@@ -98,17 +98,7 @@ function BookPage() {
             showGlossary
           />
         ) : (
-          <SpreadSection
-            paragraphs={data.paragraphs}
-            color={collection?.color_hex ?? null}
-            runningHead={
-              pickLang(lang, book.spread_running_head_fr, book.spread_running_head_en) ??
-              pickLang(lang, book.title_fr, book.title_en) ??
-              ""
-            }
-            chapter={pickLang(lang, book.spread_chapter_fr, book.spread_chapter_en) ?? ""}
-            folio={book.spread_folio_left ?? 42}
-          />
+          <SpreadSection paragraphs={data.paragraphs} />
         )}
       </section>
 
