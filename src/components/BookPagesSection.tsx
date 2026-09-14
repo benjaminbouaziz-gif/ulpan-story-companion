@@ -7,31 +7,30 @@ import {
   type BookPage,
   type GlossaryWord,
 } from "@/lib/book-page";
-import { BookSpread } from "./BookSpread";
 import { GlossaryPage } from "./GlossaryPage";
 
 /**
- * Les pages du livre sur le site : d'abord la double page telle qu'elle est
- * imprimée, ensuite — et seulement si le lecteur le demande — la même page en
- * grand, dans l'ordre du livre. Aucune mécanique qui n'existe pas sur papier.
+ * Les pages du livre sur le site : le texte hébreu et son soutien forment une
+ * suite de couples lisibles, sans reproduire les dimensions de l'imprimé.
  */
 
-/** La même page, à la taille du téléphone. Rien n'est ajouté : c'est le texte. */
+/** La page adaptée à l'écran, sans titre courant, chapitre ni folio. */
 function PageReader({ page, color }: { page: BookPage; color: string | null }) {
   const { t, lang } = useI18n();
+  const [expanded, setExpanded] = useState(false);
   const blocks = [...page.blocks].sort((a, b) => a.sort_order - b.sort_order);
+  const visibleBlocks = expanded ? blocks : blocks.slice(0, 4);
 
   return (
     <div>
       {page.keys.length > 0 && page.support_kind === "keys" ? (
         <p className="body-text text-secondary-text">{t("pages.keysInstruction")}</p>
       ) : null}
-      {blocks.map((b) => {
+      {visibleBlocks.map((b, index) => {
         const he = leftHebrew(b, page.support_kind);
-        const support =
-          page.support_kind === "nikud" ? b.he_nikud : blockSupport(b, lang);
+        const support = page.support_kind === "nikud" ? b.he_nikud : blockSupport(b, lang);
         return (
-          <div key={b.id} className="border-line mt-8 border-t pt-5 first:mt-0 first:border-0 first:pt-0">
+          <div key={b.id} className={index === 0 ? "" : "mt-[1.6em]"}>
             {he ? (
               <p
                 dir="rtl"
@@ -39,8 +38,9 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
                 className="text-right"
                 style={{
                   fontFamily: "var(--font-hebrew)",
-                  fontSize: "calc(26px * var(--text-scale))",
-                  lineHeight: 1.9,
+                  fontSize: "calc(21px * var(--text-scale))",
+                  lineHeight: 1.95,
+                  letterSpacing: "normal",
                 }}
               >
                 {he}
@@ -51,17 +51,21 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
                 <p
                   dir="rtl"
                   lang="he"
-                  className="text-secondary-text mt-3 text-right"
+                  className="text-secondary-text mt-[0.4em] text-right"
                   style={{
                     fontFamily: "var(--font-hebrew)",
-                    fontSize: "calc(21px * var(--text-scale))",
-                    lineHeight: 1.9,
+                    fontSize: "calc(15px * var(--text-scale))",
+                    lineHeight: 1.6,
+                    letterSpacing: "normal",
                   }}
                 >
                   {support}
                 </p>
               ) : (
-                <p className="body-text text-secondary-text mt-3">
+                <p
+                  className="text-secondary-text mt-[0.4em]"
+                  style={{ fontSize: "calc(15px * var(--text-scale))", lineHeight: 1.6 }}
+                >
                   {parseSupport(support).map((piece, i) =>
                     "gloss_no" in piece ? (
                       <em key={i} className="whitespace-nowrap italic">
@@ -78,6 +82,17 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
         );
       })}
 
+      {blocks.length > 4 ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="label touch mt-8 border-b border-current"
+          aria-expanded={expanded}
+        >
+          {expanded ? t("excerpt.collapse") : t("excerpt.readMore")}
+        </button>
+      ) : null}
+
       {page.keys.length > 0 ? (
         <dl className="mt-8">
           {page.keys.map((k) => (
@@ -89,7 +104,10 @@ function PageReader({ page, color }: { page: BookPage; color: string | null }) {
                 <span
                   dir="rtl"
                   lang="he"
-                  style={{ fontFamily: "var(--font-hebrew)", fontSize: "calc(21px * var(--text-scale))" }}
+                  style={{
+                    fontFamily: "var(--font-hebrew)",
+                    fontSize: "calc(21px * var(--text-scale))",
+                  }}
                 >
                   {k.he_nikud}
                 </span>
@@ -110,7 +128,6 @@ export function BookPagesSection({
   pages,
   words = [],
   color = null,
-  bookTitle,
   claim,
   note,
   showGlossary = false,
@@ -126,13 +143,10 @@ export function BookPagesSection({
 }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
-  const [grid, setGrid] = useState(false);
-  const [reading, setReading] = useState(false);
-  const [zoom, setZoom] = useState(1);
-
 
   if (pages.length === 0) return null;
-  const page = pages[Math.min(index, pages.length - 1)]!;
+  const page = pages[Math.min(index, pages.length - 1)];
+  if (!page) return null;
 
   const claimText = claim === undefined ? t("spread.claim") : claim;
   const noteText = note === undefined ? t("spread.note") : note;
@@ -149,10 +163,7 @@ export function BookPagesSection({
             <button
               key={p.id}
               type="button"
-              onClick={() => {
-                setIndex(i);
-                setReading(false);
-              }}
+              onClick={() => setIndex(i)}
               className="label touch border-line border px-3"
               style={
                 i === index
@@ -167,79 +178,23 @@ export function BookPagesSection({
         </div>
       ) : null}
 
-      <div className="mt-6 overflow-x-auto">
-        <div style={{ width: `${zoom * 100}%` }}>
-          <BookSpread
-            page={page}
-            color={color}
-            bookTitle={bookTitle}
-            showGrid={grid}
-            maxPxPerMm={3.78 * zoom}
-          />
-
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+      <div className="mt-6 flex flex-wrap items-center gap-4">
         <p className="label text-secondary-text">
           {t("pages.chapter")} {page.chapter_no ?? "—"} · {t("pages.page")} {page.page_no}
         </p>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setZoom((z) => Math.max(1, Math.round((z - 0.5) * 2) / 2))}
-            disabled={zoom <= 1}
-            aria-label="Réduire"
-            className="label touch border-line border px-3 disabled:opacity-40"
-          >
-            −
-          </button>
-          <span className="label text-secondary-text w-12 text-center">
-            {Math.round(zoom * 100)} %
-          </span>
-          <button
-            type="button"
-            onClick={() => setZoom((z) => Math.min(4, Math.round((z + 0.5) * 2) / 2))}
-            disabled={zoom >= 4}
-            aria-label="Agrandir"
-            className="label touch border-line border px-3 disabled:opacity-40"
-          >
-            +
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={() => setGrid((v) => !v)}
-          className="label touch border-b border-current"
-        >
-          {grid ? t("pages.gridOff") : t("pages.grid")}
-        </button>
       </div>
 
+      <div className="mt-6">
+        <PageReader page={page} color={color} />
+      </div>
 
       {noteText ? <p className="label text-secondary-text mt-4">{noteText}</p> : null}
-
-      {reading ? (
-        <div className="border-line mt-8 border-t pt-8">
-          <PageReader page={page} color={color} />
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setReading(true)}
-          className="label touch bg-foreground text-background mt-6 w-full"
-        >
-          {t("spread.readBig")}
-        </button>
-      )}
 
       {showGlossary && words.length > 0 ? (
         <div className="border-line mt-12 border-t pt-8">
           <h3 className="text-[22px]">{t("gloss.title")}</h3>
           <div className="mt-6 overflow-x-auto">
-            <div style={{ width: `${zoom * 100}%` }}>
-              <GlossaryPage words={words} color={color} maxPxPerMm={3.78 * zoom} />
-            </div>
+            <GlossaryPage words={words} color={color} />
           </div>
         </div>
       ) : null}
