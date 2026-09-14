@@ -5,12 +5,17 @@ export type Theme = "ivory" | "night";
 
 const KEY_SIZE = "ulpanstory.textSize";
 const KEY_THEME = "ulpanstory.theme";
+/** La vitesse d'écoute du lecteur : elle vit ici, pas dans un stockage à part. */
+const KEY_SPEED = "ulpanstory.vitesse";
+const SPEED_FALLBACK = 0.9;
 
 type PrefsValue = {
   textSize: TextSize;
   theme: Theme;
+  speed: number;
   setTextSize: (v: TextSize) => void;
   setTheme: (v: Theme) => void;
+  setSpeed: (v: number) => void;
 };
 
 const PrefsContext = createContext<PrefsValue | null>(null);
