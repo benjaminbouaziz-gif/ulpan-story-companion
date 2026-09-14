@@ -369,7 +369,6 @@ export function PageEditor({ pageId }: { pageId: string }) {
                 </select>
               </label>
 
-
               <label className="mt-2 block">
                 <span className={labelCls}>{t("atelier.livre.blocks.heNikud")}</span>
                 <textarea
