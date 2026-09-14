@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { Spread } from "@/components/Spread";
+import { ExtraitLecture } from "@/components/ExtraitLecture";
 import { pickLang, useI18n } from "@/i18n/context";
 import { collectionQuery } from "@/lib/queries";
 

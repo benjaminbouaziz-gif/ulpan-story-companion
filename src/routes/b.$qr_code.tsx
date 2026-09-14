@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { AccessForm } from "@/components/AccessForm";
 import { PageShell } from "@/components/SiteChrome";
-import { Spread } from "@/components/Spread";
+import { ExtraitLecture } from "@/components/ExtraitLecture";
 import { pickLang, useI18n } from "@/i18n/context";
 import { getQrEntry } from "@/lib/access.functions";
 
@@ -78,17 +78,7 @@ function QrEntry() {
 
       {published && data.paragraphs.length > 0 ? (
         <div className="mt-8">
-          <Spread
-            paragraphs={data.paragraphs}
-            color={data.collection?.color_hex ?? null}
-            runningHead={
-              pickLang(lang, book.spread_running_head_fr, book.spread_running_head_en) ??
-              pickLang(lang, book.title_fr, book.title_en) ??
-              ""
-            }
-            chapter={pickLang(lang, book.spread_chapter_fr, book.spread_chapter_en) ?? ""}
-            folio={book.spread_folio_left ?? 42}
-          />
+          <ExtraitLecture paragraphs={data.paragraphs} />
         </div>
       ) : null}
 
