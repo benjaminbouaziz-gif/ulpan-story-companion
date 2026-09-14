@@ -441,6 +441,9 @@ export function PageEditor({ pageId }: { pageId: string }) {
         )}
       </section>
 
+      {/* L'audio se dépose entre les paragraphes et la ligne d'enregistrement. */}
+      <PageAudio pageId={pageId} audioPath={data.audioPath} onChanged={() => void page.refetch()} />
+
       <div className="mt-6 flex items-center gap-3 text-[13px]">
         <button
           type="button"
