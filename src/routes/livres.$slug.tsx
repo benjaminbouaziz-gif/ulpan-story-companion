@@ -3,7 +3,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/SiteChrome";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
-import { BookPagesSection } from "@/components/BookPagesSection";
 import { SpreadSection } from "@/components/SpreadSection";
 
 import { pickLang, useI18n } from "@/i18n/context";
@@ -92,17 +91,8 @@ function BookPage() {
 
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("books.excerpt")}</h2>
-        {data.pages.length > 0 ? (
-          <BookPagesSection
-            pages={data.pages}
-            words={data.words}
-            color={collection?.color_hex ?? null}
-            bookTitle={pickLang(lang, book.title_fr, book.title_en) ?? ""}
-            showGlossary
-          />
-        ) : (
-          <SpreadSection paragraphs={data.paragraphs} />
-        )}
+        {/* La démonstration du site vient de spread_paragraphs, jamais des pages du livre. */}
+        <SpreadSection paragraphs={data.paragraphs} />
       </section>
 
       {learnList.length > 0 ? (

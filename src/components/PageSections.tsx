@@ -147,18 +147,8 @@ export function PageSections({
                   </p>
                 </Column>
               ) : null}
-              {bundle.pages.length > 0 ? (
-                <BookPagesSection
-                  pages={bundle.pages}
-                  words={bundle.words}
-                  color={bundle.collection?.color_hex ?? null}
-                  bookTitle={bookTitle}
-                  claim={null}
-                  note={body}
-                />
-              ) : (
-                <SpreadSection paragraphs={bundle.paragraphs} claim={null} note={body} />
-              )}
+              {/* La démonstration vient de spread_paragraphs, jamais des pages du livre. */}
+              <SpreadSection paragraphs={bundle.paragraphs} claim={null} note={body} />
             </Block>
           );
         }
