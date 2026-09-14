@@ -9,10 +9,12 @@ import { stripNikud } from "@/lib/spread";
 import { PageAudio } from "./AtelierPageAudio";
 import {
   atelierPage,
+  BLOCK_KINDS,
   deleteAtelierPage,
   saveAtelierPage,
   SUPPORT_KINDS,
   type AtelierBlock,
+  type BlockKindValue,
   type SupportKindValue,
 } from "@/lib/atelier-livre.functions";
 
@@ -152,6 +154,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
           isPublished: form.isPublished,
           blocks: blocks.map((b) => ({
             id: b.id,
+            blockKind: b.blockKind,
             heNikud: b.heNikud,
             hePlain: b.hePlain,
             supportFr: b.supportFr,
@@ -296,6 +299,8 @@ export function PageEditor({ pageId }: { pageId: string }) {
                 {
                   id: null,
                   sortOrder: bs.length + 1,
+                  // Un bloc naît en récit ; le dialogue est un choix explicite.
+                  blockKind: "narrative" as BlockKindValue,
                   heNikud: "",
                   hePlain: "",
                   supportFr: "",
@@ -344,6 +349,25 @@ export function PageEditor({ pageId }: { pageId: string }) {
                   </button>
                 </span>
               </div>
+
+              <label className="mt-2 block max-w-[260px]">
+                <span className={labelCls}>{t("atelier.livre.blocks.kind")}</span>
+                <select
+                  className={input}
+                  value={b.blockKind}
+                  onChange={(e) => {
+                    const blockKind = e.target.value as BlockKindValue;
+                    setBlocks((bs) => bs.map((x, j) => (j === i ? { ...x, blockKind } : x)));
+                    touch();
+                  }}
+                >
+                  {BLOCK_KINDS.map((k) => (
+                    <option key={k} value={k}>
+                      {t(`atelier.livre.blocks.kind.${k}` as DictKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <label className="mt-2 block">
                 <span className={labelCls}>{t("atelier.livre.blocks.heNikud")}</span>

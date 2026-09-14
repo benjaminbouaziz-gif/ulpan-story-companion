@@ -56,7 +56,7 @@ const fr = {
   "footer.rights": "Ulpan Story — maison d'édition indépendante.",
 
   "empty.page": "Cette page n'a pas encore de contenu publié.",
-  "soon": "Cet écran arrive dans une prochaine étape.",
+  soon: "Cet écran arrive dans une prochaine étape.",
   "back.home": "Retour à l'accueil",
   "excerpt.empty": "L'extrait de ce livre n'est pas encore en ligne.",
   "excerpt.before": "Lisez ce passage jusqu'en bas.",
@@ -66,8 +66,10 @@ const fr = {
   "excerpt.glossary": "Glossaire du passage",
   "excerpt.glossaryFull":
     "La liste complète du chapitre est dans le compagnon, avec sa version imprimable.",
-  "spread.claim": "C'est la double page du livre. Pas une illustration, pas une maquette pour le site : le format, les marges, la typographie et la mise en page sont exactement ceux que vous aurez entre les mains.",
-  "spread.note": "Les quatre étapes sont réunies ici pour la démonstration. Dans le livre, chaque double page appartient à une seule étape.",
+  "spread.claim":
+    "C'est la double page du livre. Pas une illustration, pas une maquette pour le site : le format, les marges, la typographie et la mise en page sont exactement ceux que vous aurez entre les mains.",
+  "spread.note":
+    "Les quatre étapes sont réunies ici pour la démonstration. Dans le livre, chaque double page appartient à une seule étape.",
   "spread.readBig": "Lire cette page en grand",
   "spread.stage": "Étape",
   "spread.of": "sur",
@@ -86,16 +88,19 @@ const fr = {
   "pages.grid": "Afficher la trame",
   "pages.gridOff": "Masquer la trame",
   "gloss.title": "Glossaire",
-  "gloss.note": "Les mots du livre, dans l'ordre où ils apparaissent. Le numéro est celui qui accompagne chaque trou.",
+  "gloss.note":
+    "Les mots du livre, dans l'ordre où ils apparaissent. Le numéro est celui qui accompagne chaque trou.",
   "gloss.no": "N°",
   "gloss.he": "Hébreu",
   "gloss.translit": "Prononcé",
   "gloss.sense": "Sens",
 
   "access.email": "Votre adresse email",
-  "access.consent": "J'accepte de recevoir le lien d'accès et les nouvelles d'Ulpan Story. Un courrier de confirmation vous sera envoyé ; l'accès s'ouvre quand vous le confirmez. Vous pouvez vous désinscrire à tout moment.",
+  "access.consent":
+    "J'accepte de recevoir le lien d'accès et les nouvelles d'Ulpan Story. Un courrier de confirmation vous sera envoyé ; l'accès s'ouvre quand vous le confirmez. Vous pouvez vous désinscrire à tout moment.",
   "access.submit": "Recevoir mon accès",
-  "access.sent": "Un courrier vient de partir. Confirmez-le pour ouvrir votre accès : le lien s'ouvre directement, et le code à six chiffres du même courrier fonctionne si votre navigateur bloque le lien.",
+  "access.sent":
+    "Un courrier vient de partir. Confirmez-le pour ouvrir votre accès : le lien s'ouvre directement, et le code à six chiffres du même courrier fonctionne si votre navigateur bloque le lien.",
   "access.error": "L'envoi n'a pas abouti. Réessayez dans un instant.",
   "access.codeLink": "J'ai un code à six chiffres",
   "access.codeTitle": "Entrer le code reçu",
@@ -104,11 +109,13 @@ const fr = {
   "access.codeError": "Ce code ne correspond pas, ou il a expiré.",
   "access.opening": "Ouverture de votre accès…",
   "access.opened": "Votre accès est ouvert.",
-  "access.qrPending": "Ce livre n'est pas encore en ligne. Laissez votre adresse : vous serez prévenu le jour de sa parution.",
+  "access.qrPending":
+    "Ce livre n'est pas encore en ligne. Laissez votre adresse : vous serez prévenu le jour de sa parution.",
   "access.yourBook": "Le livre que vous tenez",
   "admin.excerpt": "Double page de démonstration",
   "admin.forbidden": "Accès réservé.",
-  "admin.forbiddenBody": "Ce compte n'a pas de rôle d'administration. Demandez à l'éditeur de vous en attribuer un.",
+  "admin.forbiddenBody":
+    "Ce compte n'a pas de rôle d'administration. Demandez à l'éditeur de vous en attribuer un.",
   "admin.title": "Administration",
   "admin.pages": "Pages éditoriales",
   "admin.figures": "Chiffres des livres",
@@ -168,7 +175,8 @@ const fr = {
   "atelier.forbiddenBody": "Ce compte n'a pas de rôle d'atelier.",
   "atelier.empty": "vide",
   "atelier.room.dashboard": "Tableau de bord",
-  "atelier.room.dashboard.desc": "Ce qui attend ma signature, ce qui tourne, ce qui est bloqué, ce qui a bougé.",
+  "atelier.room.dashboard.desc":
+    "Ce qui attend ma signature, ce qui tourne, ce qui est bloqué, ce qui a bougé.",
   "atelier.room.books": "Livres",
   "atelier.room.books.desc": "Le catalogue de fabrication et l'étape en cours de chaque livre.",
   "atelier.room.collections": "Collections",
@@ -176,7 +184,8 @@ const fr = {
   "atelier.room.prompts": "Prompts",
   "atelier.room.prompts.desc": "La bibliothèque versionnée des étapes intelligentes.",
   "atelier.room.robots": "Robots",
-  "atelier.room.robots.desc": "L'historique des tâches lancées : statut, lots, coût, durée, erreurs.",
+  "atelier.room.robots.desc":
+    "L'historique des tâches lancées : statut, lots, coût, durée, erreurs.",
   "atelier.room.site": "Site public",
   "atelier.room.site.desc": "Les outils du site public, en attendant leur réinstallation ici.",
   "atelier.room.readers": "Lecteurs",
@@ -217,7 +226,8 @@ const fr = {
   "atelier.prompts.missing.note": "Il manque la note de changement.",
   "atelier.prompts.field.model": "Modèle",
   "atelier.prompts.field.webSearch": "Recherche en ligne autorisée",
-  "atelier.prompts.modelHint": "claude-… (Anthropic), gemini-… (Google), google/gemini-… (passerelle Lovable).",
+  "atelier.prompts.modelHint":
+    "claude-… (Anthropic), gemini-… (Google), google/gemini-… (passerelle Lovable).",
   "atelier.prompts.model": "Modèle",
   "atelier.prompts.webSearchOn": "recherche en ligne autorisée",
   "atelier.prompts.webSearchOff": "sans recherche en ligne",
@@ -229,7 +239,8 @@ const fr = {
   "atelier.robot.fresh": "Repartir de zéro",
   "atelier.robot.freshConfirm":
     "Relancer sans tenir compte du plan précédent ? Il restera consultable dans les versions, et les {n} décisions de cette étape seront archivées.",
-  "atelier.robot.running": "Le robot travaille. Cette étape se rouvrira quand il aura déposé son plan.",
+  "atelier.robot.running":
+    "Le robot travaille. Cette étape se rouvrira quand il aura déposé son plan.",
   "atelier.robot.blocked": "Ce qui manque avant de lancer :",
   "atelier.robot.lastRun": "Dernier lancement",
   "atelier.robot.failed": "Le dernier lancement a échoué :",
@@ -241,14 +252,16 @@ const fr = {
   "atelier.robot.agoSec": "il y a {n} s",
   "atelier.robot.agoMin": "il y a {n} min",
   "atelier.robot.slow": "La recherche en ligne peut prendre plusieurs minutes.",
-  "atelier.robot.stale": "Ce lancement traîne depuis plus de 15 minutes : il est probablement interrompu.",
+  "atelier.robot.stale":
+    "Ce lancement traîne depuis plus de 15 minutes : il est probablement interrompu.",
   "atelier.robot.stop": "Arrêter ce lancement",
   "atelier.robot.stopping": "Arrêt…",
   "atelier.robot.stopConfirm": "Arrêter immédiatement ce lancement :",
   "atelier.robot.stopped": "Le lancement a été arrêté : l'étape est de nouveau lançable.",
   "atelier.robot.unblock": "Débloquer cette étape",
   "atelier.robot.unblockConfirm": "Débloquer cette étape :",
-  "atelier.robot.unblocked": "Le lancement abandonné a été clos : l\'étape est de nouveau lançable.",
+  "atelier.robot.unblocked":
+    "Le lancement abandonné a été clos : l\'étape est de nouveau lançable.",
   "atelier.prompts.save": "Enregistrer",
   "atelier.prompts.cancel": "Annuler",
   "atelier.prompts.notFound": "Prompt introuvable.",
@@ -260,7 +273,8 @@ const fr = {
   "atelier.prompts.previous": "Versions précédentes",
   "atelier.prompts.noPrevious": "Aucune version précédente.",
   "atelier.prompts.activate": "Rendre active",
-  "atelier.prompts.confirmActivate": "Rendre la version {version} de « {name} » active ? La version active actuelle cessera d'être utilisée ; aucune version n'est supprimée.",
+  "atelier.prompts.confirmActivate":
+    "Rendre la version {version} de « {name} » active ? La version active actuelle cessera d'être utilisée ; aucune version n'est supprimée.",
   "atelier.prompts.produced": "Ce que ce prompt a produit",
   "atelier.prompts.producedEmpty": "Ce prompt n'a encore rien produit.",
   "atelier.prompts.activations": "Changements de version active",
@@ -282,10 +296,13 @@ const fr = {
   "atelier.fiche.needQr": "Il manque le code QR (3 caractères au moins).",
   "atelier.fiche.chooseCollection": "choisir une collection",
   "atelier.fiche.qrUrl": "adresse produite :",
-  "atelier.fiche.qrRule": "3 à 8 lettres ou chiffres, mis en majuscules, unique sur toute la table.",
+  "atelier.fiche.qrRule":
+    "3 à 8 lettres ou chiffres, mis en majuscules, unique sur toute la table.",
   "atelier.fiche.qrFrozen": "Le code QR est réservé : il est définitif.",
-  "atelier.fiche.sourceHint": "À remplir seulement pour une matière que la recherche ne donnera pas ; elle primera alors sur ce que le robot trouvera.",
-  "atelier.fiche.creationRule": "Le livre naît en fabrication : il n'apparaît pas sur le site public, et sa chaîne d'étapes est instanciée à l'enregistrement.",
+  "atelier.fiche.sourceHint":
+    "À remplir seulement pour une matière que la recherche ne donnera pas ; elle primera alors sur ce que le robot trouvera.",
+  "atelier.fiche.creationRule":
+    "Le livre naît en fabrication : il n'apparaît pas sur le site public, et sa chaîne d'étapes est instanciée à l'enregistrement.",
   "atelier.fiche.create": "Créer le livre",
   "atelier.fiche.save": "Enregistrer",
   "atelier.fiche.saving": "enregistrement…",
@@ -296,10 +313,13 @@ const fr = {
   "atelier.fiche.notFound": "Livre introuvable.",
   "atelier.fiche.frozen": "Le plan est validé : la matière du livre est gelée.",
   "atelier.fiche.missing": "Ce qui manque pour lancer le plan",
-  "atelier.fiche.missingSummary": "Il manque le résumé de l'éditeur : c'est le seul champ dont le robot ne peut pas se passer.",
+  "atelier.fiche.missingSummary":
+    "Il manque le résumé de l'éditeur : c'est le seul champ dont le robot ne peut pas se passer.",
   "atelier.fiche.materialComplete": "La matière est complète : le résumé de l'éditeur est écrit.",
-  "atelier.fiche.sourceOptional": "Aucune matière documentaire : le robot fera lui-même sa recherche.",
-  "atelier.fiche.sourcePrevails": "Une matière documentaire est fournie : elle primera sur la recherche du robot.",
+  "atelier.fiche.sourceOptional":
+    "Aucune matière documentaire : le robot fera lui-même sa recherche.",
+  "atelier.fiche.sourcePrevails":
+    "Une matière documentaire est fournie : elle primera sur la recherche du robot.",
   "atelier.fiche.noLaunchYet": "Le lancement du plan viendra avec le robot.",
   "atelier.fiche.journal": "Journal de la fiche",
   "atelier.fiche.noJournal": "aucune modification enregistrée",
@@ -395,21 +415,24 @@ const fr = {
   "atelier.step.reject": "Demander une révision",
   "atelier.step.reason": "Motif (obligatoire pour une révision)",
   "atelier.step.reviewDone": "Décision enregistrée.",
-  "atelier.step.uploadOrder": "Téléversement d'abord, ligne ensuite : la ligne n'existe que si les octets existent.",
+  "atelier.step.uploadOrder":
+    "Téléversement d'abord, ligne ensuite : la ligne n'existe que si les octets existent.",
   "atelier.step.terminal": "Étape close : déposer une nouvelle version pour la réouvrir.",
   "atelier.step.unknown": "Étape introuvable.",
   "atelier.step.current": "Livrable courant",
   "atelier.step.download": "Télécharger (lien 15 min)",
   "atelier.step.showPrevious": "Voir les versions précédentes",
   "atelier.step.hidePrevious": "Replier les versions précédentes",
-  "atelier.step.outsideCrm": "Étape validée hors CRM : elle appartient au passé, aucune action n'est proposée.",
+  "atelier.step.outsideCrm":
+    "Étape validée hors CRM : elle appartient au passé, aucune action n'est proposée.",
   "atelier.step.confirmValidate": "Valider l'étape",
   "atelier.step.confirmEffect": "Elle sera close et l'étape suivante s'ouvrira.",
   "atelier.step.confirmChain": "L'étape suivante « {next} » sera lancée automatiquement.",
   "atelier.step.noChain": "ne pas lancer la suite",
   "atelier.step.chainRunning": "Lancement automatique de l'étape suivante en cours…",
   "atelier.step.reasonRequired": "Une révision demandée exige un motif écrit.",
-  "atelier.step.depositRule": "Un dépôt crée une nouvelle version d'origine « Ben » et n'écrase jamais rien.",
+  "atelier.step.depositRule":
+    "Un dépôt crée une nouvelle version d'origine « Ben » et n'écrase jamais rien.",
   "atelier.step.journal": "Journal de l'étape",
   "atelier.step.noJournal": "aucun mouvement",
   "atelier.origin.ben": "Ben",
@@ -438,7 +461,8 @@ const fr = {
   "companion.signedOut": "Votre espace lecteur s'ouvre avec le QR code de votre livre.",
   "companion.signIn": "J'ai un code ou un lien",
   "companion.myBooks": "Vos livres",
-  "companion.noBooks": "Aucun livre n'est encore ouvert. Scannez le QR code imprimé dans votre exemplaire.",
+  "companion.noBooks":
+    "Aucun livre n'est encore ouvert. Scannez le QR code imprimé dans votre exemplaire.",
   "companion.open": "Ouvrir",
   "companion.locked": "Ce livre n'est pas ouvert sur votre compte.",
   "companion.lockedBody": "Scannez le QR code imprimé dans votre exemplaire pour l'ouvrir.",
@@ -453,7 +477,8 @@ const fr = {
   "companion.quizScore": "Réponses justes",
   "companion.progress": "Votre entraînement jusqu'ici",
   "companion.audio": "Lecture audio",
-  "companion.audioSoon": "Les lectures audio sont en cours d'enregistrement. Elles apparaîtront ici dès qu'elles seront prêtes.",
+  "companion.audioSoon":
+    "Les lectures audio sont en cours d'enregistrement. Elles apparaîtront ici dès qu'elles seront prêtes.",
   "companion.loading": "Ouverture…",
   "companion.words": "mots",
 
@@ -490,7 +515,8 @@ const fr = {
   "atelier.pc.ok": "tenu",
   "atelier.pc.failed": "non tenu",
 
-  "atelier.livre.desc": "Le catalogue. Une ligne par livre, les pages créées, les pages sonorisées.",
+  "atelier.livre.desc":
+    "Le catalogue. Une ligne par livre, les pages créées, les pages sonorisées.",
   "atelier.livre.col.title": "Titre",
   "atelier.livre.col.tome": "Tome",
   "atelier.livre.col.collection": "Collection",
@@ -589,6 +615,9 @@ const fr = {
   "atelier.livre.blocks.remove": "Retirer ce paragraphe",
   "atelier.livre.blocks.up": "Monter",
   "atelier.livre.blocks.down": "Descendre",
+  "atelier.livre.blocks.kind": "Nature du bloc",
+  "atelier.livre.blocks.kind.narrative": "Récit",
+  "atelier.livre.blocks.kind.dialogue": "Dialogue",
   "atelier.livre.blocks.heNikud": "Hébreu vocalisé",
   "atelier.livre.blocks.hePlain": "Hébreu sans nekoudot",
   "atelier.livre.blocks.hePlainAuto": "rempli automatiquement, modifiable",
@@ -610,7 +639,6 @@ const fr = {
   "atelier.livre.audio.err.tooBig": "Ce fichier dépasse 50 Mo.",
   "atelier.livre.audio.err.failed": "Le téléversement a échoué.",
 } as const;
-
 
 export type DictKey = keyof typeof fr;
 
@@ -668,7 +696,7 @@ const en: Record<DictKey, string> = {
   "footer.rights": "Ulpan Story — independent publishing house.",
 
   "empty.page": "This page has no published content yet.",
-  "soon": "This screen arrives in a later step.",
+  soon: "This screen arrives in a later step.",
   "back.home": "Back to home",
   "excerpt.empty": "This book's excerpt is not online yet.",
   "excerpt.before": "Read this passage to the bottom.",
@@ -676,10 +704,11 @@ const en: Record<DictKey, string> = {
     "The last six words you just read were Hebrew, without vowels, without translation.",
   "excerpt.after2": "That is the last page of the book.",
   "excerpt.glossary": "Glossary of this passage",
-  "excerpt.glossaryFull":
-    "The full chapter list is in the companion, with a printable version.",
-  "spread.claim": "This is the book's double page. Not an illustration, not a mock-up for the website: the format, margins, typography and layout are exactly those you will hold in your hands.",
-  "spread.note": "The four stages are gathered here for the demonstration. In the book, each double page belongs to a single stage.",
+  "excerpt.glossaryFull": "The full chapter list is in the companion, with a printable version.",
+  "spread.claim":
+    "This is the book's double page. Not an illustration, not a mock-up for the website: the format, margins, typography and layout are exactly those you will hold in your hands.",
+  "spread.note":
+    "The four stages are gathered here for the demonstration. In the book, each double page belongs to a single stage.",
   "spread.readBig": "Read this page at full size",
   "spread.stage": "Stage",
   "spread.of": "of",
@@ -698,16 +727,19 @@ const en: Record<DictKey, string> = {
   "pages.grid": "Show the grid",
   "pages.gridOff": "Hide the grid",
   "gloss.title": "Glossary",
-  "gloss.note": "The words of the book, in the order they appear. The number is the one printed beside each gap.",
+  "gloss.note":
+    "The words of the book, in the order they appear. The number is the one printed beside each gap.",
   "gloss.no": "No.",
   "gloss.he": "Hebrew",
   "gloss.translit": "Pronounced",
   "gloss.sense": "Meaning",
 
   "access.email": "Your email address",
-  "access.consent": "I agree to receive the access link and news from Ulpan Story. A confirmation email will be sent; access opens once you confirm it. You can unsubscribe at any time.",
+  "access.consent":
+    "I agree to receive the access link and news from Ulpan Story. A confirmation email will be sent; access opens once you confirm it. You can unsubscribe at any time.",
   "access.submit": "Get my access",
-  "access.sent": "An email has just been sent. Confirm it to open your access: the link opens it directly, and the six-digit code in the same email works if your browser blocks the link.",
+  "access.sent":
+    "An email has just been sent. Confirm it to open your access: the link opens it directly, and the six-digit code in the same email works if your browser blocks the link.",
   "access.error": "The email could not be sent. Try again in a moment.",
   "access.codeLink": "I have a six-digit code",
   "access.codeTitle": "Enter the code you received",
@@ -716,7 +748,8 @@ const en: Record<DictKey, string> = {
   "access.codeError": "This code does not match, or it has expired.",
   "access.opening": "Opening your access…",
   "access.opened": "Your access is open.",
-  "access.qrPending": "This book is not online yet. Leave your address and you will hear from us the day it is published.",
+  "access.qrPending":
+    "This book is not online yet. Leave your address and you will hear from us the day it is published.",
   "access.yourBook": "The book you are holding",
   "admin.excerpt": "Demonstration double page",
   "admin.forbidden": "Restricted access.",
@@ -780,7 +813,8 @@ const en: Record<DictKey, string> = {
   "atelier.forbiddenBody": "This account has no workshop role.",
   "atelier.empty": "empty",
   "atelier.room.dashboard": "Dashboard",
-  "atelier.room.dashboard.desc": "What awaits my signature, what is running, what is blocked, what moved.",
+  "atelier.room.dashboard.desc":
+    "What awaits my signature, what is running, what is blocked, what moved.",
   "atelier.room.books": "Books",
   "atelier.room.books.desc": "The production catalogue and the current stage of each book.",
   "atelier.room.collections": "Collections",
@@ -829,7 +863,8 @@ const en: Record<DictKey, string> = {
   "atelier.prompts.missing.note": "The change note is missing.",
   "atelier.prompts.field.model": "Model",
   "atelier.prompts.field.webSearch": "Online search allowed",
-  "atelier.prompts.modelHint": "claude-… (Anthropic), gemini-… (Google), google/gemini-… (Lovable gateway).",
+  "atelier.prompts.modelHint":
+    "claude-… (Anthropic), gemini-… (Google), google/gemini-… (Lovable gateway).",
   "atelier.prompts.model": "Model",
   "atelier.prompts.webSearchOn": "online search allowed",
   "atelier.prompts.webSearchOff": "no online search",
@@ -848,12 +883,13 @@ const en: Record<DictKey, string> = {
   "atelier.robot.done": "The plan is filed: it awaits your reading.",
   "atelier.robot.reason": "Revision reason used:",
   "atelier.robot.waitingOnMe":
-    "In revision — click \"Run again with my reason\" to restart. No robot is working right now.",
+    'In revision — click "Run again with my reason" to restart. No robot is working right now.',
   "atelier.robot.inFlight": "A run is under way: {robot} · {model} — started {ago}.",
   "atelier.robot.agoSec": "{n} s ago",
   "atelier.robot.agoMin": "{n} min ago",
   "atelier.robot.slow": "Online search can take several minutes.",
-  "atelier.robot.stale": "This run has been going for more than 15 minutes: it was probably interrupted.",
+  "atelier.robot.stale":
+    "This run has been going for more than 15 minutes: it was probably interrupted.",
   "atelier.robot.stop": "Stop this run",
   "atelier.robot.stopping": "Stopping…",
   "atelier.robot.stopConfirm": "Stop this run immediately:",
@@ -872,7 +908,8 @@ const en: Record<DictKey, string> = {
   "atelier.prompts.previous": "Previous versions",
   "atelier.prompts.noPrevious": "No previous version.",
   "atelier.prompts.activate": "Make active",
-  "atelier.prompts.confirmActivate": "Make version {version} of \u201c{name}\u201d active? The current active version stops being used; no version is deleted.",
+  "atelier.prompts.confirmActivate":
+    "Make version {version} of \u201c{name}\u201d active? The current active version stops being used; no version is deleted.",
   "atelier.prompts.produced": "What this prompt produced",
   "atelier.prompts.producedEmpty": "This prompt has produced nothing yet.",
   "atelier.prompts.activations": "Active version changes",
@@ -896,8 +933,10 @@ const en: Record<DictKey, string> = {
   "atelier.fiche.qrUrl": "resulting address:",
   "atelier.fiche.qrRule": "3 to 8 letters or digits, upper-cased, unique across the table.",
   "atelier.fiche.qrFrozen": "The QR code is reserved: it is final.",
-  "atelier.fiche.sourceHint": "Fill in only for material research will not find; it then prevails over what the robot finds.",
-  "atelier.fiche.creationRule": "The book is born in production: it never shows on the public site, and its step chain is instantiated on save.",
+  "atelier.fiche.sourceHint":
+    "Fill in only for material research will not find; it then prevails over what the robot finds.",
+  "atelier.fiche.creationRule":
+    "The book is born in production: it never shows on the public site, and its step chain is instantiated on save.",
   "atelier.fiche.create": "Create the book",
   "atelier.fiche.save": "Save",
   "atelier.fiche.saving": "saving…",
@@ -908,10 +947,12 @@ const en: Record<DictKey, string> = {
   "atelier.fiche.notFound": "Book not found.",
   "atelier.fiche.frozen": "The plan is validated: the book's material is frozen.",
   "atelier.fiche.missing": "What is missing to launch the plan",
-  "atelier.fiche.missingSummary": "The editor's summary is missing: it is the only field the robot cannot do without.",
+  "atelier.fiche.missingSummary":
+    "The editor's summary is missing: it is the only field the robot cannot do without.",
   "atelier.fiche.materialComplete": "The material is complete: the editor's summary is written.",
   "atelier.fiche.sourceOptional": "No source material: the robot will do its own research.",
-  "atelier.fiche.sourcePrevails": "Source material is provided: it prevails over the robot's research.",
+  "atelier.fiche.sourcePrevails":
+    "Source material is provided: it prevails over the robot's research.",
   "atelier.fiche.noLaunchYet": "Launching the plan comes with the robot.",
   "atelier.fiche.journal": "Sheet journal",
   "atelier.fiche.noJournal": "no change recorded",
@@ -1007,21 +1048,24 @@ const en: Record<DictKey, string> = {
   "atelier.step.reject": "Request revision",
   "atelier.step.reason": "Reason (required for a revision)",
   "atelier.step.reviewDone": "Decision recorded.",
-  "atelier.step.uploadOrder": "Upload first, database row second: a row only exists if the bytes exist.",
+  "atelier.step.uploadOrder":
+    "Upload first, database row second: a row only exists if the bytes exist.",
   "atelier.step.terminal": "Step closed: file a new version to reopen it.",
   "atelier.step.unknown": "Step not found.",
   "atelier.step.current": "Current deliverable",
   "atelier.step.download": "Download (15 min link)",
   "atelier.step.showPrevious": "Show previous versions",
   "atelier.step.hidePrevious": "Hide previous versions",
-  "atelier.step.outsideCrm": "Step validated outside the CRM: it belongs to the past, no action is offered.",
+  "atelier.step.outsideCrm":
+    "Step validated outside the CRM: it belongs to the past, no action is offered.",
   "atelier.step.confirmValidate": "Validate step",
   "atelier.step.confirmEffect": "It will be closed and the next step will open.",
   "atelier.step.confirmChain": "The next step \u00ab {next} \u00bb will be launched automatically.",
   "atelier.step.noChain": "do not launch the next step",
   "atelier.step.chainRunning": "Automatic launch of the next step under way\u2026",
   "atelier.step.reasonRequired": "A requested revision requires a written reason.",
-  "atelier.step.depositRule": "Filing creates a new version with origin \u00ab Ben \u00bb and never overwrites anything.",
+  "atelier.step.depositRule":
+    "Filing creates a new version with origin \u00ab Ben \u00bb and never overwrites anything.",
   "atelier.step.journal": "Step log",
   "atelier.step.noJournal": "no movement",
   "atelier.origin.ben": "Ben",
@@ -1065,7 +1109,8 @@ const en: Record<DictKey, string> = {
   "companion.quizScore": "Correct answers",
   "companion.progress": "Your training so far",
   "companion.audio": "Audio reading",
-  "companion.audioSoon": "The audio readings are being recorded. They appear here as soon as they are ready.",
+  "companion.audioSoon":
+    "The audio readings are being recorded. They appear here as soon as they are ready.",
   "companion.loading": "Opening…",
   "companion.words": "words",
 
@@ -1193,13 +1238,15 @@ const en: Record<DictKey, string> = {
   "atelier.livre.page.dirty": "Some changes are not saved.",
   "atelier.livre.page.leave": "You have unsaved changes. Leave anyway?",
   "atelier.livre.page.delete": "Delete this page",
-  "atelier.livre.page.deleteConfirm":
-    "Permanently delete this page, its paragraphs and its audio?",
+  "atelier.livre.page.deleteConfirm": "Permanently delete this page, its paragraphs and its audio?",
   "atelier.livre.blocks.title": "Paragraphs",
   "atelier.livre.blocks.add": "Add a paragraph",
   "atelier.livre.blocks.remove": "Remove this paragraph",
   "atelier.livre.blocks.up": "Move up",
   "atelier.livre.blocks.down": "Move down",
+  "atelier.livre.blocks.kind": "Block kind",
+  "atelier.livre.blocks.kind.narrative": "Narrative",
+  "atelier.livre.blocks.kind.dialogue": "Dialogue",
   "atelier.livre.blocks.heNikud": "Vocalised Hebrew",
   "atelier.livre.blocks.hePlain": "Hebrew without nikud",
   "atelier.livre.blocks.hePlainAuto": "filled automatically, editable",
@@ -1221,7 +1268,6 @@ const en: Record<DictKey, string> = {
   "atelier.livre.audio.err.tooBig": "This file exceeds 50 MB.",
   "atelier.livre.audio.err.failed": "The upload failed.",
 };
-
 
 export const dictionaries: Record<Lang, Record<DictKey, string>> = { fr, en };
 

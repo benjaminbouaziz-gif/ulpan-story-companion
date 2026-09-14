@@ -304,9 +304,17 @@ export const atelierLivrePages = createServerFn({ method: "GET" })
     }));
   });
 
+/**
+ * La base n'accepte que ces deux natures de bloc : un paragraphe de récit et
+ * une réplique de dialogue. La composition imprimée les distingue.
+ */
+export const BLOCK_KINDS = ["narrative", "dialogue"] as const;
+export type BlockKindValue = (typeof BLOCK_KINDS)[number];
+
 export type AtelierBlock = {
   id: string | null;
   sortOrder: number;
+  blockKind: BlockKindValue;
   heNikud: string;
   hePlain: string;
   supportFr: string;
@@ -357,7 +365,11 @@ export const createAtelierPage = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error || !inserted) throw new Error(texteErreurBase("CREATE_REFUSED", error));
+    if (error || !inserted) {
+      // L'index unique de la base parle le même langage que le contrôle applicatif.
+      if (error?.code === "23505") throw new Error("PAGE_NO_TAKEN");
+      throw new Error(texteErreurBase("CREATE_REFUSED", error));
+    }
     return { id: inserted.id };
   });
 
@@ -379,7 +391,7 @@ export const atelierPage = createServerFn({ method: "GET" })
       admin.from("books").select("slug").eq("id", page.book_id).maybeSingle(),
       admin
         .from("page_blocks")
-        .select("id, sort_order, he_nikud, he_plain, support_fr, support_en")
+        .select("id, sort_order, block_kind, he_nikud, he_plain, support_fr, support_en")
         .eq("page_id", page.id)
         .order("sort_order", { ascending: true }),
     ]);
@@ -402,6 +414,7 @@ export const atelierPage = createServerFn({ method: "GET" })
       blocks: (blocks.data ?? []).map((b) => ({
         id: b.id,
         sortOrder: b.sort_order,
+        blockKind: (b.block_kind === "dialogue" ? "dialogue" : "narrative") as BlockKindValue,
         heNikud: b.he_nikud ?? "",
         hePlain: b.he_plain ?? "",
         supportFr: b.support_fr ?? "",
@@ -430,6 +443,8 @@ export const saveAtelierPage = createServerFn({ method: "POST" })
           .array(
             z.object({
               id: z.string().uuid().nullable(),
+              // Toute autre valeur est refusée ici, avant d'atteindre la base.
+              blockKind: z.enum(BLOCK_KINDS),
               heNikud: z.string().max(20000),
               hePlain: z.string().max(20000),
               supportFr: z.string().max(20000),
@@ -495,9 +510,7 @@ export const saveAtelierPage = createServerFn({ method: "POST" })
       const row = {
         page_id: page.id,
         sort_order: i + 1,
-        // La base n'accepte que 'narrative' ou 'dialogue' : le paragraphe est
-        // 'narrative', et cette brique n'offre pas d'autre choix.
-        block_kind: "narrative",
+        block_kind: b.blockKind,
         he_nikud: nullish(b.heNikud),
         he_plain: nullish(b.hePlain),
         support_fr: nullish(b.supportFr),

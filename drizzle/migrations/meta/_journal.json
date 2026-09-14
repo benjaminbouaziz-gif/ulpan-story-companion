@@ -8,6 +8,13 @@
       "when": 1789405744182,
       "tag": "0000_book_pages_audio_path_et_politiques_audios",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789406998063,
+      "tag": "0001_book_pages_numero_unique_par_livre",
+      "breakpoints": true
     }
   ]
 }
