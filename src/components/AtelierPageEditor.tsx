@@ -350,6 +350,26 @@ export function PageEditor({ pageId }: { pageId: string }) {
                 </span>
               </div>
 
+              <label className="mt-2 block max-w-[260px]">
+                <span className={labelCls}>{t("atelier.livre.blocks.kind")}</span>
+                <select
+                  className={input}
+                  value={b.blockKind}
+                  onChange={(e) => {
+                    const blockKind = e.target.value as BlockKindValue;
+                    setBlocks((bs) => bs.map((x, j) => (j === i ? { ...x, blockKind } : x)));
+                    touch();
+                  }}
+                >
+                  {BLOCK_KINDS.map((k) => (
+                    <option key={k} value={k}>
+                      {t(`atelier.livre.blocks.kind.${k}` as DictKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+
               <label className="mt-2 block">
                 <span className={labelCls}>{t("atelier.livre.blocks.heNikud")}</span>
                 <textarea
