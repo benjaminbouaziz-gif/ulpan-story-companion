@@ -71,6 +71,8 @@ const fr = {
   "spread.note":
     "Les quatre étapes sont réunies ici pour la démonstration. Dans le livre, chaque double page appartient à une seule étape.",
   "spread.readBig": "Lire cette page en grand",
+  "spread.more": "Lire la suite de la page",
+  "spread.less": "Replier",
   "spread.stage": "Étape",
   "spread.of": "sur",
   "spread.next": "Étape suivante",
@@ -795,6 +797,8 @@ const en: Record<DictKey, string> = {
   "spread.note":
     "The four stages are gathered here for the demonstration. In the book, each double page belongs to a single stage.",
   "spread.readBig": "Read this page at full size",
+  "spread.more": "Read the rest of the page",
+  "spread.less": "Collapse",
   "spread.stage": "Stage",
   "spread.of": "of",
   "spread.next": "Next stage",
