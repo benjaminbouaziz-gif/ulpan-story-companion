@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -38,11 +39,24 @@ function CompanionBook() {
   const queryClient = useQueryClient();
   const fetchBook = useServerFn(getCompanionBook);
   const saveRound = useServerFn(saveQuizRound);
+  const fetchPages = useServerFn(getCompanionPages);
+  const fetchAudioUrl = useServerFn(getCompanionPageAudioUrl);
 
   const query = useQuery({
     queryKey: ["companion", "book", book_slug],
     queryFn: () => fetchBook({ data: { slug: book_slug } }),
   });
+
+  const pages = useQuery({
+    queryKey: ["companion", "pages", book_slug],
+    queryFn: () => fetchPages({ data: { slug: book_slug } }),
+  });
+
+  // L'adresse d'écoute n'est demandée qu'au moment de lire.
+  const requestAudioUrl = useCallback(
+    async (pageId: string) => (await fetchAudioUrl({ data: { pageId } })).url,
+    [fetchAudioUrl],
+  );
 
   const round = useMutation({
     mutationFn: (v: { answered: number; correct: number }) =>
