@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { PageShell } from "@/components/SiteChrome";
 import { Spread } from "@/components/Spread";
 import { useI18n } from "@/i18n/context";
 import {
@@ -24,7 +23,7 @@ const KINDS: { value: SupportKind; label: string }[] = [
 export const Route = createFileRoute("/atelier/site/extraits")({
   head: () => ({
     meta: [
-      { title: "Double page de démonstration — Administration" },
+      { title: "Double page de démonstration — Atelier Ulpan Story" },
       { name: "description", content: "Édition paragraphe par paragraphe de la double page." },
       { name: "robots", content: "noindex" },
     ],
@@ -123,18 +122,18 @@ function SpreadEditor() {
 
   if (meQuery.isLoading) {
     return (
-      <PageShell>
+      <div className="w-full">
         <p className="body-text">…</p>
-      </PageShell>
+      </div>
     );
   }
 
   if (!meQuery.data?.isEditor) {
     return (
-      <PageShell>
+      <div className="w-full">
         <h1 className="text-[26px]">{t("admin.excerpt")}</h1>
         <p className="body-text text-secondary-text mt-4">{t("admin.forbidden")}</p>
-      </PageShell>
+      </div>
     );
   }
 
@@ -143,7 +142,7 @@ function SpreadEditor() {
   }
 
   return (
-    <PageShell>
+    <div className="w-full">
       <h1 className="text-[26px]">{t("admin.excerpt")}</h1>
 
       <div className="mt-6 flex flex-wrap items-end gap-3">
@@ -346,6 +345,6 @@ function SpreadEditor() {
           </div>
         </div>
       </div>
-    </PageShell>
+    </div>
   );
 }

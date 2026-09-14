@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { PageShell } from "@/components/SiteChrome";
 import { useI18n } from "@/i18n/context";
 import { adminMe } from "@/lib/admin-spread.functions";
 import {
@@ -31,11 +30,10 @@ function Badge({ state }: { state: string | undefined }) {
   return <span className="label text-secondary-text ml-2">· {label}</span>;
 }
 
-
 export const Route = createFileRoute("/atelier/site/pages")({
   head: () => ({
     meta: [
-      { title: "Pages éditoriales — Administration" },
+      { title: "Pages éditoriales — Atelier Ulpan Story" },
       { name: "description", content: "Édition des sections des pages du site." },
       { name: "robots", content: "noindex" },
     ],
@@ -56,7 +54,6 @@ type Draft = {
   body_en: string;
   data_json: string;
 };
-
 
 function PagesEditor() {
   const { t } = useI18n();
@@ -174,25 +171,24 @@ function PagesEditor() {
 
   if (meQuery.isLoading) {
     return (
-      <PageShell>
+      <div className="w-full">
         <p className="body-text">…</p>
-      </PageShell>
+      </div>
     );
   }
   if (!meQuery.data?.isEditor) {
     return (
-      <PageShell>
+      <div className="w-full">
         <p className="body-text">{t("admin.forbidden")}</p>
-      </PageShell>
+      </div>
     );
   }
-
 
   const set = (id: string, patch: Partial<Draft>) =>
     setDrafts((d) => (d[id] ? { ...d, [id]: { ...d[id]!, ...patch } } : d));
 
   return (
-    <PageShell>
+    <div className="w-full">
       <h1 className="text-[30px]">Pages éditoriales</h1>
 
       <label className="label mt-6 block">
@@ -228,7 +224,6 @@ function PagesEditor() {
           </button>
         )}
       </div>
-
 
       {message ? <p className="label mt-4">{message}</p> : null}
 
@@ -271,8 +266,6 @@ function PagesEditor() {
                   </label>
                 ))}
               </div>
-
-
 
               <label className="label mt-4 block">
                 Titre (fr)
@@ -396,6 +389,6 @@ function PagesEditor() {
           );
         })}
       </div>
-    </PageShell>
+    </div>
   );
 }

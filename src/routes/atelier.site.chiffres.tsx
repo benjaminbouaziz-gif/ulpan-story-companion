@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { PageShell } from "@/components/SiteChrome";
 import { useI18n } from "@/i18n/context";
 import { adminMe } from "@/lib/admin-spread.functions";
 import {
@@ -14,7 +13,7 @@ import {
 export const Route = createFileRoute("/atelier/site/chiffres")({
   head: () => ({
     meta: [
-      { title: "Chiffres des livres — Administration" },
+      { title: "Chiffres des livres — Atelier Ulpan Story" },
       { name: "description", content: "Saisie des chiffres annoncés pour chaque tome." },
       { name: "robots", content: "noindex" },
     ],
@@ -107,23 +106,23 @@ function FiguresEditor() {
 
   if (meQuery.isLoading)
     return (
-      <PageShell>
+      <div className="w-full">
         <p className="body-text">…</p>
-      </PageShell>
+      </div>
     );
   if (!meQuery.data?.isEditor)
     return (
-      <PageShell>
+      <div className="w-full">
         <p className="body-text">{t("admin.forbidden")}</p>
-      </PageShell>
+      </div>
     );
 
   return (
-    <PageShell>
+    <div className="w-full">
       <h1 className="text-[30px]">Chiffres des livres</h1>
       <p className="label text-secondary-text mt-4">
-        Ces valeurs sont celles annoncées. Le comptage en base est une indication ; il ne bloque
-        ni l'enregistrement ni la publication.
+        Ces valeurs sont celles annoncées. Le comptage en base est une indication ; il ne bloque ni
+        l'enregistrement ni la publication.
       </p>
       {message ? <p className="label mt-4">{message}</p> : null}
 
@@ -139,9 +138,7 @@ function FiguresEditor() {
             </p>
             <p className="label text-secondary-text mt-1">
               Dernière confirmation :{" "}
-              {b.figures_verified_at
-                ? new Date(b.figures_verified_at).toLocaleString()
-                : "jamais"}
+              {b.figures_verified_at ? new Date(b.figures_verified_at).toLocaleString() : "jamais"}
             </p>
 
             <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -220,6 +217,6 @@ function FiguresEditor() {
           </section>
         );
       })}
-    </PageShell>
+    </div>
   );
 }
