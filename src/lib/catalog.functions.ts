@@ -92,7 +92,7 @@ export const getBookBySlug = createServerFn({ method: "GET" })
         collection: null as Collection | null,
         paragraphs: [] as SpreadParagraph[],
         glossary: [] as GlossaryItem[],
-        pages: [] as BookPage[],
+        
         words: [] as GlossaryWord[],
       };
     let collection: Collection | null = null;
