@@ -52,13 +52,7 @@ export function parseColle(text: string): ColleeParse {
 }
 
 export type VerdictColle =
-  | "ok"
-  | "remplacement"
-  | "manqueDroite"
-  | "manqueGauche"
-  | "nombres"
-  | "double"
-  | "existe";
+  "ok" | "remplacement" | "manqueDroite" | "manqueGauche" | "nombres" | "double" | "existe";
 
 export type LigneColle = {
   pageNo: number;
