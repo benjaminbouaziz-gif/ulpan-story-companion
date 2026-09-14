@@ -197,3 +197,136 @@ export const saveQuizRound = createServerFn({ method: "POST" })
     );
     return { ok: true, answered, correct };
   });
+
+/* ------------------------------------------------------------------------- *
+ * BRIQUE 4 — LE LECTEUR.
+ *
+ * Le livre est déjà en base : `book_pages` porte les pages, `page_blocks` les
+ * paragraphes, `book_pages.audio_path` le fichier dans le bucket privé.
+ * Rien ne sort d'ici sans que `book_access` ait été vérifié pour ce lecteur.
+ * ------------------------------------------------------------------------- */
+
+const AUDIO_BUCKET = "audios-livres";
+/** Quinze minutes : le temps d'écouter une page, pas de partager un lien. */
+const AUDIO_SIGNED_SECONDS = 15 * 60;
+
+export type CompanionBlock = {
+  id: string;
+  sort_order: number;
+  block_kind: string;
+  he_nikud: string | null;
+  he_plain: string | null;
+};
+
+export type CompanionPage = {
+  id: string;
+  page_no: number;
+  chapter_no: number | null;
+  support_kind: string;
+  chapter_title_he: string | null;
+  chapter_title_fr: string | null;
+  chapter_title_en: string | null;
+  folio: number | null;
+  /** Un booléen, jamais le chemin du fichier. */
+  has_audio: boolean;
+  blocks: CompanionBlock[];
+};
+
+/** Le livre ouvert par ce lecteur, page à page. Aucun soutien, aucun chemin. */
+export const getCompanionPages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ slug: z.string().min(1).max(120) }).parse(data))
+  .handler(async ({ context, data }) => {
+    const empty = { allowed: false, pages: [] as CompanionPage[] };
+
+    const { data: book } = await context.supabase
+      .from("books")
+      .select("id")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!book) return empty;
+
+    const { data: access } = await context.supabase
+      .from("book_access")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("book_id", book.id)
+      .maybeSingle();
+    if (!access) return empty;
+
+    const { data: pages } = await context.supabase
+      .from("book_pages")
+      .select(
+        "id, page_no, chapter_no, support_kind, chapter_title_he, chapter_title_fr, chapter_title_en, folio, audio_path",
+      )
+      .eq("book_id", book.id)
+      .eq("is_published", true)
+      .order("page_no", { ascending: true });
+
+    const ids = (pages ?? []).map((p) => p.id);
+    const blocksByPage = new Map<string, CompanionBlock[]>();
+    if (ids.length > 0) {
+      const { data: blocks } = await context.supabase
+        .from("page_blocks")
+        .select("id, page_id, sort_order, block_kind, he_nikud, he_plain")
+        .in("page_id", ids)
+        .order("sort_order", { ascending: true });
+      for (const b of blocks ?? []) {
+        const list = blocksByPage.get(b.page_id) ?? [];
+        list.push({
+          id: b.id,
+          sort_order: b.sort_order,
+          block_kind: b.block_kind,
+          he_nikud: b.he_nikud,
+          he_plain: b.he_plain,
+        });
+        blocksByPage.set(b.page_id, list);
+      }
+    }
+
+    return {
+      allowed: true,
+      pages: (pages ?? []).map((p) => ({
+        id: p.id,
+        page_no: p.page_no,
+        chapter_no: p.chapter_no,
+        support_kind: p.support_kind,
+        chapter_title_he: p.chapter_title_he,
+        chapter_title_fr: p.chapter_title_fr,
+        chapter_title_en: p.chapter_title_en,
+        folio: p.folio,
+        has_audio: !!p.audio_path,
+        blocks: blocksByPage.get(p.id) ?? [],
+      })) as CompanionPage[],
+    };
+  });
+
+/** L'adresse d'écoute d'une page : signée, quinze minutes, jamais permanente. */
+export const getCompanionPageAudioUrl = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ pageId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    const { data: page } = await context.supabase
+      .from("book_pages")
+      .select("id, book_id, audio_path")
+      .eq("id", data.pageId)
+      .maybeSingle();
+    if (!page) return { url: null as string | null };
+
+    const { data: access } = await context.supabase
+      .from("book_access")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("book_id", page.book_id)
+      .maybeSingle();
+    if (!access) return { url: null as string | null };
+    if (!page.audio_path) return { url: null as string | null };
+
+    // Le bucket reste privé : seul le client de service sait signer. L'import
+    // est dynamique, la clé ne doit pas entrer dans le graphe client.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed } = await supabaseAdmin.storage
+      .from(AUDIO_BUCKET)
+      .createSignedUrl(page.audio_path, AUDIO_SIGNED_SECONDS);
+    return { url: signed?.signedUrl ?? null };
+  });
