@@ -78,26 +78,49 @@ export const requestAccess = createServerFn({ method: "POST" })
         .maybeSingle();
       bookId = book?.id ?? null;
     }
-    await supabaseAdmin.from("email_signups").insert({
-      email,
-      book_id: bookId,
-      qr_code: data.qr_code,
-      lang: data.lang,
-      consent_token: crypto.randomUUID(),
-    });
-    await supabaseAdmin.from("events").insert({
-      book_id: bookId,
-      qr_code: data.qr_code,
-      kind: "access_requested",
-      meta: { lang: data.lang },
-    });
+
+    // Une adresse validée l'est définitivement : on ne ré-enregistre rien,
+    // on renvoie juste le courrier qui ouvre la session sur cet appareil.
+    const { data: profil } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("email", email)
+      .not("consent_at", "is", null)
+      .maybeSingle();
+    let alreadyConfirmed = !!profil;
+    if (!alreadyConfirmed) {
+      const { data: signup } = await supabaseAdmin
+        .from("email_signups")
+        .select("id")
+        .eq("email", email)
+        .not("confirmed_at", "is", null)
+        .limit(1)
+        .maybeSingle();
+      alreadyConfirmed = !!signup;
+    }
+
+    if (!alreadyConfirmed) {
+      await supabaseAdmin.from("email_signups").insert({
+        email,
+        book_id: bookId,
+        qr_code: data.qr_code,
+        lang: data.lang,
+        consent_token: crypto.randomUUID(),
+      });
+      await supabaseAdmin.from("events").insert({
+        book_id: bookId,
+        qr_code: data.qr_code,
+        kind: "access_requested",
+        meta: { lang: data.lang },
+      });
+    }
 
     const supabase = publicClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: data.redirect_to, shouldCreateUser: true },
     });
-    return { ok: !error, error: error?.message ?? null };
+    return { ok: !error, error: error?.message ?? null, already_confirmed: alreadyConfirmed };
   });
 
 /**

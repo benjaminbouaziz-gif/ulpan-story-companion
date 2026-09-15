@@ -36,7 +36,9 @@ export function AccessForm({ qrCode }: { qrCode: string | null }) {
   if (mutation.data?.ok) {
     return (
       <div className="border-line mt-8 border-t pt-6">
-        <p className="body-text">{t("access.sent")}</p>
+        <p className="body-text">
+          {mutation.data.already_confirmed ? t("access.alreadyConfirmed") : t("access.sent")}
+        </p>
         <Link to="/activation" className="label touch mt-4 inline-flex border-b border-current">
           {t("access.codeLink")}
         </Link>

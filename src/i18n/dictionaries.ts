@@ -104,6 +104,8 @@ const fr = {
   "access.sent":
     "Un courrier vient de partir. Confirmez-le pour ouvrir votre accès : le lien s'ouvre directement, et le code du même courrier fonctionne si votre navigateur bloque le lien.",
   "access.error": "L'envoi n'a pas abouti. Réessayez dans un instant.",
+  "access.alreadyConfirmed":
+    "Cette adresse est déjà confirmée. Le courrier que vous allez recevoir sert uniquement à vous reconnecter sur cet appareil.",
   "access.codeLink": "J'ai un code",
   "access.codeTitle": "Entrer le code reçu",
   "access.code": "Code du courrier",
@@ -895,6 +897,8 @@ const en: Record<DictKey, string> = {
   "access.sent":
     "An email has just been sent. Confirm it to open your access: the link opens it directly, and the code in the same email works if your browser blocks the link.",
   "access.error": "The email could not be sent. Try again in a moment.",
+  "access.alreadyConfirmed":
+    "This address is already confirmed. The email you are about to receive is only to sign you back in on this device.",
   "access.codeLink": "I have a code",
   "access.codeTitle": "Enter the code you received",
   "access.code": "Code from the email",
