@@ -17,10 +17,10 @@ export const Route = createFileRoute("/activation")({
       {
         name: "description",
         content:
-          "Ouvrez les contenus offerts avec votre livre : lien reçu par email ou code à six chiffres.",
+          "Ouvrez les contenus offerts avec votre livre : lien reçu par email ou code du courrier.",
       },
       { property: "og:title", content: "Activation — Ulpan Story" },
-      { property: "og:description", content: "Lien par email ou code à six chiffres." },
+      { property: "og:description", content: "Lien par email ou code du courrier." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -128,7 +128,7 @@ function ActivationPage() {
             required
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={6}
+            maxLength={8}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             className="border-line bg-background mt-1 block w-full border px-3 py-3 text-[24px] tracking-[0.2em] tabular-nums"

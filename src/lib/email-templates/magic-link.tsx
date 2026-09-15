@@ -37,7 +37,7 @@ export const MagicLinkEmail = ({ siteName, confirmationUrl, token }: MagicLinkEm
         {token ? (
           <>
             <Text style={{ ...text, margin: "28px 0 8px", color: brand.muted, fontSize: "14px" }}>
-              Ou saisissez ce code à six chiffres sur la page d’activation :
+              Ou saisissez ce code sur la page d’activation :
             </Text>
             <Text style={code}>{token}</Text>
           </>
