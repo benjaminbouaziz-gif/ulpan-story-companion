@@ -8,7 +8,12 @@ import {
   synchroniserDecisions,
 } from "./decisions.server";
 import { texteErreurBase, violeIndex } from "./db-error";
-import { appelerModele, cleConfiguree, fournisseurDuModele, secretDuModele } from "./robot-provider.server";
+import {
+  appelerModele,
+  cleConfiguree,
+  fournisseurDuModele,
+  secretDuModele,
+} from "./robot-provider.server";
 
 /**
  * LE LANCEMENT DU ROBOT « PLAN DE CHAPITRES », ET L'ENCHAÎNEMENT.
@@ -74,7 +79,9 @@ export async function executerLancementPlan(
   if (!version) throw new Error("Version de prompt introuvable.");
   const model = (version.model ?? "").trim();
   if (model.length === 0)
-    throw new Error("La version active du prompt ne précise aucun modèle : republiez-la avec un modèle.");
+    throw new Error(
+      "La version active du prompt ne précise aucun modèle : republiez-la avec un modèle.",
+    );
   if (!fournisseurDuModele(model)) throw new Error(`Modèle inconnu de l'atelier : « ${model} ».`);
   if (!cleConfiguree(model))
     throw new Error(`Il manque la clé d'API ${secretDuModele(model)} dans les secrets du projet.`);
@@ -90,8 +97,9 @@ export async function executerLancementPlan(
   const artifactVersion = (lastArt?.[0]?.version ?? 0) + 1;
 
   const collection = book.collection_id
-    ? ((await admin.from("collections").select("name_fr").eq("id", book.collection_id).maybeSingle())
-        .data?.name_fr ?? null)
+    ? ((
+        await admin.from("collections").select("name_fr").eq("id", book.collection_id).maybeSingle()
+      ).data?.name_fr ?? null)
     : null;
 
   // Le mode dit ce qui part avec le prompt. « Repartir de zéro » n'emporte ni
@@ -386,9 +394,17 @@ export async function etapeSuivante(
   };
 
   if (suivante.species !== "llm")
-    return { ...base, autoLaunch: false, raison: `L'étape suivante « ${suivante.label_fr} » vous attend.` };
+    return {
+      ...base,
+      autoLaunch: false,
+      raison: `L'étape suivante « ${suivante.label_fr} » vous attend.`,
+    };
   if (suivante.status === "valide" || suivante.status === "valide_hors_crm")
-    return { ...base, autoLaunch: false, raison: `L'étape suivante « ${suivante.label_fr} » est déjà validée.` };
+    return {
+      ...base,
+      autoLaunch: false,
+      raison: `L'étape suivante « ${suivante.label_fr} » est déjà validée.`,
+    };
   if (suivante.step_code !== PLAN_STEP_CODE)
     return {
       ...base,
@@ -443,7 +459,11 @@ export async function enchainerApresValidation(
   for (let garde = 0; garde < 10; garde += 1) {
     const suivante = await etapeSuivante(editor, depuis);
     if (!suivante) {
-      maillons.push({ stepLabel: "—", ok: true, message: "Fin de la chaîne : aucune étape suivante." });
+      maillons.push({
+        stepLabel: "—",
+        ok: true,
+        message: "Fin de la chaîne : aucune étape suivante.",
+      });
       return maillons;
     }
     if (!suivante.autoLaunch) {
@@ -475,6 +495,10 @@ export async function enchainerApresValidation(
     depuis = suivante.stepId;
   }
 
-  maillons.push({ stepLabel: "—", ok: true, message: "Enchaînement arrêté par prudence après dix étapes." });
+  maillons.push({
+    stepLabel: "—",
+    ok: true,
+    message: "Enchaînement arrêté par prudence après dix étapes.",
+  });
   return maillons;
 }

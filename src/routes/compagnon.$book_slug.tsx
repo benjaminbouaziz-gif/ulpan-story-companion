@@ -1,13 +1,15 @@
-import { useCallback } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/SiteChrome";
 import { HebrewText } from "@/components/HebrewText";
-import { QuizRound } from "@/components/QuizRound";
 import { LecteurLivre } from "@/components/LecteurLivre";
+import { CompanionTraining } from "@/components/CompanionTraining";
 import { useI18n } from "@/i18n/context";
+import type { DictKey } from "@/i18n/dictionaries";
 import {
+  enregistrerReponse,
   getCompanionBook,
   getCompanionPageAudioUrl,
   getCompanionPages,
@@ -15,13 +17,24 @@ import {
 } from "@/lib/companion.functions";
 import { glossarySense } from "@/lib/spread";
 
+type Onglet = "lecture" | "entrainement" | "glossaire";
+const ONGLETS: { id: Onglet; key: DictKey }[] = [
+  { id: "lecture", key: "companion.tab.lecture" },
+  { id: "entrainement", key: "companion.tab.entrainement" },
+  { id: "glossaire", key: "companion.tab.glossaire" },
+];
+
 export const Route = createFileRoute("/compagnon/$book_slug")({
+  validateSearch: (search: Record<string, unknown>): { onglet?: Onglet } => {
+    const o = search["onglet"];
+    return o === "entrainement" || o === "glossaire" || o === "lecture" ? { onglet: o } : {};
+  },
   head: () => ({
     meta: [
       { title: "Le compagnon du livre — Ulpan Story" },
       {
         name: "description",
-        content: "Glossaire, quiz, lecture audio et conversation en hébreu, offerts avec le livre.",
+        content: "Lecture audio, entraînement et glossaire, offerts avec le livre.",
       },
       { property: "og:title", content: "Le compagnon du livre — Ulpan Story" },
       { property: "og:description", content: "Les contenus offerts avec votre tome." },
@@ -35,24 +48,29 @@ export const Route = createFileRoute("/compagnon/$book_slug")({
 
 function CompanionBook() {
   const { book_slug } = Route.useParams();
+  const onglet: Onglet = Route.useSearch().onglet ?? "lecture";
+  const navigate = useNavigate({ from: Route.fullPath });
   const { t, lang } = useI18n();
-  const queryClient = useQueryClient();
   const fetchBook = useServerFn(getCompanionBook);
   const saveRound = useServerFn(saveQuizRound);
+  const saveAnswer = useServerFn(enregistrerReponse);
   const fetchPages = useServerFn(getCompanionPages);
   const fetchAudioUrl = useServerFn(getCompanionPageAudioUrl);
+
+  const [focus, setFocus] = useState(false);
+  const [readerPage, setReaderPage] = useState<number | undefined>(undefined);
+  const [retour, setRetour] = useState<"question" | "result" | null>(null);
 
   const query = useQuery({
     queryKey: ["companion", "book", book_slug],
     queryFn: () => fetchBook({ data: { slug: book_slug } }),
+    staleTime: Infinity,
   });
-
   const pages = useQuery({
     queryKey: ["companion", "pages", book_slug],
     queryFn: () => fetchPages({ data: { slug: book_slug } }),
   });
 
-  // L'adresse d'écoute n'est demandée qu'au moment de lire.
   const requestAudioUrl = useCallback(
     async (pageId: string) => (await fetchAudioUrl({ data: { pageId } })).url,
     [fetchAudioUrl],
@@ -61,10 +79,9 @@ function CompanionBook() {
   const round = useMutation({
     mutationFn: (v: { answered: number; correct: number }) =>
       saveRound({ data: { book_slug, answered: v.answered, correct: v.correct } }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["companion", "book", book_slug] });
-    },
   });
+
+  const go = (o: Onglet) => void navigate({ search: { onglet: o } });
 
   if (query.isPending) {
     return (
@@ -75,7 +92,6 @@ function CompanionBook() {
   }
 
   const data = query.data;
-
   if (!data || !data.allowed) {
     return (
       <PageShell>
@@ -89,72 +105,121 @@ function CompanionBook() {
   }
 
   const book = data.book!;
-  const accent = data.collection?.color_hex ?? undefined;
+  const folios = new Map(data.folios.map((f) => [f.page_no, f.folio ?? f.page_no]));
+  const folioFor = (n: number) => folios.get(n) ?? n;
+  const concentre = focus && onglet === "entrainement";
+  const collStyle = data.collection?.color_hex
+    ? ({ "--collection": data.collection.color_hex } as React.CSSProperties)
+    : undefined;
 
   return (
     <PageShell>
-      <p className="label text-secondary-text">
-        {(lang === "en" ? data.collection?.name_en : data.collection?.name_fr) ?? ""}
-      </p>
+      <div style={collStyle}>
+        <div className="bg-collection text-ivory px-4 pt-4">
+          {!concentre ? (
+            <>
+              <p className="label" style={{ opacity: 0.7 }}>
+                {(lang === "en" ? data.collection?.name_en : data.collection?.name_fr) ?? ""}
+                {book.tome_no ? ` · ${book.tome_no}` : ""}
+              </p>
+              <h1 className="font-latin mt-1 text-[30px] font-normal">
+                {lang === "en" ? book.title_en || book.title_fr : book.title_fr}
+              </h1>
+            </>
+          ) : null}
+          <div role="tablist" className="mt-3 flex gap-5">
+            {ONGLETS.map((o) => {
+              const active = onglet === o.id;
+              return (
+                <button
+                  key={o.id}
+                  role="tab"
+                  type="button"
+                  aria-selected={active}
+                  onClick={() => go(o.id)}
+                  className="touch border-b-2 pb-2"
+                  style={{
+                    fontFamily: "var(--font-ui)",
+                    fontSize: 13,
+                    borderColor: active ? "currentColor" : "transparent",
+                    opacity: active ? 1 : 0.6,
+                  }}
+                >
+                  {t(o.key)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-      <h1 className="mt-1 text-[30px]" style={accent ? { color: accent } : undefined}>
-        {lang === "en" ? book.title_en || book.title_fr : book.title_fr}
-      </h1>
+        <div role="tabpanel" hidden={onglet !== "lecture"} className="mt-6">
+          {pages.isPending ? (
+            <p className="label text-secondary-text">{t("companion.loading")}</p>
+          ) : (pages.data?.pages.length ?? 0) > 0 ? (
+            <LecteurLivre
+              pages={pages.data!.pages}
+              requestAudioUrl={requestAudioUrl}
+              initialPageNo={readerPage}
+              retour={
+                retour
+                  ? {
+                      label: retour === "question" ? t("quiz.backQuestion") : t("quiz.backResult"),
+                      onClick: () => {
+                        setRetour(null);
+                        go("entrainement");
+                      },
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <p className="body-text text-secondary-text">{t("companion.audioSoon")}</p>
+          )}
+        </div>
 
-      {data.progress ? (
-        <p className="label text-secondary-text mt-4">
-          {t("companion.progress")} — {data.progress.quiz_correct} / {data.progress.quiz_answered}
-        </p>
-      ) : null}
-
-      {/* Le lecteur : c'est le corps de la page, tout de suite. */}
-      <section className="mt-8">
-        {pages.isPending ? (
-          <p className="label text-secondary-text">{t("companion.loading")}</p>
-        ) : (pages.data?.pages.length ?? 0) > 0 ? (
-          <LecteurLivre pages={pages.data!.pages} requestAudioUrl={requestAudioUrl} />
-        ) : (
-          <p className="body-text text-secondary-text">{t("companion.audioSoon")}</p>
-        )}
-      </section>
-
-      {/* L'entraînement */}
-      <section className="mt-12">
-        <h2 className="text-[22px]">{t("companion.quiz")}</h2>
-        <p className="label text-secondary-text mt-2">{t("companion.quizNote")}</p>
-        {data.quiz.length > 0 ? (
-          <QuizRound
+        <div role="tabpanel" hidden={onglet !== "entrainement"}>
+          <CompanionTraining
             questions={data.quiz}
+            chapters={data.chapters}
+            initialAnswers={data.lastAnswers}
+            folioFor={folioFor}
+            onAnswer={async (q, chosen) => {
+              try {
+                await saveAnswer({ data: { book_slug, question_id: q.id, chosen_index: chosen } });
+                return true;
+              } catch {
+                return false;
+              }
+            }}
             onFinish={(answered, correct) => round.mutate({ answered, correct })}
+            onReread={(pageNo, from) => {
+              setReaderPage(pageNo);
+              setRetour(from);
+              go("lecture");
+            }}
+            onFocusMode={setFocus}
           />
-        ) : (
-          <p className="body-text text-secondary-text mt-4">{t("soon")}</p>
-        )}
-      </section>
+        </div>
 
-      {/* Le glossaire */}
-      <section className="mt-16">
-        <h2 className="text-[22px]">{t("companion.glossary")}</h2>
-        <p className="label text-secondary-text mt-2">
-          {data.glossary.length} {t("companion.words")} — {t("companion.glossaryNote")}
-        </p>
-        <ul className="border-line mt-6 border-t">
-          {data.glossary.map((item) => (
-            <li
-              key={item.id}
-              className="border-line flex items-baseline justify-between gap-6 border-b py-3"
-            >
-              <HebrewText size="base">{item.lemma_he}</HebrewText>
-              <span className="body-text text-secondary-text text-right">
-                {glossarySense(item, lang) ?? ""}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* La lecture audio vit désormais dans le lecteur, page par page.
-          `audio_tracks` et sa requête dorment, sans être supprimés. */}
+        <div role="tabpanel" hidden={onglet !== "glossaire"} className="mt-6">
+          <p className="label text-secondary-text">
+            {data.glossary.length} {t("companion.words")} — {t("companion.glossaryNote")}
+          </p>
+          <ul className="border-line mt-6 border-t">
+            {data.glossary.map((item) => (
+              <li
+                key={item.id}
+                className="border-line flex items-baseline justify-between gap-6 border-b py-3"
+              >
+                <HebrewText size="base">{item.lemma_he}</HebrewText>
+                <span className="body-text text-secondary-text text-right">
+                  {glossarySense(item, lang) ?? ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </PageShell>
   );
 }

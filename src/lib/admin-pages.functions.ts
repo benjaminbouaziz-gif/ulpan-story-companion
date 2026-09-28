@@ -11,7 +11,6 @@ import {
   translateDataObject,
 } from "./translate-pages.server";
 
-
 /** Les sections d'une page : lecture, écriture, versions, traduction. */
 export const adminListSections = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -35,7 +34,6 @@ export const adminListSections = createServerFn({ method: "GET" })
     for (const s of rows) statuses[s.id] = await sectionFieldStatus(s, { manual });
     return { page, sections: rows, statuses, manual };
   });
-
 
 export const adminSaveSection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -118,7 +116,6 @@ export const adminSaveSection = createServerFn({ method: "POST" })
     return { ok: !error, error: error?.message ?? auto.error ?? null };
   });
 
-
 /** Retraduit tous les champs d'une page, y compris les anglais obsolètes. */
 export const adminTranslatePage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -164,11 +161,12 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
       }
       const patch: Record<string, unknown> = {};
       if (jobs.length > 0) {
-        const run = await translateFields(
-          context.supabase,
-          jobs,
-          { kind: "translate_page", entity: "page_section", entity_id: s.id, created_by: context.userId },
-        );
+        const run = await translateFields(context.supabase, jobs, {
+          kind: "translate_page",
+          entity: "page_section",
+          entity_id: s.id,
+          created_by: context.userId,
+        });
         if (run.error) error = run.error;
         for (const r of run.results) {
           patch[`${r.field}_en`] = r.en;
@@ -194,7 +192,10 @@ export const adminTranslatePage = createServerFn({ method: "POST" })
       }
       if (dataRes.error) error = dataRes.error;
       if (Object.keys(patch).length > 0)
-        await context.supabase.from("page_sections").update(patch as never).eq("id", s.id);
+        await context.supabase
+          .from("page_sections")
+          .update(patch as never)
+          .eq("id", s.id);
     }
     return { ok: !error, translated, error };
   });
@@ -204,10 +205,7 @@ export const adminDeleteSection = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
-    const { error } = await context.supabase
-      .from("page_sections")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("page_sections").delete().eq("id", data.id);
     return { ok: !error, error: error?.message ?? null };
   });
 

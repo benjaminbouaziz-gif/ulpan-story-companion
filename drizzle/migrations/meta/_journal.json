@@ -15,6 +15,13 @@
       "when": 1789406998063,
       "tag": "0001_book_pages_numero_unique_par_livre",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790591216243,
+      "tag": "0002_quiz_depot_et_reponses",
+      "breakpoints": true
     }
   ]
 }

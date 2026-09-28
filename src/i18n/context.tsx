@@ -9,7 +9,10 @@ type I18nValue = {
   setLang: (lang: Lang) => void;
 };
 
-const I18nContext = createContext<I18nValue | null>(null);
+// Un seul contexte, même quand le module est rechargé à chaud pendant l'édition
+// (sinon fournisseur et lecteurs tiennent deux contextes différents).
+const g = globalThis as { __ulpanI18nContext?: React.Context<I18nValue | null> };
+const I18nContext = (g.__ulpanI18nContext ??= createContext<I18nValue | null>(null));
 
 export function I18nProvider({
   initialLang,

@@ -9,10 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 export const MODEL = "google/gemini-2.5-flash";
 
 /** Champs dont l'anglais n'est jamais produit automatiquement. */
-export const NEVER_AUTO = [
-  "spread_paragraphs.support_en",
-  "books.excerpt_translation_en",
-] as const;
+export const NEVER_AUTO = ["spread_paragraphs.support_en", "books.excerpt_translation_en"] as const;
 
 /** Champs traduisibles mais toujours marqués « à relire ». */
 export const REVIEW_REQUIRED = ["glossary_entries.sense_en"] as const;

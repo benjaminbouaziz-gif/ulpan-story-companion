@@ -57,10 +57,7 @@ export const adminSaveSpreadParagraph = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
     const { id, ...patch } = data;
-    const { error } = await context.supabase
-      .from("spread_paragraphs")
-      .update(patch)
-      .eq("id", id);
+    const { error } = await context.supabase.from("spread_paragraphs").update(patch).eq("id", id);
     return { ok: !error, error: error?.message ?? null };
   });
 
@@ -78,9 +75,6 @@ export const adminDeleteSpreadParagraph = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertEditor(context.supabase, context.userId);
-    const { error } = await context.supabase
-      .from("spread_paragraphs")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("spread_paragraphs").delete().eq("id", data.id);
     return { ok: !error, error: error?.message ?? null };
   });

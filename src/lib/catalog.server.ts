@@ -10,7 +10,6 @@ import type {
 } from "./book-page";
 import type { GlossaryItem, SpreadParagraph, SupportKind } from "./spread";
 
-
 /** Client de lecture publique : les politiques RLS anon s'appliquent. */
 export function publicClient() {
   return createClient<Database>(

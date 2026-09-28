@@ -189,7 +189,6 @@ export async function synchroniserDecisions(
     .eq("book_step_id", args.bookStepId)
     .is("archived_at", null);
 
-
   const parCle = new Map((existantes ?? []).map((d) => [d.question_key, d]));
   const clesVues = new Set<string>();
   let created = 0;

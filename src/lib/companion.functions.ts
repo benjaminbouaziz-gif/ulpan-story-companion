@@ -13,6 +13,7 @@ export type QuizQuestion = {
   id: string;
   sort_order: number;
   chapter_no: number | null;
+  page_no: number | null;
   kind: string;
   prompt_fr: string | null;
   prompt_en: string | null;
@@ -30,6 +31,16 @@ export type AudioTrack = {
   label_en: string | null;
   duration_s: number | null;
 };
+
+export type CompanionChapter = {
+  chapter_no: number;
+  title_fr: string | null;
+  title_en: string | null;
+  first_page: number | null;
+  last_page: number | null;
+};
+
+export type LastAnswer = { chosen_index: number; is_correct: boolean };
 
 export type ReaderProgress = { quiz_answered: number; quiz_correct: number } | null;
 
@@ -63,6 +74,9 @@ export const getCompanionBook = createServerFn({ method: "GET" })
       audio: [] as AudioTrack[],
       paragraphs: [] as SpreadParagraph[],
       progress: null as ReaderProgress,
+      chapters: [] as CompanionChapter[],
+      folios: [] as { page_no: number; folio: number | null }[],
+      lastAnswers: {} as Record<string, LastAnswer>,
     };
 
     const { data: book } = await context.supabase
@@ -80,30 +94,79 @@ export const getCompanionBook = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!access) return { ...empty, book: book as Book };
 
-    const [{ data: gloss }, { data: quiz }, { data: audio }, { data: progress }] =
-      await Promise.all([
-        context.supabase
-          .from("glossary_entries")
-          .select("id, sort_order, lemma_he, sense_fr, sense_en")
-          .eq("book_id", book.id)
-          .order("sort_order", { ascending: true }),
-        context.supabase
-          .from("quiz_questions")
-          .select("*")
-          .eq("book_id", book.id)
-          .order("sort_order", { ascending: true }),
-        context.supabase
-          .from("audio_tracks")
-          .select("id, chapter_no, label_fr, label_en, duration_s")
-          .eq("book_id", book.id)
-          .order("chapter_no", { ascending: true }),
-        context.supabase
-          .from("reader_progress")
-          .select("quiz_answered, quiz_correct")
-          .eq("user_id", context.userId)
-          .eq("book_id", book.id)
-          .maybeSingle(),
-      ]);
+    const [
+      { data: gloss },
+      { data: quiz },
+      { data: audio },
+      { data: progress },
+      { data: pubPages },
+      { data: answers },
+    ] = await Promise.all([
+      context.supabase
+        .from("glossary_entries")
+        .select("id, sort_order, lemma_he, sense_fr, sense_en")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+      context.supabase
+        .from("quiz_questions")
+        .select("*")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+      context.supabase
+        .from("audio_tracks")
+        .select("id, chapter_no, label_fr, label_en, duration_s")
+        .eq("book_id", book.id)
+        .order("chapter_no", { ascending: true }),
+      context.supabase
+        .from("reader_progress")
+        .select("quiz_answered, quiz_correct")
+        .eq("user_id", context.userId)
+        .eq("book_id", book.id)
+        .maybeSingle(),
+      context.supabase
+        .from("book_pages")
+        .select("page_no, chapter_no, folio, chapter_title_fr, chapter_title_en")
+        .eq("book_id", book.id)
+        .eq("is_published", true)
+        .order("page_no", { ascending: true }),
+      context.supabase
+        .from("quiz_answers")
+        .select("question_id, chosen_index, is_correct, answered_at")
+        .eq("user_id", context.userId)
+        .eq("book_id", book.id)
+        .order("answered_at", { ascending: false }),
+    ]);
+
+    const chapMap = new Map<number, CompanionChapter>();
+    for (const p of pubPages ?? []) {
+      if (p.chapter_no == null) continue;
+      const c = chapMap.get(p.chapter_no) ?? {
+        chapter_no: p.chapter_no,
+        title_fr: null,
+        title_en: null,
+        first_page: p.page_no,
+        last_page: p.page_no,
+      };
+      c.title_fr = c.title_fr ?? p.chapter_title_fr;
+      c.title_en = c.title_en ?? p.chapter_title_en;
+      c.first_page = Math.min(c.first_page ?? p.page_no, p.page_no);
+      c.last_page = Math.max(c.last_page ?? p.page_no, p.page_no);
+      chapMap.set(p.chapter_no, c);
+    }
+    for (const q of quiz ?? []) {
+      if (q.chapter_no != null && !chapMap.has(q.chapter_no))
+        chapMap.set(q.chapter_no, {
+          chapter_no: q.chapter_no,
+          title_fr: null,
+          title_en: null,
+          first_page: null,
+          last_page: null,
+        });
+    }
+    const lastAnswers: Record<string, LastAnswer> = {};
+    for (const a of answers ?? [])
+      if (!lastAnswers[a.question_id])
+        lastAnswers[a.question_id] = { chosen_index: a.chosen_index, is_correct: a.is_correct };
 
     let collection: Collection | null = null;
     if (book.collection_id) {
@@ -131,6 +194,7 @@ export const getCompanionBook = createServerFn({ method: "GET" })
         id: q.id,
         sort_order: q.sort_order,
         chapter_no: q.chapter_no,
+        page_no: q.page_no ?? null,
         kind: q.kind as string,
         prompt_fr: q.prompt_fr,
         prompt_en: q.prompt_en,
@@ -146,7 +210,56 @@ export const getCompanionBook = createServerFn({ method: "GET" })
       audio: (audio ?? []) as AudioTrack[],
       paragraphs: [] as SpreadParagraph[],
       progress: (progress ?? null) as ReaderProgress,
+      chapters: [...chapMap.values()].sort((a, b) => a.chapter_no - b.chapter_no),
+      folios: (pubPages ?? []).map((p) => ({ page_no: p.page_no, folio: p.folio })),
+      lastAnswers,
     };
+  });
+
+/** Une réponse, enregistrée au toucher. La justesse se recalcule ici. */
+export const enregistrerReponse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        book_slug: z.string().min(1).max(120),
+        question_id: z.string().uuid(),
+        chosen_index: z.number().int().min(0).max(20),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const { data: book } = await context.supabase
+      .from("books")
+      .select("id")
+      .eq("slug", data.book_slug)
+      .maybeSingle();
+    if (!book) throw new Error("Forbidden");
+    const { data: access } = await context.supabase
+      .from("book_access")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("book_id", book.id)
+      .maybeSingle();
+    if (!access) throw new Error("Forbidden");
+    const { data: q } = await context.supabase
+      .from("quiz_questions")
+      .select("id, answer")
+      .eq("id", data.question_id)
+      .eq("book_id", book.id)
+      .maybeSingle();
+    if (!q) throw new Error("NOT_FOUND");
+    const idx = (q.answer as { index?: number } | null)?.index;
+    const is_correct = typeof idx === "number" && idx === data.chosen_index;
+    const { error } = await context.supabase.from("quiz_answers").insert({
+      user_id: context.userId,
+      book_id: book.id,
+      question_id: q.id,
+      chosen_index: data.chosen_index,
+      is_correct,
+    });
+    if (error) throw new Error("SAVE_FAILED");
+    return { is_correct };
   });
 
 /** La progression, comptée en réponses données et en réponses justes. */

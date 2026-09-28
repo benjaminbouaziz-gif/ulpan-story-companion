@@ -5,13 +5,14 @@ import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { LivreInfoForm } from "@/components/AtelierLivreInfo";
 import { LivrePagesTable } from "@/components/AtelierLivrePages";
+import { LivreQuiz } from "@/components/AtelierLivreQuiz";
 import { atelierLivreCollections, atelierLivreInfo } from "@/lib/atelier-livre.functions";
 
 /**
  * LA FICHE DU LIVRE. Deux onglets actifs : Informations et Pages. Les trois
  * autres sont annoncés, désactivés, et n'appellent rien.
  */
-type Onglet = "info" | "pages";
+type Onglet = "info" | "pages" | "quiz";
 
 export const Route = createFileRoute("/atelier/livres_/$slug")({
   ssr: false,
@@ -19,16 +20,14 @@ export const Route = createFileRoute("/atelier/livres_/$slug")({
     meta: [{ title: "Livre — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    onglet: (search["onglet"] === "pages" ? "pages" : "info") as Onglet,
+    onglet: (search["onglet"] === "pages" || search["onglet"] === "quiz"
+      ? search["onglet"]
+      : "info") as Onglet,
   }),
   component: FicheLivre,
 });
 
-const ONGLETS_A_VENIR: DictKey[] = [
-  "atelier.livre.tab.glossary",
-  "atelier.livre.tab.quiz",
-  "atelier.livre.tab.talk",
-];
+const ONGLETS_A_VENIR: DictKey[] = ["atelier.livre.tab.glossary", "atelier.livre.tab.talk"];
 
 function FicheLivre() {
   const { t } = useI18n();
@@ -82,6 +81,13 @@ function FicheLivre() {
         >
           {t("atelier.livre.tab.pages")}
         </button>
+        <button
+          type="button"
+          className={`${tab} ${onglet === "quiz" ? "font-medium" : ""}`}
+          onClick={() => void navigate({ to: ".", search: { onglet: "quiz" } })}
+        >
+          {t("atelier.livre.tab.quiz")}
+        </button>
         {ONGLETS_A_VENIR.map((key) => (
           <span key={key} className={`${tab} opacity-50`}>
             {t(key)} — {t("atelier.livre.tab.soon")}
@@ -105,6 +111,8 @@ function FicheLivre() {
             }
           }}
         />
+      ) : onglet === "quiz" ? (
+        <LivreQuiz bookId={book.id} slug={book.slug} />
       ) : (
         <LivrePagesTable bookId={book.id} slug={book.slug} />
       )}

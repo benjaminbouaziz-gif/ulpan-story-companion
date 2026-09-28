@@ -28,9 +28,13 @@ function formatSpeed(v: number): string {
 type Props = {
   pages: CompanionPage[];
   requestAudioUrl: (pageId: string) => Promise<string | null>;
+  /** Ouvre le lecteur sur cette page (sans lancer l'audio). */
+  initialPageNo?: number | undefined;
+  /** Lien de retour affiché au-dessus du lecteur. */
+  retour?: { label: string; onClick: () => void } | undefined;
 };
 
-export function LecteurLivre({ pages, requestAudioUrl }: Props) {
+export function LecteurLivre({ pages, requestAudioUrl, initialPageNo, retour }: Props) {
   const { t, lang } = useI18n();
   const { speed, setSpeed } = usePreferences();
 
@@ -43,6 +47,12 @@ export function LecteurLivre({ pages, requestAudioUrl }: Props) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const page = pages[index];
+
+  useEffect(() => {
+    if (initialPageNo == null) return;
+    const i = pages.findIndex((p) => p.page_no === initialPageNo);
+    if (i >= 0) setIndex(i);
+  }, [initialPageNo, pages]);
 
   /** La hauteur du son ne doit pas descendre quand on ralentit. */
   const applyRate = useCallback(
@@ -173,6 +183,15 @@ export function LecteurLivre({ pages, requestAudioUrl }: Props) {
       onDragStart={(e) => e.preventDefault()}
       style={{ WebkitUserSelect: "none", userSelect: "none" }}
     >
+      {retour ? (
+        <button
+          type="button"
+          className="label touch mb-3 inline-flex items-center border-b border-current"
+          onClick={retour.onClick}
+        >
+          ← {retour.label}
+        </button>
+      ) : null}
       <audio
         ref={audioRef}
         preload="none"

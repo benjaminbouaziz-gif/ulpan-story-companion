@@ -84,25 +84,44 @@ export const atelierQueue = createServerFn({ method: "GET" })
             .select("id, book_step_id, type, version, created_at")
             .in("book_step_id", stepIds)
             .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [] as { id: string; book_step_id: string; type: string; version: number; created_at: string }[] }),
+        : Promise.resolve({
+            data: [] as {
+              id: string;
+              book_step_id: string;
+              type: string;
+              version: number;
+              created_at: string;
+            }[],
+          }),
       stepIds.length > 0
         ? admin
             .from("agent_runs")
             .select("book_step_id, robot_name, error_summary, created_at")
             .in("book_step_id", stepIds)
             .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [] as { book_step_id: string | null; robot_name: string | null; error_summary: string | null; created_at: string }[] }),
+        : Promise.resolve({
+            data: [] as {
+              book_step_id: string | null;
+              robot_name: string | null;
+              error_summary: string | null;
+              created_at: string;
+            }[],
+          }),
     ]);
 
     const titles = new Map((books.data ?? []).map((b) => [b.id, b.title_fr]));
     const lastArtifact = new Map<string, QueueArtifact>();
     for (const a of arts.data ?? []) {
-      if (!lastArtifact.has(a.book_step_id)) lastArtifact.set(a.book_step_id, { type: a.type, version: a.version });
+      if (!lastArtifact.has(a.book_step_id))
+        lastArtifact.set(a.book_step_id, { type: a.type, version: a.version });
     }
     const lastRun = new Map<string, { robot: string | null; error: string | null }>();
     for (const r of runs.data ?? []) {
       if (r.book_step_id && !lastRun.has(r.book_step_id))
-        lastRun.set(r.book_step_id, { robot: r.robot_name ?? null, error: r.error_summary ?? null });
+        lastRun.set(r.book_step_id, {
+          robot: r.robot_name ?? null,
+          error: r.error_summary ?? null,
+        });
     }
 
     const map = (s: (typeof rows)[number]): QueueStep => ({
