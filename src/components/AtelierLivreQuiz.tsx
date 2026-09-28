@@ -122,8 +122,7 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
     }
   }
 
-  const libelle = (p: QuizProbleme) =>
-    fmt(t(`atelier.quiz.code.${p.code}` as DictKey), p.params);
+  const libelle = (p: QuizProbleme) => fmt(t(`atelier.quiz.code.${p.code}` as DictKey), p.params);
   const erreurs = rapport?.erreurs ?? [];
   const ok = !!rapport && erreurs.length === 0;
   const total = stats.data?.total ?? 0;
@@ -224,7 +223,11 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
             }}
           >
             <p>{t("atelier.quiz.drop")}</p>
-            <button type="button" className={`${btn} mt-2`} onClick={() => fileRef.current?.click()}>
+            <button
+              type="button"
+              className={`${btn} mt-2`}
+              onClick={() => fileRef.current?.click()}
+            >
               {t("atelier.quiz.choose")}
             </button>
           </div>
@@ -313,14 +316,19 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
                 {t("atelier.quiz.publish")}
               </button>
             </div>
-            {!ok ? <p className="mt-1 text-[12px] opacity-70">{t("atelier.quiz.buttonsHint")}</p> : null}
+            {!ok ? (
+              <p className="mt-1 text-[12px] opacity-70">{t("atelier.quiz.buttonsHint")}</p>
+            ) : null}
             {confirm && ok ? (
               <div className="border-line mt-3 border p-3">
-                <p>
-                  {fmt(t("atelier.quiz.confirm"), { x: total, y: rapport!.resume.total })}
-                </p>
+                <p>{fmt(t("atelier.quiz.confirm"), { x: total, y: rapport!.resume.total })}</p>
                 <div className="mt-2 flex gap-2">
-                  <button type="button" className={btn} disabled={busy} onClick={() => void publier()}>
+                  <button
+                    type="button"
+                    className={btn}
+                    disabled={busy}
+                    onClick={() => void publier()}
+                  >
                     {t("atelier.quiz.confirmYes")}
                   </button>
                   <button type="button" className={btn} onClick={() => setConfirm(false)}>
