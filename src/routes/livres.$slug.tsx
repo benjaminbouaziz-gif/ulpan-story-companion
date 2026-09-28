@@ -87,7 +87,22 @@ function BookPage() {
         </div>
       ) : null}
 
-      <p className="body-text mt-8">{pickLang(lang, book.blurb_fr, book.blurb_en)}</p>
+      {pickLang(lang, book.blurb_fr, book.blurb_en) ? (
+        <p className="body-text mt-8">{pickLang(lang, book.blurb_fr, book.blurb_en)}</p>
+      ) : null}
+      {/* Le lien d'achat du marché de cette édition, et lui seul. */}
+      {pickLang(lang, book.amazon_url_fr, book.amazon_url_com) ? (
+        <p className="mt-6">
+          <a
+            href={pickLang(lang, book.amazon_url_fr, book.amazon_url_com)!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="label touch bg-foreground text-background inline-flex px-4"
+          >
+            {t("book.buyAmazon")}
+          </a>
+        </p>
+      ) : null}
 
       <section className="border-line mt-8 border-t pt-6">
         <h2 className="text-[22px]">{t("books.excerpt")}</h2>
