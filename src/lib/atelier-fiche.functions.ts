@@ -235,13 +235,13 @@ export const atelierBookFiche = createServerFn({ method: "GET" })
       ficheStepStatus: (fiche?.status as string | undefined) ?? null,
       journal: (journal.data ?? []).map((row) => {
         const snap = (row.snapshot ?? {}) as Record<string, unknown>;
-        const fields = Array.isArray(snap['fields'])
-          ? (snap['fields'] as string[])
+        const fields = Array.isArray(snap["fields"])
+          ? (snap["fields"] as string[])
           : Object.keys(snap).filter((k) => k !== "action");
         return {
           id: row.id,
           at: row.created_at,
-          fields: snap['action'] === "creation" ? ["creation"] : fields,
+          fields: snap["action"] === "creation" ? ["creation"] : fields,
         };
       }),
     };

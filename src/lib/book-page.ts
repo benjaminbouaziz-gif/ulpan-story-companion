@@ -272,10 +272,7 @@ export function validateBookPage(page: BookPage, glossNumbers: Set<number>): Pag
 
   if (kind === "cloze") {
     blocks.forEach((b, i) => {
-      const cited = [
-        ...clozeNumbers(b.support_fr ?? ""),
-        ...clozeNumbers(b.support_en ?? ""),
-      ];
+      const cited = [...clozeNumbers(b.support_fr ?? ""), ...clozeNumbers(b.support_en ?? "")];
       for (const no of Array.from(new Set(cited))) {
         if (!glossNumbers.has(no)) {
           issues.push({

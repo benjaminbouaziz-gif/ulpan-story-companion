@@ -72,7 +72,6 @@ function mapRow(r: Brut, labels: Map<string, string>): DecisionRow {
 const SELECT =
   "id, book_id, book_step_id, sort_order, question, contexte, decision, status, stale, created_at, decided_at, archived_at, archived_from_version";
 
-
 /** Les décisions d'une étape, plus l'état de la dernière lecture automatique. */
 export const stepDecisions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

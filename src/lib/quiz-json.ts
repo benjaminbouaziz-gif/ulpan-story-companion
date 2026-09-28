@@ -90,7 +90,8 @@ function positionSyntaxe(texte: string, message: string): { ligne: number; colon
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
-const isPosInt = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 1;
+const isPosInt = (v: unknown): v is number =>
+  typeof v === "number" && Number.isInteger(v) && v >= 1;
 const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
 export function analyserQuizJson(contenu: string, slug: string, pages: PageRef[]): QuizAnalyse {

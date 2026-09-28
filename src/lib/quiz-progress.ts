@@ -20,7 +20,9 @@ export function aRevoir(questions: QuizQuestion[], last: Answers): QuizQuestion[
 }
 
 export function questionsDuChapitre(questions: QuizQuestion[], chapter: number): QuizQuestion[] {
-  return questions.filter((q) => q.chapter_no === chapter).sort((a, b) => a.sort_order - b.sort_order);
+  return questions
+    .filter((q) => q.chapter_no === chapter)
+    .sort((a, b) => a.sort_order - b.sort_order);
 }
 
 export function etatChapitre(questions: QuizQuestion[], last: Answers, chapter: number) {

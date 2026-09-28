@@ -28,7 +28,6 @@ import {
  *  - aucun artefact n'est créé quand l'appel échoue.
  */
 
-
 export const ROBOT_PLAN = "plan";
 export const PLAN_STEP_CODE = "plan";
 /** Au-delà de ce délai, un lancement resté « en cours » est tenu pour abandonné. */
@@ -159,7 +158,6 @@ export const cancelPlanRun = createServerFn({ method: "POST" })
     return { stopped: true };
   });
 
-
 /** L'état du robot pour une étape : sert à dire ce qui manque AVANT de lancer. */
 export const planRobotState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -179,7 +177,6 @@ export const planRobotState = createServerFn({ method: "GET" })
     await balayerLancementsMorts(admin, step.id);
 
     const isPlanStep = step.step_code === PLAN_STEP_CODE;
-
 
     const [{ data: book }, { data: prompt }, { data: runs }, { data: arts }, { data: revs }] =
       await Promise.all([
@@ -230,7 +227,6 @@ export const planRobotState = createServerFn({ method: "GET" })
       .eq("book_step_id", step.id)
       .is("archived_at", null);
 
-
     const model = version?.model ?? null;
     const summaryFilled = (book?.work_summary_fr ?? "").trim().length > 0;
     const keyConfigured = model ? cleConfiguree(model) : false;
@@ -239,17 +235,19 @@ export const planRobotState = createServerFn({ method: "GET" })
     const runningStale =
       enCours !== null && Date.now() - new Date(enCours.created_at).getTime() > DELAI_ABANDON_MS;
 
-
     const missing: string[] = [];
     if (!isPlanStep) missing.push("Ce robot ne travaille que sur l'étape « Plan de chapitres ».");
-    if (!summaryFilled)
-      missing.push("Il manque le résumé de l'éditeur dans la fiche du livre.");
+    if (!summaryFilled) missing.push("Il manque le résumé de l'éditeur dans la fiche du livre.");
     if (!prompt) missing.push("Il manque un prompt pour l'étape « Plan de chapitres ».");
     else if (!version) missing.push("Le prompt de l'étape n'a aucune version active.");
     else if (!model)
-      missing.push("La version active du prompt ne précise aucun modèle : republiez-la avec un modèle.");
+      missing.push(
+        "La version active du prompt ne précise aucun modèle : republiez-la avec un modèle.",
+      );
     else if (!fournisseurDuModele(model))
-      missing.push(`Modèle inconnu de l'atelier : « ${model} » (claude-…, gemini-…, google/gemini-…).`);
+      missing.push(
+        `Modèle inconnu de l'atelier : « ${model} » (claude-…, gemini-…, google/gemini-…).`,
+      );
     else if (!keyConfigured)
       missing.push(`Il manque la clé d'API ${secretDuModele(model)} dans les secrets du projet.`);
     if (running) missing.push("Un lancement est déjà en cours sur cette étape.");
@@ -322,7 +320,6 @@ export const chainAfterValidation = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     return enchainerApresValidation(editor, data.bookStepId);
   });
-
 
 export type RobotRunLine = {
   id: string;

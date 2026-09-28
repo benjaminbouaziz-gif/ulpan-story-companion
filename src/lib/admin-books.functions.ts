@@ -25,7 +25,10 @@ export const adminBookFigures = createServerFn({ method: "GET" })
     > = {};
     for (const b of rows) {
       const [{ data: gloss }, { data: quiz }, { data: paras }] = await Promise.all([
-        context.supabase.from("glossary_entries").select("chapter_no, lemma_he").eq("book_id", b.id),
+        context.supabase
+          .from("glossary_entries")
+          .select("chapter_no, lemma_he")
+          .eq("book_id", b.id),
         context.supabase.from("quiz_questions").select("chapter_no").eq("book_id", b.id),
         context.supabase.from("spread_paragraphs").select("id").eq("book_id", b.id),
       ]);
@@ -36,7 +39,9 @@ export const adminBookFigures = createServerFn({ method: "GET" })
       counted[b.id] = {
         chapters_count: chapters.size > 0 ? chapters.size : null,
         words_unique: lemmas.size > 0 ? lemmas.size : null,
-        spread_pages: b.kdp_page_count ? Math.ceil(b.kdp_page_count / 2) : (paras ?? []).length || null,
+        spread_pages: b.kdp_page_count
+          ? Math.ceil(b.kdp_page_count / 2)
+          : (paras ?? []).length || null,
       };
     }
     return { books: rows, counted };
@@ -133,6 +138,9 @@ export const adminTranslateBook = createServerFn({ method: "POST" })
       }
     }
     if (Object.keys(patch).length > 0)
-      await context.supabase.from("books").update(patch as never).eq("id", book.id);
+      await context.supabase
+        .from("books")
+        .update(patch as never)
+        .eq("id", book.id);
     return { ok: !error, translated: Object.keys(patch).length, error };
   });

@@ -17,7 +17,12 @@ import { QuizRound } from "@/components/QuizRound";
  * « Revenir à la question » retrouve exactement la même question.
  */
 
-type Series = { key: number; kind: "chapter" | "review"; chapter: number | null; qs: QuizQuestion[] };
+type Series = {
+  key: number;
+  kind: "chapter" | "review";
+  chapter: number | null;
+  qs: QuizQuestion[];
+};
 
 type Props = {
   questions: QuizQuestion[];
@@ -88,7 +93,10 @@ export function CompanionTraining({
   };
 
   const answer = async (q: QuizQuestion, chosen: number) => {
-    setLast((l) => ({ ...l, [q.id]: { chosen_index: chosen, is_correct: chosen === q.answer_index } }));
+    setLast((l) => ({
+      ...l,
+      [q.id]: { chosen_index: chosen, is_correct: chosen === q.answer_index },
+    }));
     return onAnswer(q, chosen);
   };
 
@@ -111,7 +119,11 @@ export function CompanionTraining({
       <QuizRound
         key={series.key}
         questions={series.qs}
-        mode={series.kind === "review" ? { kind: "review" } : { kind: "chapter", chapter: series.chapter }}
+        mode={
+          series.kind === "review"
+            ? { kind: "review" }
+            : { kind: "chapter", chapter: series.chapter }
+        }
         chapterTitle={title}
         folioFor={folioFor}
         onAnswer={answer}
@@ -143,7 +155,10 @@ export function CompanionTraining({
   return (
     <div className="mt-6">
       {/* 1. Continuer */}
-      <div className="bg-paper border-line border p-4" style={{ boxShadow: "0 2px 6px var(--surface-rule)" }}>
+      <div
+        className="bg-paper border-line border p-4"
+        style={{ boxShadow: "0 2px 6px var(--surface-rule)" }}
+      >
         {proposedChap ? (
           <>
             <div className="flex items-center gap-4">

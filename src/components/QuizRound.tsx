@@ -31,7 +31,9 @@ const hebStyle = { letterSpacing: "normal", textTransform: "none" } as const;
 
 /** Isole les passages hébreux d'une explication. */
 function Mixte({ text }: { text: string }) {
-  const parts = text.split(/([\u0590-\u05FF][\u0590-\u05FF\u05B0-\u05C7\s׳״'"־]*[\u0590-\u05FF\u05B0-\u05C7])/);
+  const parts = text.split(
+    /([\u0590-\u05FF][\u0590-\u05FF\u05B0-\u05C7\s׳״'"־]*[\u0590-\u05FF\u05B0-\u05C7])/,
+  );
   return (
     <>
       {parts.map((p, i) =>
@@ -82,7 +84,9 @@ export function QuizRound({
 
   const chapLabel = (no: number | null) => {
     const title = chapterTitle(no);
-    return no == null ? (title ?? "") : `${fmt(t("quiz.chapter"), { n: no })}${title ? ` · ${title}` : ""}`;
+    return no == null
+      ? (title ?? "")
+      : `${fmt(t("quiz.chapter"), { n: no })}${title ? ` · ${title}` : ""}`;
   };
 
   /* ---------- Bilan ---------- */
@@ -203,7 +207,8 @@ export function QuizRound({
   /* ---------- Question ---------- */
   const q = list[index]!;
   const prompt = (lang === "en" ? q.prompt_en || q.prompt_fr : q.prompt_fr || q.prompt_en) ?? "";
-  const explain = (lang === "en" ? q.explain_en || q.explain_fr : q.explain_fr || q.explain_en) ?? "";
+  const explain =
+    (lang === "en" ? q.explain_en || q.explain_fr : q.explain_fr || q.explain_en) ?? "";
   const answered = picked !== null;
   const juste = answered && picked === q.answer_index;
   const heb = toutEnHebreu(q.options);
@@ -323,7 +328,9 @@ export function QuizRound({
               {t("quiz.theAnswer")}{" "}
               <strong
                 {...(HEB.test(good) ? { dir: "rtl", lang: "he" } : {})}
-                style={HEB.test(good) ? { ...hebStyle, fontFamily: "var(--font-hebrew)" } : undefined}
+                style={
+                  HEB.test(good) ? { ...hebStyle, fontFamily: "var(--font-hebrew)" } : undefined
+                }
               >
                 {good}
               </strong>
@@ -344,9 +351,7 @@ export function QuizRound({
               {fmt(t("quiz.reread"), { n: folioFor(q.page_no) })}
             </button>
           ) : null}
-          {notSaved ? (
-            <p className="label mt-2 opacity-70">{t("quiz.notSaved")}</p>
-          ) : null}
+          {notSaved ? <p className="label mt-2 opacity-70">{t("quiz.notSaved")}</p> : null}
           <button
             ref={nextBtn}
             type="button"

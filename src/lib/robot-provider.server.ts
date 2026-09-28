@@ -131,7 +131,8 @@ function texteErreur(
   else if (status === 429) cause = "Fournisseur saturé (trop de demandes)";
   else if (status === 413) cause = "Requête trop grosse pour le fournisseur";
   else if (status === 504 || status === 524 || status === 522)
-    cause = "Appel coupé par le fournisseur avant la fin de la réponse (délai dépassé côté fournisseur)";
+    cause =
+      "Appel coupé par le fournisseur avant la fin de la réponse (délai dépassé côté fournisseur)";
   else if (status >= 500) cause = "Panne passagère du fournisseur";
   else cause = "Appel refusé";
   return `${cause} — ${queue}`;
@@ -163,7 +164,10 @@ async function appelAnthropic(
   const url = "https://api.anthropic.com/v1/messages";
   const t0 = Date.now();
   const controller = new AbortController();
-  const totalTimer = setTimeout(() => controller.abort(timeoutMessage(model, "total")), MODEL_TOTAL_TIMEOUT_MS);
+  const totalTimer = setTimeout(
+    () => controller.abort(timeoutMessage(model, "total")),
+    MODEL_TOTAL_TIMEOUT_MS,
+  );
   // Avant les en-têtes il n'y a aucun flux à surveiller : c'est ce délai-là qui
   // couvre une requête qui part et ne revient jamais.
   let connectTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(
@@ -307,7 +311,6 @@ async function appelAnthropic(
   };
 }
 
-
 async function appelGoogle(
   model: string,
   webSearch: boolean,
@@ -340,7 +343,11 @@ async function appelGoogle(
       texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
     );
 
-  const json = (await withTimeout(res.json(), MODEL_TOTAL_TIMEOUT_MS, timeoutMessage(model, "total"))) as {
+  const json = (await withTimeout(
+    res.json(),
+    MODEL_TOTAL_TIMEOUT_MS,
+    timeoutMessage(model, "total"),
+  )) as {
     modelVersion?: string;
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
     candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[];
@@ -392,7 +399,11 @@ async function appelLovable(model: string, system: string, user: string): Promis
       texteErreur(res.status, await res.text(), { url, model, elapsedMs: Date.now() - t0 }),
     );
 
-  const json = (await withTimeout(res.json(), MODEL_TOTAL_TIMEOUT_MS, timeoutMessage(model, "total"))) as {
+  const json = (await withTimeout(
+    res.json(),
+    MODEL_TOTAL_TIMEOUT_MS,
+    timeoutMessage(model, "total"),
+  )) as {
     model?: string;
     usage?: { prompt_tokens?: number; completion_tokens?: number };
     choices?: { finish_reason?: string; message?: { content?: string } }[];

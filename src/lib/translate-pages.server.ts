@@ -56,7 +56,6 @@ export async function sectionFieldStatus(
   return out;
 }
 
-
 /**
  * À l'enregistrement : tout anglais vide ou marqué auto dont le français a
  * changé est retraduit. Un anglais « human » n'est jamais écrasé.
@@ -65,7 +64,13 @@ export async function autoEnglishPatch(
   supabase: Client,
   userId: string,
   current: Row,
-  next: { title_fr: string | null; title_en: string | null; body_fr: string | null; body_en: string | null; data: unknown },
+  next: {
+    title_fr: string | null;
+    title_en: string | null;
+    body_fr: string | null;
+    body_en: string | null;
+    data: unknown;
+  },
 ): Promise<{ patch: Record<string, unknown>; error: string | null }> {
   const target = next as unknown as Record<string, unknown>;
   const jobs: { field: string; fr: string }[] = [];
@@ -106,8 +111,7 @@ export async function translateDataObject(
   data: unknown,
   force: boolean,
 ): Promise<{ data: unknown; changed: boolean; count: number; error: string | null }> {
-  if (!data || typeof data !== "object")
-    return { data, changed: false, count: 0, error: null };
+  if (!data || typeof data !== "object") return { data, changed: false, count: 0, error: null };
   const clone = JSON.parse(JSON.stringify(data)) as Record<string, unknown>;
   const jobs: { field: string; fr: string }[] = [];
   const targets: { holder: Record<string, unknown>; key: string }[] = [];

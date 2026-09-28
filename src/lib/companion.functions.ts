@@ -102,40 +102,40 @@ export const getCompanionBook = createServerFn({ method: "GET" })
       { data: pubPages },
       { data: answers },
     ] = await Promise.all([
-        context.supabase
-          .from("glossary_entries")
-          .select("id, sort_order, lemma_he, sense_fr, sense_en")
-          .eq("book_id", book.id)
-          .order("sort_order", { ascending: true }),
-        context.supabase
-          .from("quiz_questions")
-          .select("*")
-          .eq("book_id", book.id)
-          .order("sort_order", { ascending: true }),
-        context.supabase
-          .from("audio_tracks")
-          .select("id, chapter_no, label_fr, label_en, duration_s")
-          .eq("book_id", book.id)
-          .order("chapter_no", { ascending: true }),
-        context.supabase
-          .from("reader_progress")
-          .select("quiz_answered, quiz_correct")
-          .eq("user_id", context.userId)
-          .eq("book_id", book.id)
-          .maybeSingle(),
-        context.supabase
-          .from("book_pages")
-          .select("page_no, chapter_no, folio, chapter_title_fr, chapter_title_en")
-          .eq("book_id", book.id)
-          .eq("is_published", true)
-          .order("page_no", { ascending: true }),
-        context.supabase
-          .from("quiz_answers")
-          .select("question_id, chosen_index, is_correct, answered_at")
-          .eq("user_id", context.userId)
-          .eq("book_id", book.id)
-          .order("answered_at", { ascending: false }),
-      ]);
+      context.supabase
+        .from("glossary_entries")
+        .select("id, sort_order, lemma_he, sense_fr, sense_en")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+      context.supabase
+        .from("quiz_questions")
+        .select("*")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+      context.supabase
+        .from("audio_tracks")
+        .select("id, chapter_no, label_fr, label_en, duration_s")
+        .eq("book_id", book.id)
+        .order("chapter_no", { ascending: true }),
+      context.supabase
+        .from("reader_progress")
+        .select("quiz_answered, quiz_correct")
+        .eq("user_id", context.userId)
+        .eq("book_id", book.id)
+        .maybeSingle(),
+      context.supabase
+        .from("book_pages")
+        .select("page_no, chapter_no, folio, chapter_title_fr, chapter_title_en")
+        .eq("book_id", book.id)
+        .eq("is_published", true)
+        .order("page_no", { ascending: true }),
+      context.supabase
+        .from("quiz_answers")
+        .select("question_id, chosen_index, is_correct, answered_at")
+        .eq("user_id", context.userId)
+        .eq("book_id", book.id)
+        .order("answered_at", { ascending: false }),
+    ]);
 
     const chapMap = new Map<number, CompanionChapter>();
     for (const p of pubPages ?? []) {

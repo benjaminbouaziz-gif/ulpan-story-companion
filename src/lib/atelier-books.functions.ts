@@ -35,7 +35,10 @@ export const atelierBooks = createServerFn({ method: "GET" })
         .select("id, slug, title_fr, status, collection_id, current_step_code")
         .order("tome_no", { ascending: true }),
       admin.from("collections").select("id, name_fr"),
-      admin.from("book_steps").select("book_id, step_code, label_fr, status, lang").in("lang", ["shared", "fr"]),
+      admin
+        .from("book_steps")
+        .select("book_id, step_code, label_fr, status, lang")
+        .in("lang", ["shared", "fr"]),
     ]);
 
     const names = new Map((collections.data ?? []).map((c) => [c.id, c.name_fr]));
@@ -52,7 +55,8 @@ export const atelierBooks = createServerFn({ method: "GET" })
         status: b.status as string,
         currentStepCode: b.current_step_code ?? null,
         currentStepLabelFr: current?.label_fr ?? null,
-        stepsValidated: own.filter((s) => s.status === "valide" || s.status === "valide_hors_crm").length,
+        stepsValidated: own.filter((s) => s.status === "valide" || s.status === "valide_hors_crm")
+          .length,
         stepsTotal: own.length,
       };
     });

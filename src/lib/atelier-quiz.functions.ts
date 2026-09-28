@@ -17,7 +17,11 @@ const contenuInput = z.object({ bookId: z.string().uuid(), contenu: z.string().m
 type Admin = Awaited<ReturnType<typeof getAdminClient>>;
 
 async function lireLivre(admin: Admin, bookId: string) {
-  const { data: book } = await admin.from("books").select("id, slug").eq("id", bookId).maybeSingle();
+  const { data: book } = await admin
+    .from("books")
+    .select("id, slug")
+    .eq("id", bookId)
+    .maybeSingle();
   if (!book) throw new Error("BOOK_NOT_FOUND");
   const { data: pages } = await admin
     .from("book_pages")

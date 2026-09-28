@@ -30,7 +30,6 @@ export const MOTS_MAX_DUR = 210;
 
 const MOT = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
 
-
 export function compterMots(texte: string): number {
   return texte.match(MOT)?.length ?? 0;
 }
@@ -85,7 +84,9 @@ export function lirePlanChapitres(markdown: string): LecturePlan {
 
   const problems: string[] = [];
   if (trouves.length === 0)
-    problems.push("Le plan ne contient aucun titre de chapitre au format « ## Chapitre N · titre ».");
+    problems.push(
+      "Le plan ne contient aucun titre de chapitre au format « ## Chapitre N · titre ».",
+    );
 
   // Un même chapitre peut apparaître deux fois (tableau de répartition puis
   // fiche) : on retient la première occurrence qui annonce ses pages.
@@ -93,13 +94,18 @@ export function lirePlanChapitres(markdown: string): LecturePlan {
   for (const c of trouves) {
     const deja = parNumero.get(c.chapterNo);
     if (!deja || (deja.pages === null && c.pages !== null))
-      parNumero.set(c.chapterNo, { titre: c.titre || (deja?.titre ?? ""), pages: c.pages ?? deja?.pages ?? null });
+      parNumero.set(c.chapterNo, {
+        titre: c.titre || (deja?.titre ?? ""),
+        pages: c.pages ?? deja?.pages ?? null,
+      });
   }
 
   const numeros = [...parNumero.keys()].sort((a, b) => a - b);
   numeros.forEach((n, i) => {
     if (n !== i + 1)
-      problems.push(`La numérotation des chapitres du plan est trouée : chapitre ${i + 1} attendu, ${n} trouvé.`);
+      problems.push(
+        `La numérotation des chapitres du plan est trouée : chapitre ${i + 1} attendu, ${n} trouvé.`,
+      );
   });
 
   const chapitres: ChapitrePlan[] = [];
@@ -107,7 +113,9 @@ export function lirePlanChapitres(markdown: string): LecturePlan {
   for (const n of numeros) {
     const c = parNumero.get(n)!;
     if (c.pages === null || c.pages < 1) {
-      problems.push(`Le plan n'annonce aucun nombre de pages pour le chapitre ${n} (ligne « Pages : n »).`);
+      problems.push(
+        `Le plan n'annonce aucun nombre de pages pour le chapitre ${n} (ligne « Pages : n »).`,
+      );
       continue;
     }
     chapitres.push({
@@ -152,7 +160,6 @@ export type MesureChapitre = {
   warnings: string[];
   totalWords: number;
 };
-
 
 type PageBrute = { pageNo: number; texte: string };
 
@@ -232,10 +239,11 @@ export function mesurerChapitre(
       problems.push(
         `Page ${p.pageNo} : cible du plan ${cible} mots, mesuré ${p.words} — au-dessus du plafond bloquant de ${MOTS_MAX_DUR}.`,
       );
-    else if (p.words < cible)
-      warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible}.`);
+    else if (p.words < cible) warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible}.`);
     else if (p.words > MOTS_MAX)
-      warnings.push(`Page ${p.pageNo} : ${p.words} mots, cible ${cible} — au-dessus de la fourchette visée.`);
+      warnings.push(
+        `Page ${p.pageNo} : ${p.words} mots, cible ${cible} — au-dessus de la fourchette visée.`,
+      );
   }
 
   return {
@@ -292,9 +300,11 @@ export function assemblerRecit(
   const attendus: number[] = [];
   for (let i = 1; i <= total; i += 1) attendus.push(i);
   const vus = new Set(pagesFound);
-  for (const n of attendus) if (!vus.has(n)) problems.push(`La page ${n} manque dans le récit assemblé.`);
+  for (const n of attendus)
+    if (!vus.has(n)) problems.push(`La page ${n} manque dans le récit assemblé.`);
   const doublons = pagesFound.filter((n, i) => pagesFound.indexOf(n) !== i);
-  for (const n of [...new Set(doublons)]) problems.push(`La page ${n} apparaît deux fois dans le récit assemblé.`);
+  for (const n of [...new Set(doublons)])
+    problems.push(`La page ${n} apparaît deux fois dans le récit assemblé.`);
   for (let i = 1; i < pagesFound.length; i += 1)
     if ((pagesFound[i] ?? 0) !== (pagesFound[i - 1] ?? 0) + 1)
       problems.push(

@@ -119,88 +119,104 @@ export const atelierPrompts = createServerFn({ method: "GET" })
 export const promptDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ promptId: z.string().uuid() }).parse(data))
-  .handler(async ({ context, data }): Promise<{
-    prompt: { id: string; name: string; stepCode: string; stepLabelFr: string; activeVersionId: string | null } | null;
-    versions: PromptVersionRow[];
-    activations: PromptActivationRow[];
-    produced: PromptProducedRow[];
-  }> => {
-    const editor = await assertEditor(context.supabase, context.userId);
-    const admin = await getAdminClient(editor);
+  .handler(
+    async ({
+      context,
+      data,
+    }): Promise<{
+      prompt: {
+        id: string;
+        name: string;
+        stepCode: string;
+        stepLabelFr: string;
+        activeVersionId: string | null;
+      } | null;
+      versions: PromptVersionRow[];
+      activations: PromptActivationRow[];
+      produced: PromptProducedRow[];
+    }> => {
+      const editor = await assertEditor(context.supabase, context.userId);
+      const admin = await getAdminClient(editor);
 
-    const { data: prompt } = await admin
-      .from("prompts")
-      .select("id, name, step_code, active_version_id")
-      .eq("id", data.promptId)
-      .maybeSingle();
-    if (!prompt) return { prompt: null, versions: [], activations: [], produced: [] };
+      const { data: prompt } = await admin
+        .from("prompts")
+        .select("id, name, step_code, active_version_id")
+        .eq("id", data.promptId)
+        .maybeSingle();
+      if (!prompt) return { prompt: null, versions: [], activations: [], produced: [] };
 
-    const [{ data: tpl }, { data: versions }, { data: activations }] = await Promise.all([
-      admin.from("step_templates").select("label_fr").eq("code", prompt.step_code).maybeSingle(),
-      admin
-        .from("prompt_versions")
-        .select("id, version, content, change_note, model, web_search, created_at")
-        .eq("prompt_id", prompt.id)
-        .order("version", { ascending: false }),
-      admin
-        .from("prompt_activations")
-        .select("id, version, created_at")
-        .eq("prompt_id", prompt.id)
-        .order("created_at", { ascending: false }),
-    ]);
+      const [{ data: tpl }, { data: versions }, { data: activations }] = await Promise.all([
+        admin.from("step_templates").select("label_fr").eq("code", prompt.step_code).maybeSingle(),
+        admin
+          .from("prompt_versions")
+          .select("id, version, content, change_note, model, web_search, created_at")
+          .eq("prompt_id", prompt.id)
+          .order("version", { ascending: false }),
+        admin
+          .from("prompt_activations")
+          .select("id, version, created_at")
+          .eq("prompt_id", prompt.id)
+          .order("created_at", { ascending: false }),
+      ]);
 
-    const versionIds = (versions ?? []).map((v) => v.id);
-    let produced: PromptProducedRow[] = [];
-    if (versionIds.length > 0) {
-      const { data: arts } = await admin
-        .from("artifacts")
-        .select("prompt_version_id, type, version, created_at, book_step_id")
-        .in("prompt_version_id", versionIds)
-        .order("created_at", { ascending: false });
-      const stepIds = [...new Set((arts ?? []).map((a) => a.book_step_id))];
-      const steps = stepIds.length
-        ? (await admin.from("book_steps").select("id, label_fr, book_id").in("id", stepIds)).data ?? []
-        : [];
-      const bookIds = [...new Set(steps.map((s) => s.book_id))];
-      const books = bookIds.length
-        ? (await admin.from("books").select("id, title_fr").in("id", bookIds)).data ?? []
-        : [];
-      produced = (arts ?? []).map((a) => {
-        const step = steps.find((s) => s.id === a.book_step_id);
-        const book = books.find((b) => b.id === step?.book_id);
-        return {
-          versionId: a.prompt_version_id as string,
-          bookTitle: book?.title_fr ?? "",
-          stepLabelFr: step?.label_fr ?? "",
-          type: a.type,
+      const versionIds = (versions ?? []).map((v) => v.id);
+      let produced: PromptProducedRow[] = [];
+      if (versionIds.length > 0) {
+        const { data: arts } = await admin
+          .from("artifacts")
+          .select("prompt_version_id, type, version, created_at, book_step_id")
+          .in("prompt_version_id", versionIds)
+          .order("created_at", { ascending: false });
+        const stepIds = [...new Set((arts ?? []).map((a) => a.book_step_id))];
+        const steps = stepIds.length
+          ? ((await admin.from("book_steps").select("id, label_fr, book_id").in("id", stepIds))
+              .data ?? [])
+          : [];
+        const bookIds = [...new Set(steps.map((s) => s.book_id))];
+        const books = bookIds.length
+          ? ((await admin.from("books").select("id, title_fr").in("id", bookIds)).data ?? [])
+          : [];
+        produced = (arts ?? []).map((a) => {
+          const step = steps.find((s) => s.id === a.book_step_id);
+          const book = books.find((b) => b.id === step?.book_id);
+          return {
+            versionId: a.prompt_version_id as string,
+            bookTitle: book?.title_fr ?? "",
+            stepLabelFr: step?.label_fr ?? "",
+            type: a.type,
+            version: a.version,
+            createdAt: a.created_at,
+          };
+        });
+      }
+
+      return {
+        prompt: {
+          id: prompt.id,
+          name: prompt.name,
+          stepCode: prompt.step_code,
+          stepLabelFr: tpl?.label_fr ?? prompt.step_code,
+          activeVersionId: prompt.active_version_id ?? null,
+        },
+        versions: (versions ?? []).map((v) => ({
+          id: v.id,
+          version: v.version,
+          content: v.content,
+          changeNote: v.change_note ?? null,
+          model: v.model ?? null,
+          webSearch: v.web_search ?? false,
+          createdAt: v.created_at,
+          isActive: v.id === prompt.active_version_id,
+        })),
+        activations: (activations ?? []).map((a) => ({
+          id: a.id,
           version: a.version,
           createdAt: a.created_at,
-        };
-      });
-    }
-
-    return {
-      prompt: {
-        id: prompt.id,
-        name: prompt.name,
-        stepCode: prompt.step_code,
-        stepLabelFr: tpl?.label_fr ?? prompt.step_code,
-        activeVersionId: prompt.active_version_id ?? null,
-      },
-      versions: (versions ?? []).map((v) => ({
-        id: v.id,
-        version: v.version,
-        content: v.content,
-        changeNote: v.change_note ?? null,
-        model: v.model ?? null,
-        webSearch: v.web_search ?? false,
-        createdAt: v.created_at,
-        isActive: v.id === prompt.active_version_id,
-      })),
-      activations: (activations ?? []).map((a) => ({ id: a.id, version: a.version, createdAt: a.created_at })),
-      produced,
-    };
-  });
+        })),
+        produced,
+      };
+    },
+  );
 
 /** Création : le prompt et sa version 1, active d'emblée. */
 export const createPrompt = createServerFn({ method: "POST" })
@@ -227,10 +243,14 @@ export const createPrompt = createServerFn({ method: "POST" })
       .select("code, species")
       .eq("code", data.stepCode)
       .maybeSingle();
-    if (!tpl || tpl.species !== "llm") throw new Error("L’étape choisie ne peut pas recevoir de prompt.");
+    if (!tpl || tpl.species !== "llm")
+      throw new Error("L’étape choisie ne peut pas recevoir de prompt.");
 
     // Code unique, dérivé de l'étape.
-    const { data: siblings } = await admin.from("prompts").select("code").like("code", `${tpl.code}%`);
+    const { data: siblings } = await admin
+      .from("prompts")
+      .select("code")
+      .like("code", `${tpl.code}%`);
     let code = tpl.code;
     let n = 1;
     const taken = new Set((siblings ?? []).map((s) => s.code));
@@ -277,10 +297,16 @@ export const createPrompt = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (vErr || !version)
-      throw new Error(texteErreurBase("La première version du prompt n’a pas pu être enregistrée", vErr));
+      throw new Error(
+        texteErreurBase("La première version du prompt n’a pas pu être enregistrée", vErr),
+      );
 
-    const { error: activeError } = await admin.from("prompts").update({ active_version_id: version.id }).eq("id", prompt.id);
-    if (activeError) throw new Error("Le prompt a été créé, mais sa version n’a pas pu être activée.");
+    const { error: activeError } = await admin
+      .from("prompts")
+      .update({ active_version_id: version.id })
+      .eq("id", prompt.id);
+    if (activeError)
+      throw new Error("Le prompt a été créé, mais sa version n’a pas pu être activée.");
     const { error: activationError } = await admin.from("prompt_activations").insert({
       prompt_id: prompt.id,
       prompt_version_id: version.id,
@@ -290,7 +316,10 @@ export const createPrompt = createServerFn({ method: "POST" })
     });
     if (activationError)
       throw new Error(
-        texteErreurBase("Le prompt a été créé, mais son activation n’a pas pu être enregistrée", activationError),
+        texteErreurBase(
+          "Le prompt a été créé, mais son activation n’a pas pu être enregistrée",
+          activationError,
+        ),
       );
 
     return { promptId: prompt.id };
@@ -351,7 +380,10 @@ export const publishPromptVersion = createServerFn({ method: "POST" })
     });
     if (activationError)
       throw new Error(
-        texteErreurBase("La version a été créée, mais son activation n’a pas pu être enregistrée", activationError),
+        texteErreurBase(
+          "La version a été créée, mais son activation n’a pas pu être enregistrée",
+          activationError,
+        ),
       );
 
     return { version };

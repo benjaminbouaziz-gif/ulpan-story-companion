@@ -22,13 +22,20 @@ const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 const ARTIFACT_READ_TIMEOUT_MS = 30 * 1000;
 const MAX_TEXT_ARTIFACT_BYTES = 1024 * 1024;
 
-async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, label: string): Promise<T> {
+async function withTimeout<T>(
+  promise: PromiseLike<T>,
+  timeoutMs: number,
+  label: string,
+): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       Promise.resolve(promise),
       new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`${label} : délai de ${timeoutMs / 1000} s dépassé.`)), timeoutMs);
+        timer = setTimeout(
+          () => reject(new Error(`${label} : délai de ${timeoutMs / 1000} s dépassé.`)),
+          timeoutMs,
+        );
       }),
     ]);
   } finally {
@@ -79,9 +86,12 @@ export async function downloadArtifactText(
     ARTIFACT_READ_TIMEOUT_MS,
     "Lecture du plan précédent",
   );
-  if (error || !blob) throw new Error(`Lecture du plan précédent impossible : ${error?.message ?? "fichier absent"}`);
+  if (error || !blob)
+    throw new Error(`Lecture du plan précédent impossible : ${error?.message ?? "fichier absent"}`);
   if (blob.size > MAX_TEXT_ARTIFACT_BYTES) {
-    throw new Error(`Plan précédent trop volumineux : ${blob.size} octets (maximum ${MAX_TEXT_ARTIFACT_BYTES}).`);
+    throw new Error(
+      `Plan précédent trop volumineux : ${blob.size} octets (maximum ${MAX_TEXT_ARTIFACT_BYTES}).`,
+    );
   }
   const bytes = await withTimeout(
     blob.arrayBuffer(),
@@ -118,7 +128,9 @@ async function walk(
 }
 
 /** Balayage : tout objet inconnu de `artifacts` et vieux de plus de 24 h part. */
-export async function balayerOrphelins(ctx: EditorContext): Promise<{ scanned: number; removed: string[] }> {
+export async function balayerOrphelins(
+  ctx: EditorContext,
+): Promise<{ scanned: number; removed: string[] }> {
   const admin = await getAdminClient(ctx);
   const objects: StoredObject[] = [];
   await walk(admin, "books", objects, 0);
@@ -126,7 +138,9 @@ export async function balayerOrphelins(ctx: EditorContext): Promise<{ scanned: n
   const { data: rows } = await admin.from("artifacts").select("storage_path");
   const known = new Set((rows ?? []).map((r) => r.storage_path));
   const cutoff = Date.now() - ORPHAN_GRACE_MS;
-  const orphans = objects.filter((o) => !known.has(o.path) && o.createdAt < cutoff).map((o) => o.path);
+  const orphans = objects
+    .filter((o) => !known.has(o.path) && o.createdAt < cutoff)
+    .map((o) => o.path);
 
   if (orphans.length > 0) {
     await admin.storage.from(ARTIFACT_BUCKET).remove(orphans);
