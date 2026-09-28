@@ -38,6 +38,10 @@
   --color-line: var(--surface-rule);
   --color-secondary-text: var(--surface-muted);
   --color-collection: var(--collection);
+  --color-paper: var(--paper);
+  --color-ivory-2: var(--ivory-2);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
 }
 
 :root {
@@ -47,6 +51,10 @@
   --surface-muted: #6c6c66;
   --collection: #15171a;
   --text-scale: 1;
+  --paper: #fbfaf6;
+  --ivory-2: #ebe8df;
+  --alert: #a3412e;
+  --alert-soft: #f4e6e1;
 }
 
 :root.night {
@@ -54,6 +62,10 @@
   --on-surface: #edebe4;
   --surface-rule: #3a3a33;
   --surface-muted: #9c9c92;
+  --paper: #22221e;
+  --ivory-2: #2c2c27;
+  --alert: #d98a78;
+  --alert-soft: #3a2723;
 }
 
 :root[data-text-size="grand"] {
@@ -175,4 +187,14 @@
 .atelier h2,
 .atelier h3 {
   font-family: var(--font-latin);
+}
+
+/* Panneau de correction du quiz : glisse depuis le bas, sauf mouvement réduit. */
+@keyframes quiz-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.quiz-panel { animation: quiz-slide-up 0.28s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .quiz-panel { animation: none; }
 }
