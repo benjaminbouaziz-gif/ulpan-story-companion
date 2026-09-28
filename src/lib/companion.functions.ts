@@ -63,10 +63,15 @@ export const listMyBooks = createServerFn({ method: "GET" })
 /** Le compagnon d'un livre : glossaire complet, entraînement, lectures audio. */
 export const getCompanionBook = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ slug: z.string().min(1).max(120) }).parse(data))
+  .inputValidator((data) =>
+    z.object({ slug: z.string().min(1).max(120), lang: z.enum(["fr", "en"]) }).parse(data),
+  )
   .handler(async ({ context, data }) => {
     const empty = {
       allowed: false,
+      /** L'édition de la langue active n'est pas publiée. */
+      unavailable: false,
+      hasGlossaryFile: false,
       book: null as Book | null,
       collection: null as Collection | null,
       glossary: [] as GlossaryItem[],
@@ -93,6 +98,8 @@ export const getCompanionBook = createServerFn({ method: "GET" })
       .eq("book_id", book.id)
       .maybeSingle();
     if (!access) return { ...empty, book: book as Book };
+    const etat = data.lang === "en" ? book.edition_en : book.edition_fr;
+    if (etat !== "publiee") return { ...empty, book: book as Book, unavailable: true };
 
     const [
       { data: gloss },
@@ -111,6 +118,7 @@ export const getCompanionBook = createServerFn({ method: "GET" })
         .from("quiz_questions")
         .select("*")
         .eq("book_id", book.id)
+        .eq("lang", data.lang)
         .order("sort_order", { ascending: true }),
       context.supabase
         .from("audio_tracks")
@@ -187,6 +195,8 @@ export const getCompanionBook = createServerFn({ method: "GET" })
 
     return {
       allowed: true,
+      unavailable: false,
+      hasGlossaryFile: !!(data.lang === "en" ? book.glossaire_en_path : book.glossaire_fr_path),
       book: book as Book,
       collection,
       glossary: (gloss ?? []) as GlossaryItem[],
@@ -441,5 +451,39 @@ export const getCompanionPageAudioUrl = createServerFn({ method: "GET" })
     const { data: signed } = await supabaseAdmin.storage
       .from(AUDIO_BUCKET)
       .createSignedUrl(page.audio_path, AUDIO_SIGNED_SECONDS);
+    return { url: signed?.signedUrl ?? null };
+  });
+
+/* Le glossaire de l'édition : un fichier, une adresse signée de quelques minutes. */
+const GLOSSARY_BUCKET = "glossaires";
+const GLOSSARY_SIGNED_SECONDS = 5 * 60;
+
+export const getCompanionGlossaryUrl = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({ slug: z.string().min(1).max(120), lang: z.enum(["fr", "en"]) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const none = { url: null as string | null };
+    const { data: book } = await context.supabase
+      .from("books")
+      .select("id, edition_fr, edition_en, glossaire_fr_path, glossaire_en_path")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!book) return none;
+    const { data: access } = await context.supabase
+      .from("book_access")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("book_id", book.id)
+      .maybeSingle();
+    if (!access) return none;
+    const etat = data.lang === "en" ? book.edition_en : book.edition_fr;
+    const path = data.lang === "en" ? book.glossaire_en_path : book.glossaire_fr_path;
+    if (etat !== "publiee" || !path) return none;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed } = await supabaseAdmin.storage
+      .from(GLOSSARY_BUCKET)
+      .createSignedUrl(path, GLOSSARY_SIGNED_SECONDS, { download: true });
     return { url: signed?.signedUrl ?? null };
   });

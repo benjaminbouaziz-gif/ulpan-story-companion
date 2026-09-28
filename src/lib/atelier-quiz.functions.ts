@@ -11,8 +11,13 @@ import { analyserQuizJson, exporterQuizJson, type QuizAnalyse } from "./quiz-jso
  * L'import est tout ou rien, et l'analyse est toujours relancée ici.
  */
 
-const idInput = z.object({ bookId: z.string().uuid() });
-const contenuInput = z.object({ bookId: z.string().uuid(), contenu: z.string().max(2_000_000) });
+const edition = z.enum(["fr", "en"]);
+const idInput = z.object({ bookId: z.string().uuid(), edition });
+const contenuInput = z.object({
+  bookId: z.string().uuid(),
+  edition,
+  contenu: z.string().max(2_000_000),
+});
 
 type Admin = Awaited<ReturnType<typeof getAdminClient>>;
 
@@ -39,7 +44,7 @@ export const analyserQuiz = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
     const { slug, pages } = await lireLivre(admin, data.bookId);
-    const { lignes: _l, ...rest } = analyserQuizJson(data.contenu, slug, pages);
+    const { lignes: _l, ...rest } = analyserQuizJson(data.contenu, slug, pages, data.edition);
     return rest;
   });
 
@@ -50,10 +55,11 @@ export const importerQuiz = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
     const { slug, pages } = await lireLivre(admin, data.bookId);
-    const a = analyserQuizJson(data.contenu, slug, pages);
+    const a = analyserQuizJson(data.contenu, slug, pages, data.edition);
     if (a.erreurs.length > 0) throw new Error("QUIZ_INVALID");
     const { data: n, error } = await admin.rpc("remplacer_quiz_livre", {
       p_book_id: data.bookId,
+      p_lang: data.edition,
       p_rows: a.lignes as unknown as never,
     });
     if (error) throw new Error("QUIZ_WRITE_FAILED");
@@ -73,8 +79,9 @@ export const exporterQuiz = createServerFn({ method: "GET" })
         "chapter_no, page_no, kind, prompt_fr, prompt_en, prompt_he, options, answer, explain_fr, explain_en",
       )
       .eq("book_id", data.bookId)
+      .eq("lang", data.edition)
       .order("sort_order", { ascending: true });
-    return { slug, json: exporterQuizJson(slug, rows ?? []) };
+    return { slug, json: exporterQuizJson(slug, rows ?? [], data.edition) };
   });
 
 export type QuizStatChapitre = {
@@ -96,18 +103,19 @@ export const statsQuiz = createServerFn({ method: "GET" })
       admin
         .from("quiz_questions")
         .select("id, chapter_no, prompt_he, prompt_fr, prompt_en")
-        .eq("book_id", data.bookId),
+        .eq("book_id", data.bookId)
+        .eq("lang", data.edition),
       admin.from("quiz_answers").select("question_id, is_correct").eq("book_id", data.bookId),
       admin
         .from("book_pages")
-        .select("chapter_no, chapter_title_fr, page_no")
+        .select("chapter_no, chapter_title_fr, chapter_title_en, page_no")
         .eq("book_id", data.bookId)
         .order("page_no", { ascending: true }),
     ]);
     const titres = new Map<number, string | null>();
     for (const p of pages ?? [])
       if (p.chapter_no != null && !titres.get(p.chapter_no))
-        titres.set(p.chapter_no, p.chapter_title_fr);
+        titres.set(p.chapter_no, data.edition === "en" ? p.chapter_title_en : p.chapter_title_fr);
 
     const parQ = new Map<string, { n: number; ok: number }>();
     for (const a of ans ?? []) {
@@ -139,7 +147,7 @@ export const statsQuiz = createServerFn({ method: "GET" })
           const echec = (s.n - s.ok) / s.n;
           if (!cur.pireQuestion || echec > cur.pireQuestion.tauxEchec)
             cur.pireQuestion = {
-              texte: q.prompt_he || q.prompt_fr || q.prompt_en || "",
+              texte: q.prompt_he || (data.edition === "en" ? q.prompt_en : q.prompt_fr) || "",
               tauxEchec: echec,
             };
         }

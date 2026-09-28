@@ -3,19 +3,18 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/SiteChrome";
-import { HebrewText } from "@/components/HebrewText";
 import { LecteurLivre } from "@/components/LecteurLivre";
 import { CompanionTraining } from "@/components/CompanionTraining";
-import { useI18n } from "@/i18n/context";
+import { pickLang, useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import {
   enregistrerReponse,
   getCompanionBook,
+  getCompanionGlossaryUrl,
   getCompanionPageAudioUrl,
   getCompanionPages,
   saveQuizRound,
 } from "@/lib/companion.functions";
-import { glossarySense } from "@/lib/spread";
 
 type Onglet = "lecture" | "entrainement" | "glossaire";
 const ONGLETS: { id: Onglet; key: DictKey }[] = [
@@ -56,14 +55,16 @@ function CompanionBook() {
   const saveAnswer = useServerFn(enregistrerReponse);
   const fetchPages = useServerFn(getCompanionPages);
   const fetchAudioUrl = useServerFn(getCompanionPageAudioUrl);
+  const fetchGlossaryUrl = useServerFn(getCompanionGlossaryUrl);
+  const [glossaryBusy, setGlossaryBusy] = useState(false);
 
   const [focus, setFocus] = useState(false);
   const [readerPage, setReaderPage] = useState<number | undefined>(undefined);
   const [retour, setRetour] = useState<"question" | "result" | null>(null);
 
   const query = useQuery({
-    queryKey: ["companion", "book", book_slug],
-    queryFn: () => fetchBook({ data: { slug: book_slug } }),
+    queryKey: ["companion", "book", book_slug, lang],
+    queryFn: () => fetchBook({ data: { slug: book_slug, lang } }),
     staleTime: Infinity,
   });
   const pages = useQuery({
@@ -104,6 +105,18 @@ function CompanionBook() {
     );
   }
 
+  if (data.unavailable) {
+    return (
+      <PageShell>
+        <h1 className="text-[28px]">{t("companion.unavailable")}</h1>
+        <p className="body-text mt-4">{t("companion.unavailableBody")}</p>
+        <Link to="/compagnon" className="label touch mt-6 inline-flex border-b border-current">
+          {t("nav.companion")}
+        </Link>
+      </PageShell>
+    );
+  }
+
   const book = data.book!;
   const folios = new Map(data.folios.map((f) => [f.page_no, f.folio ?? f.page_no]));
   const folioFor = (n: number) => folios.get(n) ?? n;
@@ -119,11 +132,11 @@ function CompanionBook() {
           {!concentre ? (
             <>
               <p className="label" style={{ opacity: 0.7 }}>
-                {(lang === "en" ? data.collection?.name_en : data.collection?.name_fr) ?? ""}
+                {pickLang(lang, data.collection?.name_fr, data.collection?.name_en) ?? ""}
                 {book.tome_no ? ` · ${book.tome_no}` : ""}
               </p>
               <h1 className="font-latin mt-1 text-[30px] font-normal">
-                {lang === "en" ? book.title_en || book.title_fr : book.title_fr}
+                {pickLang(lang, book.title_fr, book.title_en) ?? ""}
               </h1>
             </>
           ) : null}
@@ -178,46 +191,56 @@ function CompanionBook() {
         </div>
 
         <div role="tabpanel" hidden={onglet !== "entrainement"}>
-          <CompanionTraining
-            questions={data.quiz}
-            chapters={data.chapters}
-            initialAnswers={data.lastAnswers}
-            folioFor={folioFor}
-            onAnswer={async (q, chosen) => {
-              try {
-                await saveAnswer({ data: { book_slug, question_id: q.id, chosen_index: chosen } });
-                return true;
-              } catch {
-                return false;
-              }
-            }}
-            onFinish={(answered, correct) => round.mutate({ answered, correct })}
-            onReread={(pageNo, from) => {
-              setReaderPage(pageNo);
-              setRetour(from);
-              go("lecture");
-            }}
-            onFocusMode={setFocus}
-          />
+          {data.quiz.length === 0 ? (
+            <p className="body-text text-secondary-text mt-6">{t("companion.trainingSoon")}</p>
+          ) : (
+            <CompanionTraining
+              questions={data.quiz}
+              chapters={data.chapters}
+              initialAnswers={data.lastAnswers}
+              folioFor={folioFor}
+              onAnswer={async (q, chosen) => {
+                try {
+                  await saveAnswer({
+                    data: { book_slug, question_id: q.id, chosen_index: chosen },
+                  });
+                  return true;
+                } catch {
+                  return false;
+                }
+              }}
+              onFinish={(answered, correct) => round.mutate({ answered, correct })}
+              onReread={(pageNo, from) => {
+                setReaderPage(pageNo);
+                setRetour(from);
+                go("lecture");
+              }}
+              onFocusMode={setFocus}
+            />
+          )}
         </div>
 
         <div role="tabpanel" hidden={onglet !== "glossaire"} className="mt-6">
-          <p className="label text-secondary-text">
-            {data.glossary.length} {t("companion.words")} — {t("companion.glossaryNote")}
-          </p>
-          <ul className="border-line mt-6 border-t">
-            {data.glossary.map((item) => (
-              <li
-                key={item.id}
-                className="border-line flex items-baseline justify-between gap-6 border-b py-3"
-              >
-                <HebrewText size="base">{item.lemma_he}</HebrewText>
-                <span className="body-text text-secondary-text text-right">
-                  {glossarySense(item, lang) ?? ""}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {data.hasGlossaryFile ? (
+            <button
+              type="button"
+              disabled={glossaryBusy}
+              className="label touch bg-foreground text-background px-4 disabled:opacity-40"
+              onClick={async () => {
+                setGlossaryBusy(true);
+                try {
+                  const { url } = await fetchGlossaryUrl({ data: { slug: book_slug, lang } });
+                  if (url) window.location.href = url;
+                } finally {
+                  setGlossaryBusy(false);
+                }
+              }}
+            >
+              {t("companion.glossaryDownload")}
+            </button>
+          ) : (
+            <p className="body-text text-secondary-text">{t("companion.glossarySoon")}</p>
+          )}
         </div>
       </div>
     </PageShell>

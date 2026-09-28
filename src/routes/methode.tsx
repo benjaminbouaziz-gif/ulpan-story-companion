@@ -26,7 +26,7 @@ export const Route = createFileRoute("/methode")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE, context.lang)),
   component: MethodPage,
   errorComponent: () => (
     <PageShell>
@@ -36,8 +36,8 @@ export const Route = createFileRoute("/methode")({
 });
 
 function MethodPage() {
-  const { t } = useI18n();
-  const { data } = useSuspenseQuery(pageQuery(PAGE));
+  const { t, lang } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE, lang));
 
   return (
     <PageShell>
@@ -55,7 +55,6 @@ function MethodPage() {
           />
         </div>
       </div>
-
     </PageShell>
   );
 }

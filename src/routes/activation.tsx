@@ -24,13 +24,14 @@ export const Route = createFileRoute("/activation")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("activation")),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(pageQuery("activation", context.lang)),
   component: ActivationPage,
 });
 
 function ActivationPage() {
-  const { t } = useI18n();
-  const { data: pageData } = useSuspenseQuery(pageQuery("activation"));
+  const { t, lang } = useI18n();
+  const { data: pageData } = useSuspenseQuery(pageQuery("activation", lang));
   const navigate = useNavigate();
   const confirm = useServerFn(confirmAccess);
   const [state, setState] = useState<"idle" | "opening" | "done">("idle");

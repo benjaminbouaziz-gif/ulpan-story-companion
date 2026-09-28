@@ -29,7 +29,14 @@ const labelCls = "block text-[12px] opacity-80";
 
 type Bloc = AtelierBlock & { plainManual: boolean };
 
-export function PageEditor({ pageId }: { pageId: string }) {
+export function PageEditor({
+  pageId,
+  edition = "fr",
+}: {
+  pageId: string;
+  /** Le volet affiché : l'hébreu toujours, le reste de cette édition seulement. */
+  edition?: "fr" | "en";
+}) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const read = useServerFn(atelierPage);
@@ -179,7 +186,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
       await navigate({
         to: "/atelier/livres/$slug",
         params: { slug: data?.bookSlug ?? "" },
-        search: { onglet: "pages" },
+        search: { onglet: "pages", edition },
       });
     } catch (e) {
       setError(cleErreurAtelier(e));
@@ -235,38 +242,46 @@ export function PageEditor({ pageId }: { pageId: string }) {
             onChange={(e) => setField("chapterTitleHe", e.target.value)}
           />
         </label>
-        <label className="block">
-          <span className={labelCls}>{t("atelier.livre.page.f.chapterTitleFr")}</span>
-          <input
-            className={input}
-            value={form.chapterTitleFr}
-            onChange={(e) => setField("chapterTitleFr", e.target.value)}
-          />
-        </label>
-        <label className="block">
-          <span className={labelCls}>{t("atelier.livre.page.f.chapterTitleEn")}</span>
-          <input
-            className={input}
-            value={form.chapterTitleEn}
-            onChange={(e) => setField("chapterTitleEn", e.target.value)}
-          />
-        </label>
-        <label className="block">
-          <span className={labelCls}>{t("atelier.livre.page.f.runningHeadFr")}</span>
-          <input
-            className={input}
-            value={form.runningHeadFr}
-            onChange={(e) => setField("runningHeadFr", e.target.value)}
-          />
-        </label>
-        <label className="block">
-          <span className={labelCls}>{t("atelier.livre.page.f.runningHeadEn")}</span>
-          <input
-            className={input}
-            value={form.runningHeadEn}
-            onChange={(e) => setField("runningHeadEn", e.target.value)}
-          />
-        </label>
+        {edition === "fr" ? (
+          <label className="block">
+            <span className={labelCls}>{t("atelier.livre.page.f.chapterTitleFr")}</span>
+            <input
+              className={input}
+              value={form.chapterTitleFr}
+              onChange={(e) => setField("chapterTitleFr", e.target.value)}
+            />
+          </label>
+        ) : null}
+        {edition === "en" ? (
+          <label className="block">
+            <span className={labelCls}>{t("atelier.livre.page.f.chapterTitleEn")}</span>
+            <input
+              className={input}
+              value={form.chapterTitleEn}
+              onChange={(e) => setField("chapterTitleEn", e.target.value)}
+            />
+          </label>
+        ) : null}
+        {edition === "fr" ? (
+          <label className="block">
+            <span className={labelCls}>{t("atelier.livre.page.f.runningHeadFr")}</span>
+            <input
+              className={input}
+              value={form.runningHeadFr}
+              onChange={(e) => setField("runningHeadFr", e.target.value)}
+            />
+          </label>
+        ) : null}
+        {edition === "en" ? (
+          <label className="block">
+            <span className={labelCls}>{t("atelier.livre.page.f.runningHeadEn")}</span>
+            <input
+              className={input}
+              value={form.runningHeadEn}
+              onChange={(e) => setField("runningHeadEn", e.target.value)}
+            />
+          </label>
+        ) : null}
         <label className="block">
           <span className={labelCls}>{t("atelier.livre.page.f.folio")}</span>
           <input
@@ -416,25 +431,29 @@ export function PageEditor({ pageId }: { pageId: string }) {
                 />
               </label>
 
-              <div className="mt-2 grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className={labelCls}>{t("atelier.livre.blocks.supportFr")}</span>
-                  <textarea
-                    className={input}
-                    rows={3}
-                    value={b.supportFr}
-                    onChange={(e) => setBloc(i, { supportFr: e.target.value })}
-                  />
-                </label>
-                <label className="block">
-                  <span className={labelCls}>{t("atelier.livre.blocks.supportEn")}</span>
-                  <textarea
-                    className={input}
-                    rows={3}
-                    value={b.supportEn}
-                    onChange={(e) => setBloc(i, { supportEn: e.target.value })}
-                  />
-                </label>
+              <div className="mt-2 grid gap-3">
+                {edition === "fr" ? (
+                  <label className="block">
+                    <span className={labelCls}>{t("atelier.livre.blocks.supportFr")}</span>
+                    <textarea
+                      className={input}
+                      rows={3}
+                      value={b.supportFr}
+                      onChange={(e) => setBloc(i, { supportFr: e.target.value })}
+                    />
+                  </label>
+                ) : null}
+                {edition === "en" ? (
+                  <label className="block">
+                    <span className={labelCls}>{t("atelier.livre.blocks.supportEn")}</span>
+                    <textarea
+                      className={input}
+                      rows={3}
+                      value={b.supportEn}
+                      onChange={(e) => setBloc(i, { supportEn: e.target.value })}
+                    />
+                  </label>
+                ) : null}
               </div>
             </div>
           ))

@@ -206,9 +206,9 @@ export function QuizRound({
 
   /* ---------- Question ---------- */
   const q = list[index]!;
-  const prompt = (lang === "en" ? q.prompt_en || q.prompt_fr : q.prompt_fr || q.prompt_en) ?? "";
+  const prompt = (lang === "en" ? q.prompt_en : q.prompt_fr) ?? "";
   const explain =
-    (lang === "en" ? q.explain_en || q.explain_fr : q.explain_fr || q.explain_en) ?? "";
+    (lang === "en" ? q.explain_en : q.explain_fr) ?? "";
   const answered = picked !== null;
   const juste = answered && picked === q.answer_index;
   const heb = toutEnHebreu(q.options);

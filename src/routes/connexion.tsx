@@ -19,13 +19,13 @@ export const Route = createFileRoute("/connexion")({
       { property: "og:description", content: "Un lien par email, aucun mot de passe." },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE, context.lang)),
   component: SignInPage,
 });
 
 function SignInPage() {
-  const { t } = useI18n();
-  const { data } = useSuspenseQuery(pageQuery(PAGE));
+  const { t, lang } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE, lang));
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("nav.companion")}</h1>

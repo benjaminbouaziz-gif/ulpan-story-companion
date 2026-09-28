@@ -535,11 +535,15 @@ export type Database = {
           cover_url: string | null
           created_at: string
           current_step_code: string | null
+          edition_en: Database["public"]["Enums"]["edition_etat"]
+          edition_fr: Database["public"]["Enums"]["edition_etat"]
           excerpt_he: string | null
           excerpt_translation_en: string | null
           excerpt_translation_fr: string | null
           expected_at: string | null
           figures_verified_at: string | null
+          glossaire_en_path: string | null
+          glossaire_fr_path: string | null
           id: string
           intent_note_fr: string | null
           isbn: string | null
@@ -595,11 +599,15 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           current_step_code?: string | null
+          edition_en?: Database["public"]["Enums"]["edition_etat"]
+          edition_fr?: Database["public"]["Enums"]["edition_etat"]
           excerpt_he?: string | null
           excerpt_translation_en?: string | null
           excerpt_translation_fr?: string | null
           expected_at?: string | null
           figures_verified_at?: string | null
+          glossaire_en_path?: string | null
+          glossaire_fr_path?: string | null
           id?: string
           intent_note_fr?: string | null
           isbn?: string | null
@@ -655,11 +663,15 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           current_step_code?: string | null
+          edition_en?: Database["public"]["Enums"]["edition_etat"]
+          edition_fr?: Database["public"]["Enums"]["edition_etat"]
           excerpt_he?: string | null
           excerpt_translation_en?: string | null
           excerpt_translation_fr?: string | null
           expected_at?: string | null
           figures_verified_at?: string | null
+          glossaire_en_path?: string | null
+          glossaire_fr_path?: string | null
           id?: string
           intent_note_fr?: string | null
           isbn?: string | null
@@ -1934,6 +1946,7 @@ export type Database = {
           explain_fr: string | null
           id: string
           kind: Database["public"]["Enums"]["quiz_kind"]
+          lang: string
           options: Json
           page_no: number | null
           prompt_en: string | null
@@ -1950,6 +1963,7 @@ export type Database = {
           explain_fr?: string | null
           id?: string
           kind: Database["public"]["Enums"]["quiz_kind"]
+          lang?: string
           options?: Json
           page_no?: number | null
           prompt_en?: string | null
@@ -1966,6 +1980,7 @@ export type Database = {
           explain_fr?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["quiz_kind"]
+          lang?: string
           options?: Json
           page_no?: number | null
           prompt_en?: string | null
@@ -2201,7 +2216,7 @@ export type Database = {
       }
       instancier_chaine: { Args: { p_book_id: string }; Returns: number }
       remplacer_quiz_livre: {
-        Args: { p_book_id: string; p_rows: Json }
+        Args: { p_book_id: string; p_lang: string; p_rows: Json }
         Returns: number
       }
       supprimer_prompt: { Args: { p_prompt_id: string }; Returns: number }
@@ -2218,6 +2233,7 @@ export type Database = {
         | "printing"
         | "published"
         | "retired"
+      edition_etat: "absente" | "preparation" | "publiee"
       page_status: "draft" | "published"
       quiz_kind: "qcm" | "trou" | "ordre" | "ecoute"
       section_kind:
@@ -2370,6 +2386,7 @@ export const Constants = {
         "published",
         "retired",
       ],
+      edition_etat: ["absente", "preparation", "publiee"],
       page_status: ["draft", "published"],
       quiz_kind: ["qcm", "trou", "ordre", "ecoute"],
       section_kind: [

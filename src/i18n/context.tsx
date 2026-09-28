@@ -49,9 +49,13 @@ export function useI18n(): I18nValue {
   return value;
 }
 
-/** Choisit la colonne éditoriale correspondant à la langue courante. */
+/**
+ * La colonne éditoriale de la langue courante, et elle seule. Jamais de repli
+ * sur l'autre langue : un texte absent vaut null et ne s'affiche pas.
+ */
 export function pickLang<T>(lang: Lang, fr: T | null | undefined, en: T | null | undefined): T | null {
-  const primary = lang === "en" ? en : fr;
-  const fallback = lang === "en" ? fr : en;
-  return (primary ?? fallback) ?? null;
+  const v = lang === "en" ? en : fr;
+  if (v === null || v === undefined) return null;
+  if (typeof v === "string" && v.trim() === "") return null;
+  return v;
 }

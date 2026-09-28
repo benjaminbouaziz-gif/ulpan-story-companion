@@ -15,28 +15,50 @@ export type Book = Database["public"]["Tables"]["books"]["Row"];
 export type Page = Database["public"]["Tables"]["pages"]["Row"];
 export type PageSection = Database["public"]["Tables"]["page_sections"]["Row"];
 
-export const getCollections = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = publicClient();
-  const { data, error } = await supabase
-    .from("collections")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (error) return { collections: [] as Collection[], error: error.message };
-  return { collections: data as Collection[], error: null as string | null };
-});
+const langSchema = z.enum(["fr", "en"]);
+type Lang = z.infer<typeof langSchema>;
+/** La colonne d'état de l'édition de cette langue. */
+const edition = (lang: Lang) => (lang === "en" ? "edition_en" : "edition_fr") as "edition_fr";
 
-export const getPublishedBooks = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = publicClient();
-  const { data, error } = await supabase
-    .from("books")
-    .select("*")
-    .order("tome_no", { ascending: true });
-  if (error) return { books: [] as Book[], error: error.message };
-  return { books: data as Book[], error: null as string | null };
-});
+const langInput = (data: unknown) => z.object({ lang: langSchema }).parse(data);
+
+/** Seulement les collections qui ont au moins un livre publié dans cette langue. */
+export const getCollections = createServerFn({ method: "GET" })
+  .inputValidator(langInput)
+  .handler(async ({ data: input }) => {
+    const supabase = publicClient();
+    const { data: books } = await supabase
+      .from("books")
+      .select("collection_id")
+      .eq(edition(input.lang), "publiee");
+    const ids = Array.from(
+      new Set((books ?? []).map((b) => b.collection_id).filter((v): v is string => !!v)),
+    );
+    if (ids.length === 0) return { collections: [] as Collection[], error: null as string | null };
+    const { data, error } = await supabase
+      .from("collections")
+      .select("*")
+      .in("id", ids)
+      .order("sort_order", { ascending: true });
+    if (error) return { collections: [] as Collection[], error: error.message };
+    return { collections: data as Collection[], error: null as string | null };
+  });
+
+export const getPublishedBooks = createServerFn({ method: "GET" })
+  .inputValidator(langInput)
+  .handler(async ({ data: input }) => {
+    const supabase = publicClient();
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .eq(edition(input.lang), "publiee")
+      .order("tome_no", { ascending: true });
+    if (error) return { books: [] as Book[], error: error.message };
+    return { books: data as Book[], error: null as string | null };
+  });
 
 export const getCollectionBySlug = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
+  .inputValidator((data) => z.object({ slug: z.string().min(1), lang: langSchema }).parse(data))
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: collection } = await supabase
@@ -55,8 +77,17 @@ export const getCollectionBySlug = createServerFn({ method: "GET" })
       .from("books")
       .select("*")
       .eq("collection_id", collection.id)
+      .eq(edition(data.lang), "publiee")
       .order("tome_no", { ascending: true });
     const list = (books ?? []) as Book[];
+    // Aucun livre publié dans cette langue : la collection n'existe pas pour ce domaine.
+    if (list.length === 0)
+      return {
+        collection: null as Collection | null,
+        books: [] as Book[],
+        firstBook: null as Book | null,
+        paragraphs: [] as SpreadParagraph[],
+      };
     const first = list[0] ?? null;
     let paragraphs: SpreadParagraph[] = [];
     if (first) {
@@ -76,13 +107,14 @@ export const getCollectionBySlug = createServerFn({ method: "GET" })
   });
 
 export const getBookBySlug = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
+  .inputValidator((data) => z.object({ slug: z.string().min(1), lang: langSchema }).parse(data))
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: book } = await supabase
       .from("books")
       .select("*")
       .eq("slug", data.slug)
+      .eq(edition(data.lang), "publiee")
       .maybeSingle();
     if (!book)
       return {
@@ -132,7 +164,7 @@ export type SpreadBundle = {
 };
 
 export const getPageBySlug = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ slug: z.string().min(1) }).parse(data))
+  .inputValidator((data) => z.object({ slug: z.string().min(1), lang: langSchema }).parse(data))
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const empty = {
@@ -168,7 +200,11 @@ export const getPageBySlug = createServerFn({ method: "GET" })
     const colors: Record<string, string | null> = {};
     const spreads: Record<string, SpreadBundle> = {};
     if (bookIds.length > 0) {
-      const { data: bookRows } = await supabase.from("books").select("*").in("id", bookIds);
+      const { data: bookRows } = await supabase
+        .from("books")
+        .select("*")
+        .in("id", bookIds)
+        .eq(edition(data.lang), "publiee");
       for (const b of (bookRows ?? []) as Book[]) books[b.id] = b;
 
       const collectionIds = Array.from(
@@ -214,42 +250,45 @@ export const getPageBySlug = createServerFn({ method: "GET" })
   });
 
 /** La double page de référence : celle du premier tome publié. */
-export const getShowcaseSpread = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = publicClient();
-  const { data: book } = await supabase
-    .from("books")
-    .select("*")
-    .order("tome_no", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!book)
-    return {
-      book: null as Book | null,
-      collection: null as Collection | null,
-      paragraphs: [] as SpreadParagraph[],
-      words: [] as GlossaryWord[],
-    };
-  let collection: Collection | null = null;
-  if (book.collection_id) {
-    const { data: c } = await supabase
-      .from("collections")
+export const getShowcaseSpread = createServerFn({ method: "GET" })
+  .inputValidator(langInput)
+  .handler(async ({ data: input }) => {
+    const supabase = publicClient();
+    const { data: book } = await supabase
+      .from("books")
       .select("*")
-      .eq("id", book.collection_id)
+      .eq(edition(input.lang), "publiee")
+      .order("tome_no", { ascending: true })
+      .limit(1)
       .maybeSingle();
-    collection = (c as Collection) ?? null;
-  }
-  const [{ data: rows }, words] = await Promise.all([
-    supabase
-      .from("spread_paragraphs")
-      .select("*")
-      .eq("book_id", book.id)
-      .order("sort_order", { ascending: true }),
-    loadGlossaryWords(supabase, book.id),
-  ]);
-  return {
-    book: book as Book | null,
-    collection,
-    paragraphs: (rows ?? []).map(toSpreadParagraph),
-    words,
-  };
-});
+    if (!book)
+      return {
+        book: null as Book | null,
+        collection: null as Collection | null,
+        paragraphs: [] as SpreadParagraph[],
+        words: [] as GlossaryWord[],
+      };
+    let collection: Collection | null = null;
+    if (book.collection_id) {
+      const { data: c } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("id", book.collection_id)
+        .maybeSingle();
+      collection = (c as Collection) ?? null;
+    }
+    const [{ data: rows }, words] = await Promise.all([
+      supabase
+        .from("spread_paragraphs")
+        .select("*")
+        .eq("book_id", book.id)
+        .order("sort_order", { ascending: true }),
+      loadGlossaryWords(supabase, book.id),
+    ]);
+    return {
+      book: book as Book | null,
+      collection,
+      paragraphs: (rows ?? []).map(toSpreadParagraph),
+      words,
+    };
+  });

@@ -19,13 +19,13 @@ export const Route = createFileRoute("/mentions-legales")({
       { property: "og:description", content: "Éditeur, hébergement et contact." },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE, context.lang)),
   component: LegalPage,
 });
 
 function LegalPage() {
-  const { t } = useI18n();
-  const { data } = useSuspenseQuery(pageQuery(PAGE));
+  const { t, lang } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE, lang));
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("footer.legal")}</h1>

@@ -149,7 +149,11 @@ function PromptsRoom() {
               <h2 className="font-latin text-[16px]">{t("atelier.prompts.new")}</h2>
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.step")}
-                <select value={newStep} onChange={(e) => setNewStep(e.target.value)} className={`${field} mt-1`}>
+                <select
+                  value={newStep}
+                  onChange={(e) => setNewStep(e.target.value)}
+                  className={`${field} mt-1`}
+                >
                   <option value="">{t("atelier.prompts.chooseStep")}</option>
                   {(steps.data ?? []).map((s) => (
                     <option key={s.code} value={s.code}>
@@ -158,12 +162,20 @@ function PromptsRoom() {
                   ))}
                 </select>
               </label>
-              {missing.step ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p> : null}
+              {missing.step ? (
+                <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.step")}</p>
+              ) : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.name")}
-                <input value={newName} onChange={(e) => setNewName(e.target.value)} className={`${field} mt-1`} />
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className={`${field} mt-1`}
+                />
               </label>
-              {missing.name ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.name")}</p> : null}
+              {missing.name ? (
+                <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.name")}</p>
+              ) : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.content")}
                 <textarea
@@ -173,10 +185,16 @@ function PromptsRoom() {
                   className={`${field} ${mono} mt-1`}
                 />
               </label>
-              {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
+              {missing.content ? (
+                <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p>
+              ) : null}
               <label className="mt-3 block text-[13px]">
                 {t("atelier.prompts.field.model")}
-                <input value={newModel} onChange={(e) => setNewModel(e.target.value)} className={`${field} mt-1`} />
+                <input
+                  value={newModel}
+                  onChange={(e) => setNewModel(e.target.value)}
+                  className={`${field} mt-1`}
+                />
               </label>
               <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
               <label className="mt-3 flex items-center gap-2 text-[13px]">
@@ -201,7 +219,7 @@ function PromptsRoom() {
                     setMissing(m);
                     setError(null);
                     if (m.step || m.name || m.content) return;
-                     if (createMut.isPending) return;
+                    if (createMut.isPending) return;
                     createMut.mutate();
                   }}
                 >
@@ -290,7 +308,9 @@ function PromptDossier({ promptId }: { promptId: string }) {
 
       <h3 className="mt-6 text-[14px] font-medium">
         {t("atelier.prompts.activeVersion")}{" "}
-        {active ? `${t("atelier.prompts.version")} ${active.version} — ${fmt(active.createdAt)}` : t("atelier.none")}
+        {active
+          ? `${t("atelier.prompts.version")} ${active.version} — ${fmt(active.createdAt)}`
+          : t("atelier.none")}
       </h3>
       {active ? (
         <p className="mt-1 text-[13px]">
@@ -317,19 +337,35 @@ function PromptDossier({ promptId }: { promptId: string }) {
                 className={`${field} ${mono} mt-1`}
               />
             </label>
-            {missing.content ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p> : null}
+            {missing.content ? (
+              <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.content")}</p>
+            ) : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.changeNote")}
-              <input value={note} onChange={(e) => setNote(e.target.value)} className={`${field} mt-1`} />
+              <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className={`${field} mt-1`}
+              />
             </label>
-            {missing.note ? <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.note")}</p> : null}
+            {missing.note ? (
+              <p className="mt-1 text-[13px]">{t("atelier.prompts.missing.note")}</p>
+            ) : null}
             <label className="mt-3 block text-[13px]">
               {t("atelier.prompts.field.model")}
-              <input value={model} onChange={(e) => setModel(e.target.value)} className={`${field} mt-1`} />
+              <input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className={`${field} mt-1`}
+              />
             </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.modelHint")}</p>
             <label className="mt-3 flex items-center gap-2 text-[13px]">
-              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={webSearch}
+                onChange={(e) => setWebSearch(e.target.checked)}
+              />
               {t("atelier.prompts.field.webSearch")}
             </label>
             <p className="mt-1 text-[12px]">{t("atelier.prompts.noteRequired")}</p>
@@ -343,7 +379,7 @@ function PromptDossier({ promptId }: { promptId: string }) {
                   setMissing(m);
                   setError(null);
                   if (m.content || m.note) return;
-                   if (publishMut.isPending) return;
+                  if (publishMut.isPending) return;
                   publishMut.mutate();
                 }}
               >
@@ -428,7 +464,9 @@ function PromptDossier({ promptId }: { promptId: string }) {
           <tbody>
             {data.produced.map((p, i) => (
               <tr key={`${p.versionId}-${i}`}>
-                <td className={cell}>{data.versions.find((v) => v.id === p.versionId)?.version ?? "—"}</td>
+                <td className={cell}>
+                  {data.versions.find((v) => v.id === p.versionId)?.version ?? "—"}
+                </td>
                 <td className={cell}>{p.bookTitle}</td>
                 <td className={cell}>
                   {p.type} v{p.version}

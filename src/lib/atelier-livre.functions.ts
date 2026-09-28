@@ -113,7 +113,15 @@ export type AtelierLivreInfo = {
   chaptersCount: number | null;
   status: string;
   publishedAt: string | null;
+  editionFr: EditionEtat;
+  editionEn: EditionEtat;
+  glossaireFr: GlossaireFichier | null;
+  glossaireEn: GlossaireFichier | null;
 };
+
+export const EDITION_ETATS = ["absente", "preparation", "publiee"] as const;
+export type EditionEtat = (typeof EDITION_ETATS)[number];
+export type GlossaireFichier = { path: string; name: string; updatedAt: string | null };
 
 function lines(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -162,6 +170,10 @@ export const atelierLivreInfo = createServerFn({ method: "GET" })
       chaptersCount: b.chapters_count ?? null,
       status: b.status as string,
       publishedAt: b.published_at ?? null,
+      editionFr: b.edition_fr as EditionEtat,
+      editionEn: b.edition_en as EditionEtat,
+      glossaireFr: await lireGlossaire(admin, b.glossaire_fr_path),
+      glossaireEn: await lireGlossaire(admin, b.glossaire_en_path),
     };
   });
 
@@ -183,7 +195,7 @@ export const saveAtelierLivreInfo = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        titleFr: z.string().trim().min(1).max(300),
+        titleFr: optText,
         titleEn: optText,
         titleHe: optText,
         subtitleFr: optText,
@@ -224,6 +236,17 @@ export const saveAtelierLivreInfo = createServerFn({ method: "POST" })
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
 
+    // Le titre est obligatoire pour chaque édition qui n'est pas « absente ».
+    const { data: etats } = await admin
+      .from("books")
+      .select("edition_fr, edition_en")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (etats?.edition_fr !== "absente" && !nullish(data.titleFr))
+      throw new Error("TITLE_REQUIRED_FR");
+    if (etats?.edition_en !== "absente" && !nullish(data.titleEn))
+      throw new Error("TITLE_REQUIRED_EN");
+
     const { data: taken } = await admin
       .from("books")
       .select("id")
@@ -243,7 +266,8 @@ export const saveAtelierLivreInfo = createServerFn({ method: "POST" })
     const { error } = await admin
       .from("books")
       .update({
-        title_fr: data.titleFr,
+        // title_fr est NOT NULL en base : une édition absente garde son ancien titre.
+        ...(nullish(data.titleFr) ? { title_fr: nullish(data.titleFr)! } : {}),
         title_en: nullish(data.titleEn),
         title_he: nullish(data.titleHe),
         subtitle_fr: nullish(data.subtitleFr),
@@ -282,6 +306,9 @@ export type AtelierPageRow = {
   supportKind: string;
   hasAudio: boolean;
   isPublished: boolean;
+  /** Au moins un paragraphe sans soutien (ou aucun paragraphe) dans cette langue. */
+  supportMissingFr: boolean;
+  supportMissingEn: boolean;
 };
 
 export const atelierLivrePages = createServerFn({ method: "GET" })
@@ -295,6 +322,20 @@ export const atelierLivrePages = createServerFn({ method: "GET" })
       .select("id, page_no, chapter_no, support_kind, audio_path, is_published")
       .eq("book_id", data.bookId)
       .order("page_no", { ascending: true });
+    const ids = (rows ?? []).map((r) => r.id);
+    const blocks: { page_id: string; support_fr: string | null; support_en: string | null }[] = [];
+    for (let i = 0; i < ids.length; i += 200) {
+      const { data: part } = await admin
+        .from("page_blocks")
+        .select("page_id, support_fr, support_en")
+        .in("page_id", ids.slice(i, i + 200));
+      blocks.push(...(part ?? []));
+    }
+    const vide = (v: string | null) => !v || v.trim().length === 0;
+    const manque = (pageId: string, col: "support_fr" | "support_en") => {
+      const own = blocks.filter((b) => b.page_id === pageId);
+      return own.length === 0 || own.some((b) => vide(b[col]));
+    };
     return (rows ?? []).map((r) => ({
       id: r.id,
       pageNo: r.page_no,
@@ -302,6 +343,8 @@ export const atelierLivrePages = createServerFn({ method: "GET" })
       supportKind: r.support_kind,
       hasAudio: Boolean(r.audio_path),
       isPublished: r.is_published,
+      supportMissingFr: manque(r.id, "support_fr"),
+      supportMissingEn: manque(r.id, "support_en"),
     }));
   });
 
@@ -823,4 +866,201 @@ export const collerLivre = createServerFn({ method: "POST" })
     }
 
     return { pages: analyse.lignes.length, blocks: blocs.length };
+  });
+
+/* ------------------------------------------------------------------------- *
+ * DEUX ÉDITIONS PAR LIVRE — état, liste de contrôle, glossaire.
+ * ------------------------------------------------------------------------- */
+
+const GLOSSAIRE_BUCKET = "glossaires";
+const MAX_GLOSSAIRE = 20 * 1024 * 1024;
+const langue = z.enum(["fr", "en"]);
+
+async function lireGlossaire(
+  admin: Awaited<ReturnType<typeof getAdminClient>>,
+  path: string | null,
+): Promise<GlossaireFichier | null> {
+  if (!path) return null;
+  const dir = path.split("/").slice(0, -1).join("/");
+  const name = path.split("/").pop() ?? path;
+  const { data } = await admin.storage.from(GLOSSAIRE_BUCKET).list(dir);
+  const f = (data ?? []).find((o) => o.name === name);
+  return { path, name, updatedAt: f?.updated_at ?? f?.created_at ?? null };
+}
+
+export type ControleEdition = {
+  bloquants: { code: string; n?: number }[];
+  avertissements: { code: string }[];
+};
+
+async function controler(
+  admin: Awaited<ReturnType<typeof getAdminClient>>,
+  bookId: string,
+  lang: "fr" | "en",
+): Promise<ControleEdition> {
+  const { data: b } = await admin.from("books").select("*").eq("id", bookId).maybeSingle();
+  if (!b) throw new Error("BOOK_NOT_FOUND");
+  const en = lang === "en";
+  const vide = (v: unknown) => v == null || (typeof v === "string" && v.trim() === "");
+  const bloquants: ControleEdition["bloquants"] = [];
+  const avertissements: ControleEdition["avertissements"] = [];
+
+  if (vide(en ? b.title_en : b.title_fr)) bloquants.push({ code: "title" });
+  if (vide(en ? b.blurb_en : b.blurb_fr)) bloquants.push({ code: "blurb" });
+  if (vide(en ? b.amazon_url_com : b.amazon_url_fr)) bloquants.push({ code: "amazon" });
+  if (vide(en ? b.glossaire_en_path : b.glossaire_fr_path)) bloquants.push({ code: "glossary" });
+
+  const { data: pages } = await admin
+    .from("book_pages")
+    .select("id, chapter_no, chapter_title_fr, chapter_title_en")
+    .eq("book_id", bookId);
+  const ids = (pages ?? []).map((p) => p.id);
+  const blocks: { page_id: string; support_fr: string | null; support_en: string | null }[] = [];
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data: part } = await admin
+      .from("page_blocks")
+      .select("page_id, support_fr, support_en")
+      .in("page_id", ids.slice(i, i + 200));
+    blocks.push(...(part ?? []));
+  }
+  const sansSoutien = ids.filter((id) => {
+    const own = blocks.filter((x) => x.page_id === id);
+    return own.length === 0 || own.some((x) => vide(en ? x.support_en : x.support_fr));
+  }).length;
+  if (sansSoutien > 0) bloquants.push({ code: "support", n: sansSoutien });
+
+  const chapitres = new Map<number, boolean>();
+  for (const p of pages ?? []) {
+    if (p.chapter_no == null) continue;
+    const ok = !vide(en ? p.chapter_title_en : p.chapter_title_fr);
+    chapitres.set(p.chapter_no, (chapitres.get(p.chapter_no) ?? false) || ok);
+  }
+  const sansTitre = [...chapitres.values()].filter((ok) => !ok).length;
+  if (sansTitre > 0) bloquants.push({ code: "chapterTitles", n: sansTitre });
+
+  if (!b.collection_id) bloquants.push({ code: "collectionName" });
+  else {
+    const { data: c } = await admin
+      .from("collections")
+      .select("name_fr, name_en")
+      .eq("id", b.collection_id)
+      .maybeSingle();
+    if (vide(en ? c?.name_en : c?.name_fr)) bloquants.push({ code: "collectionName" });
+  }
+
+  const { count } = await admin
+    .from("quiz_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("book_id", bookId)
+    .eq("lang", lang);
+  if (!count) avertissements.push({ code: "quiz" });
+  if (vide(en ? b.subtitle_en : b.subtitle_fr)) avertissements.push({ code: "subtitle" });
+  const learn = en ? b.what_you_learn_en : b.what_you_learn_fr;
+  if (!Array.isArray(learn) || learn.length === 0) avertissements.push({ code: "learn" });
+
+  return { bloquants, avertissements };
+}
+
+export const controleEdition = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ bookId: z.string().uuid(), lang: langue }).parse(d))
+  .handler(async ({ context, data }): Promise<ControleEdition> => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    return controler(admin, data.bookId, data.lang);
+  });
+
+/** Changer l'état d'une édition. « publiée » exige une liste de contrôle vide. */
+export const setEditionEtat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ bookId: z.string().uuid(), lang: langue, etat: z.enum(EDITION_ETATS) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const { data: b } = await admin
+      .from("books")
+      .select("edition_fr, edition_en, title_fr, title_en")
+      .eq("id", data.bookId)
+      .maybeSingle();
+    if (!b) throw new Error("BOOK_NOT_FOUND");
+    const autre = data.lang === "en" ? b.edition_fr : b.edition_en;
+    if (data.etat === "absente" && autre === "absente") throw new Error("EDITION_ONE_REQUIRED");
+    if (data.etat !== "absente") {
+      const titre = data.lang === "en" ? b.title_en : b.title_fr;
+      if (!titre || titre.trim() === "")
+        throw new Error(data.lang === "en" ? "TITLE_REQUIRED_EN" : "TITLE_REQUIRED_FR");
+    }
+    if (data.etat === "publiee") {
+      const c = await controler(admin, data.bookId, data.lang);
+      if (c.bloquants.length > 0) throw new Error("EDITION_BLOCKED");
+    }
+    const col = data.lang === "en" ? "edition_en" : "edition_fr";
+    const { error } = await admin
+      .from("books")
+      .update({ [col]: data.etat } as { edition_fr: EditionEtat })
+      .eq("id", data.bookId);
+    if (error) throw new Error(texteErreurBase("SAVE_REFUSED", error));
+    return { ok: true };
+  });
+
+/** Le glossaire d'une édition : un PDF rangé sous <book_id>/<fr|en>/<nom>. */
+export const uploadGlossaire = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: FormData) => {
+    if (!(data instanceof FormData)) throw new Error("GLOSSARY_BAD_REQUEST");
+    const bookId = String(data.get("bookId") ?? "");
+    const lang = String(data.get("lang") ?? "");
+    const file = data.get("file");
+    if (!z.string().uuid().safeParse(bookId).success) throw new Error("GLOSSARY_BAD_REQUEST");
+    if (lang !== "fr" && lang !== "en") throw new Error("GLOSSARY_BAD_REQUEST");
+    if (!(file instanceof File)) throw new Error("GLOSSARY_BAD_REQUEST");
+    return { bookId, lang: lang as "fr" | "en", file };
+  })
+  .handler(async ({ context, data }) => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    if (!data.file.name.toLowerCase().endsWith(".pdf")) throw new Error("GLOSSARY_BAD_FORMAT");
+    if (data.file.size > MAX_GLOSSAIRE) throw new Error("GLOSSARY_TOO_BIG");
+    const { data: b } = await admin
+      .from("books")
+      .select("glossaire_fr_path, glossaire_en_path")
+      .eq("id", data.bookId)
+      .maybeSingle();
+    if (!b) throw new Error("BOOK_NOT_FOUND");
+    const nom = data.file.name.replace(/[^A-Za-z0-9._-]+/g, "-").slice(-120) || "glossaire.pdf";
+    const path = `${data.bookId}/${data.lang}/${nom}`;
+    const bytes = new Uint8Array(await data.file.arrayBuffer());
+    const { error } = await admin.storage
+      .from(GLOSSAIRE_BUCKET)
+      .upload(path, bytes, { upsert: true, contentType: "application/pdf" });
+    if (error) throw new Error(`GLOSSARY_UPLOAD_FAILED:${error.message}`);
+    const ancien = data.lang === "en" ? b.glossaire_en_path : b.glossaire_fr_path;
+    if (ancien && ancien !== path) await admin.storage.from(GLOSSAIRE_BUCKET).remove([ancien]);
+    const col = data.lang === "en" ? "glossaire_en_path" : "glossaire_fr_path";
+    await admin
+      .from("books")
+      .update({ [col]: path } as { glossaire_fr_path: string })
+      .eq("id", data.bookId);
+    return { ok: true, path };
+  });
+
+export const glossaireAtelierUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ bookId: z.string().uuid(), lang: langue }).parse(d))
+  .handler(async ({ context, data }) => {
+    const editor = await assertEditor(context.supabase, context.userId);
+    const admin = await getAdminClient(editor);
+    const { data: b } = await admin
+      .from("books")
+      .select("glossaire_fr_path, glossaire_en_path")
+      .eq("id", data.bookId)
+      .maybeSingle();
+    const path = data.lang === "en" ? b?.glossaire_en_path : b?.glossaire_fr_path;
+    if (!path) return { url: null as string | null };
+    const { data: signed } = await admin.storage
+      .from(GLOSSAIRE_BUCKET)
+      .createSignedUrl(path, 120, { download: true });
+    return { url: signed?.signedUrl ?? null };
   });

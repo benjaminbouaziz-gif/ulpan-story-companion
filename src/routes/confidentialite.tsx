@@ -23,13 +23,13 @@ export const Route = createFileRoute("/confidentialite")({
       },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE, context.lang)),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
-  const { t } = useI18n();
-  const { data } = useSuspenseQuery(pageQuery(PAGE));
+  const { t, lang } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE, lang));
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("footer.privacy")}</h1>
