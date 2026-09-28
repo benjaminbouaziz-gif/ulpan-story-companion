@@ -1879,6 +1879,51 @@ export type Database = {
           },
         ]
       }
+      quiz_answers: {
+        Row: {
+          answered_at: string
+          book_id: string
+          chosen_index: number
+          id: string
+          is_correct: boolean
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          answered_at?: string
+          book_id: string
+          chosen_index: number
+          id?: string
+          is_correct: boolean
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          answered_at?: string
+          book_id?: string
+          chosen_index?: number
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answers_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           answer: Json
@@ -1890,6 +1935,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["quiz_kind"]
           options: Json
+          page_no: number | null
           prompt_en: string | null
           prompt_fr: string | null
           prompt_he: string | null
@@ -1905,6 +1951,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["quiz_kind"]
           options?: Json
+          page_no?: number | null
           prompt_en?: string | null
           prompt_fr?: string | null
           prompt_he?: string | null
@@ -1920,6 +1967,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["quiz_kind"]
           options?: Json
+          page_no?: number | null
           prompt_en?: string | null
           prompt_fr?: string | null
           prompt_he?: string | null
@@ -2152,6 +2200,10 @@ export type Database = {
         Returns: boolean
       }
       instancier_chaine: { Args: { p_book_id: string }; Returns: number }
+      remplacer_quiz_livre: {
+        Args: { p_book_id: string; p_rows: Json }
+        Returns: number
+      }
       supprimer_prompt: { Args: { p_prompt_id: string }; Returns: number }
     }
     Enums: {
