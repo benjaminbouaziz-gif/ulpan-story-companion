@@ -6,6 +6,7 @@ import type { DictKey } from "@/i18n/dictionaries";
 import { LivreInfoForm } from "@/components/AtelierLivreInfo";
 import { LivrePagesTable } from "@/components/AtelierLivrePages";
 import { LivreQuiz } from "@/components/AtelierLivreQuiz";
+import { EditionPanel, etatKey } from "@/components/AtelierEdition";
 import { atelierLivreCollections, atelierLivreInfo } from "@/lib/atelier-livre.functions";
 
 /**
@@ -13,16 +14,18 @@ import { atelierLivreCollections, atelierLivreInfo } from "@/lib/atelier-livre.f
  * autres sont annoncés, désactivés, et n'appellent rien.
  */
 type Onglet = "info" | "pages" | "quiz";
+type Edition = "fr" | "en";
 
 export const Route = createFileRoute("/atelier/livres_/$slug")({
   ssr: false,
   head: () => ({
     meta: [{ title: "Livre — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { onglet: Onglet; edition?: Edition } => ({
     onglet: (search["onglet"] === "pages" || search["onglet"] === "quiz"
       ? search["onglet"]
       : "info") as Onglet,
+    ...(search["edition"] === "en" ? { edition: "en" as const } : {}),
   }),
   component: FicheLivre,
 });
@@ -32,7 +35,8 @@ const ONGLETS_A_VENIR: DictKey[] = ["atelier.livre.tab.glossary", "atelier.livre
 function FicheLivre() {
   const { t } = useI18n();
   const { slug } = Route.useParams();
-  const { onglet } = Route.useSearch();
+  const { onglet, edition: ed } = Route.useSearch();
+  const edition: Edition = ed ?? "fr";
   const navigate = useNavigate();
   const readInfo = useServerFn(atelierLivreInfo);
   const readCollections = useServerFn(atelierLivreCollections);
@@ -66,25 +70,43 @@ function FicheLivre() {
         {book.qrCode}
       </p>
 
+      {/* Deux éditions, une fiche : l'état de chacune, et le volet affiché. */}
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px]">
+        <span className="border-line border px-2 py-0.5">FR · {t(etatKey(book.editionFr))}</span>
+        <span className="border-line border px-2 py-0.5">EN · {t(etatKey(book.editionEn))}</span>
+        <span className="ml-4">{t("atelier.edition.selector")}</span>
+        {(["fr", "en"] as const).map((e) => (
+          <button
+            key={e}
+            type="button"
+            className={`border-line border px-2 py-0.5 ${edition === e ? "font-medium" : "opacity-60"}`}
+            aria-pressed={edition === e}
+            onClick={() => void navigate({ to: ".", search: { onglet, edition: e } })}
+          >
+            {e.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
       <div className="border-line mt-6 flex flex-wrap items-center gap-2 border-b pb-3">
         <button
           type="button"
           className={`${tab} ${onglet === "info" ? "font-medium" : ""}`}
-          onClick={() => void navigate({ to: ".", search: { onglet: "info" } })}
+          onClick={() => void navigate({ to: ".", search: { onglet: "info", edition } })}
         >
           {t("atelier.livre.tab.info")}
         </button>
         <button
           type="button"
           className={`${tab} ${onglet === "pages" ? "font-medium" : ""}`}
-          onClick={() => void navigate({ to: ".", search: { onglet: "pages" } })}
+          onClick={() => void navigate({ to: ".", search: { onglet: "pages", edition } })}
         >
           {t("atelier.livre.tab.pages")}
         </button>
         <button
           type="button"
           className={`${tab} ${onglet === "quiz" ? "font-medium" : ""}`}
-          onClick={() => void navigate({ to: ".", search: { onglet: "quiz" } })}
+          onClick={() => void navigate({ to: ".", search: { onglet: "quiz", edition } })}
         >
           {t("atelier.livre.tab.quiz")}
         </button>
@@ -96,7 +118,10 @@ function FicheLivre() {
       </div>
 
       {onglet === "info" ? (
+        <>
         <LivreInfoForm
+          key={`${book.id}-${edition}`}
+          edition={edition}
           info={book}
           collections={collections.data ?? []}
           onSaved={(nouveauSlug) => {
@@ -104,17 +129,19 @@ function FicheLivre() {
               void navigate({
                 to: "/atelier/livres/$slug",
                 params: { slug: nouveauSlug },
-                search: { onglet: "info" },
+                search: { onglet: "info", edition },
               });
             } else {
               void info.refetch();
             }
           }}
         />
+        <EditionPanel info={book} edition={edition} onChanged={() => void info.refetch()} />
+        </>
       ) : onglet === "quiz" ? (
-        <LivreQuiz bookId={book.id} slug={book.slug} />
+        <LivreQuiz key={edition} bookId={book.id} slug={book.slug} edition={edition} />
       ) : (
-        <LivrePagesTable bookId={book.id} slug={book.slug} />
+        <LivrePagesTable bookId={book.id} slug={book.slug} edition={edition} />
       )}
     </section>
   );
