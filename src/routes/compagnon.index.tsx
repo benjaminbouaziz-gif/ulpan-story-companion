@@ -25,7 +25,8 @@ export const Route = createFileRoute("/compagnon/")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("compagnon", context.lang)),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(pageQuery("compagnon", context.lang)),
   component: CompanionHome,
 });
 
@@ -77,17 +78,19 @@ function CompanionHome() {
             {(query.data?.books ?? [])
               .filter((b) => (lang === "en" ? b.edition_en : b.edition_fr) === "publiee")
               .map((book) => (
-              <li key={book.id} className="border-line border-b py-4">
-                <Link
-                  to="/compagnon/$book_slug"
-                  params={{ book_slug: book.slug }}
-                  className="touch flex items-baseline justify-between gap-4"
-                >
-                  <span className="body-text">{pickLang(lang, book.title_fr, book.title_en) ?? ""}</span>
-                  <span className="label text-secondary-text">{t("companion.open")}</span>
-                </Link>
-              </li>
-            ))}
+                <li key={book.id} className="border-line border-b py-4">
+                  <Link
+                    to="/compagnon/$book_slug"
+                    params={{ book_slug: book.slug }}
+                    className="touch flex items-baseline justify-between gap-4"
+                  >
+                    <span className="body-text">
+                      {pickLang(lang, book.title_fr, book.title_en) ?? ""}
+                    </span>
+                    <span className="label text-secondary-text">{t("companion.open")}</span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </>
       ) : null}

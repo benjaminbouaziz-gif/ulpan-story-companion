@@ -332,7 +332,12 @@ export function LivreQuiz({
             ) : null}
             {confirm && ok ? (
               <div className="border-line mt-3 border p-3">
-                <p>{fmt(t(edition === "en" ? "atelier.quiz.confirmEn" : "atelier.quiz.confirmFr"), { x: total, y: rapport!.resume.total })}</p>
+                <p>
+                  {fmt(t(edition === "en" ? "atelier.quiz.confirmEn" : "atelier.quiz.confirmFr"), {
+                    x: total,
+                    y: rapport!.resume.total,
+                  })}
+                </p>
                 <div className="mt-2 flex gap-2">
                   <button
                     type="button"

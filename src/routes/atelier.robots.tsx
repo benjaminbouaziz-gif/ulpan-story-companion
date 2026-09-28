@@ -61,9 +61,7 @@ function RunsTable() {
             <td className="py-1 pr-3">
               {r.status ?? "—"}
               {r.truncated ? " · coupé" : ""}
-              {r.errorSummary ? (
-                <span className="block opacity-70">{r.errorSummary}</span>
-              ) : null}
+              {r.errorSummary ? <span className="block opacity-70">{r.errorSummary}</span> : null}
             </td>
             <td className="py-1 pr-3">
               {r.durationMs !== null ? `${Math.round(r.durationMs / 1000)} s` : "—"}

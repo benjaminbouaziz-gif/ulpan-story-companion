@@ -119,24 +119,24 @@ function FicheLivre() {
 
       {onglet === "info" ? (
         <>
-        <LivreInfoForm
-          key={`${book.id}-${edition}`}
-          edition={edition}
-          info={book}
-          collections={collections.data ?? []}
-          onSaved={(nouveauSlug) => {
-            if (nouveauSlug !== slug) {
-              void navigate({
-                to: "/atelier/livres/$slug",
-                params: { slug: nouveauSlug },
-                search: { onglet: "info", edition },
-              });
-            } else {
-              void info.refetch();
-            }
-          }}
-        />
-        <EditionPanel info={book} edition={edition} onChanged={() => void info.refetch()} />
+          <LivreInfoForm
+            key={`${book.id}-${edition}`}
+            edition={edition}
+            info={book}
+            collections={collections.data ?? []}
+            onSaved={(nouveauSlug) => {
+              if (nouveauSlug !== slug) {
+                void navigate({
+                  to: "/atelier/livres/$slug",
+                  params: { slug: nouveauSlug },
+                  search: { onglet: "info", edition },
+                });
+              } else {
+                void info.refetch();
+              }
+            }}
+          />
+          <EditionPanel info={book} edition={edition} onChanged={() => void info.refetch()} />
         </>
       ) : onglet === "quiz" ? (
         <LivreQuiz key={edition} bookId={book.id} slug={book.slug} edition={edition} />

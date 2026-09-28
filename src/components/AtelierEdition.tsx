@@ -70,7 +70,8 @@ export function EditionPanel({
   async function deposer(f: File | undefined) {
     if (!f) return;
     setError(null);
-    if (!f.name.toLowerCase().endsWith(".pdf")) return setError("atelier.edition.glossary.err.format");
+    if (!f.name.toLowerCase().endsWith(".pdf"))
+      return setError("atelier.edition.glossary.err.format");
     if (glossaire && !window.confirm(t("atelier.edition.glossary.replaceConfirm"))) return;
     setBusy(true);
     try {
@@ -115,7 +116,12 @@ export function EditionPanel({
           {glossaire.updatedAt
             ? ` · ${new Date(glossaire.updatedAt).toLocaleString("fr-FR")}`
             : ""}{" "}
-          <button type="button" className={`${btn} ml-2`} disabled={busy} onClick={() => fileRef.current?.click()}>
+          <button
+            type="button"
+            className={`${btn} ml-2`}
+            disabled={busy}
+            onClick={() => fileRef.current?.click()}
+          >
             {t("atelier.edition.glossary.replace")}
           </button>{" "}
           <button type="button" className={btn} onClick={() => void telecharger()}>
@@ -125,7 +131,12 @@ export function EditionPanel({
       ) : (
         <p className="mt-1">
           {t("atelier.edition.glossary.none")}{" "}
-          <button type="button" className={`${btn} ml-2`} disabled={busy} onClick={() => fileRef.current?.click()}>
+          <button
+            type="button"
+            className={`${btn} ml-2`}
+            disabled={busy}
+            onClick={() => fileRef.current?.click()}
+          >
             {t("atelier.edition.glossary.upload")}
           </button>
         </p>
@@ -160,7 +171,9 @@ export function EditionPanel({
                 <ul className="text-alert mt-1 list-disc pl-5">
                   {c.bloquants.map((b) => (
                     <li key={b.code}>
-                      {fmt(t(`atelier.edition.check.${b.code}.${edition}` as DictKey), { n: b.n ?? 0 })}
+                      {fmt(t(`atelier.edition.check.${b.code}.${edition}` as DictKey), {
+                        n: b.n ?? 0,
+                      })}
                     </li>
                   ))}
                 </ul>

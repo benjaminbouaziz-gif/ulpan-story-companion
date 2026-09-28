@@ -114,7 +114,9 @@ export function LivreInfoForm({
   }
 
   const urls: [DictKey, keyof typeof form][] = [
-    fr ? ["atelier.livre.f.amazonFr", "amazonUrlFr"] : ["atelier.livre.f.amazonCom", "amazonUrlCom"],
+    fr
+      ? ["atelier.livre.f.amazonFr", "amazonUrlFr"]
+      : ["atelier.livre.f.amazonCom", "amazonUrlCom"],
     ["atelier.livre.f.amazonOther", "amazonUrlOther"],
   ];
 
@@ -177,22 +179,22 @@ export function LivreInfoForm({
       <h2 className="font-latin text-[15px]">{t("atelier.livre.info.identity")}</h2>
       <div className="mt-2 grid grid-cols-2 gap-3">
         {fr ? (
-<Champ labelKey="atelier.livre.f.titleFr">
-          <input
-            className={input}
-            value={form.titleFr}
-            onChange={(e) => set("titleFr", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.titleFr">
+            <input
+              className={input}
+              value={form.titleFr}
+              onChange={(e) => set("titleFr", e.target.value)}
+            />
+          </Champ>
         ) : null}
         {!fr ? (
-<Champ labelKey="atelier.livre.f.titleEn">
-          <input
-            className={input}
-            value={form.titleEn}
-            onChange={(e) => set("titleEn", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.titleEn">
+            <input
+              className={input}
+              value={form.titleEn}
+              onChange={(e) => set("titleEn", e.target.value)}
+            />
+          </Champ>
         ) : null}
         <Champ labelKey="atelier.livre.f.titleHe">
           <input
@@ -212,22 +214,22 @@ export function LivreInfoForm({
           />
         </Champ>
         {fr ? (
-<Champ labelKey="atelier.livre.f.subtitleFr">
-          <input
-            className={input}
-            value={form.subtitleFr}
-            onChange={(e) => set("subtitleFr", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.subtitleFr">
+            <input
+              className={input}
+              value={form.subtitleFr}
+              onChange={(e) => set("subtitleFr", e.target.value)}
+            />
+          </Champ>
         ) : null}
         {!fr ? (
-<Champ labelKey="atelier.livre.f.subtitleEn">
-          <input
-            className={input}
-            value={form.subtitleEn}
-            onChange={(e) => set("subtitleEn", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.subtitleEn">
+            <input
+              className={input}
+              value={form.subtitleEn}
+              onChange={(e) => set("subtitleEn", e.target.value)}
+            />
+          </Champ>
         ) : null}
         <Champ labelKey="atelier.livre.f.tome">
           <input
@@ -263,58 +265,58 @@ export function LivreInfoForm({
       <h2 className="font-latin mt-8 text-[15px]">{t("atelier.livre.info.presentation")}</h2>
       <div className="mt-2 grid grid-cols-2 gap-3">
         {fr ? (
-<Champ labelKey="atelier.livre.f.blurbFr">
-          <textarea
-            className={input}
-            rows={4}
-            value={form.blurbFr}
-            onChange={(e) => set("blurbFr", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.blurbFr">
+            <textarea
+              className={input}
+              rows={4}
+              value={form.blurbFr}
+              onChange={(e) => set("blurbFr", e.target.value)}
+            />
+          </Champ>
         ) : null}
         {!fr ? (
-<Champ labelKey="atelier.livre.f.blurbEn">
-          <textarea
-            className={input}
-            rows={4}
-            value={form.blurbEn}
-            onChange={(e) => set("blurbEn", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.blurbEn">
+            <textarea
+              className={input}
+              rows={4}
+              value={form.blurbEn}
+              onChange={(e) => set("blurbEn", e.target.value)}
+            />
+          </Champ>
         ) : null}
         {fr ? (
-<Champ labelKey="atelier.livre.f.levelFr">
-          <textarea
-            className={input}
-            rows={2}
-            value={form.levelNoteFr}
-            onChange={(e) => set("levelNoteFr", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.levelFr">
+            <textarea
+              className={input}
+              rows={2}
+              value={form.levelNoteFr}
+              onChange={(e) => set("levelNoteFr", e.target.value)}
+            />
+          </Champ>
         ) : null}
         {!fr ? (
-<Champ labelKey="atelier.livre.f.levelEn">
-          <textarea
-            className={input}
-            rows={2}
-            value={form.levelNoteEn}
-            onChange={(e) => set("levelNoteEn", e.target.value)}
-          />
-        </Champ>
+          <Champ labelKey="atelier.livre.f.levelEn">
+            <textarea
+              className={input}
+              rows={2}
+              value={form.levelNoteEn}
+              onChange={(e) => set("levelNoteEn", e.target.value)}
+            />
+          </Champ>
         ) : null}
         {fr ? (
-<Liste
-          labelKey="atelier.livre.f.learnFr"
-          values={form.whatYouLearnFr}
-          onChange={(v) => set("whatYouLearnFr", v)}
-        />
+          <Liste
+            labelKey="atelier.livre.f.learnFr"
+            values={form.whatYouLearnFr}
+            onChange={(v) => set("whatYouLearnFr", v)}
+          />
         ) : null}
         {!fr ? (
-<Liste
-          labelKey="atelier.livre.f.learnEn"
-          values={form.whatYouLearnEn}
-          onChange={(v) => set("whatYouLearnEn", v)}
-        />
+          <Liste
+            labelKey="atelier.livre.f.learnEn"
+            values={form.whatYouLearnEn}
+            onChange={(v) => set("whatYouLearnEn", v)}
+          />
         ) : null}
       </div>
 

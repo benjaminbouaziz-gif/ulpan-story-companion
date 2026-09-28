@@ -24,7 +24,8 @@ export const Route = createFileRoute("/activation")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("activation", context.lang)),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(pageQuery("activation", context.lang)),
   component: ActivationPage,
 });
 

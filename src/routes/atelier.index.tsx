@@ -16,7 +16,10 @@ import { atelierQueue, type QueueStep } from "@/lib/atelier-queue.functions";
  */
 export const Route = createFileRoute("/atelier/")({
   head: () => ({
-    meta: [{ title: "Tableau de bord — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Tableau de bord — Atelier Ulpan Story" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: Dashboard,
 });
@@ -116,14 +119,27 @@ function Dashboard() {
             </table>
           )}
 
-          {block("atelier.queue.running", "atelier.queue.noRunning", data.running, "atelier.queue.col.robot", (s) =>
-            s.robotName ?? t("atelier.none"),
+          {block(
+            "atelier.queue.running",
+            "atelier.queue.noRunning",
+            data.running,
+            "atelier.queue.col.robot",
+            (s) => s.robotName ?? t("atelier.none"),
           )}
-          {block("atelier.queue.revision", "atelier.queue.noRevision", data.revision, "atelier.books.col.awaiting", (s) =>
-            s.awaiting ? t(`atelier.awaiting.${s.awaiting}` as DictKey) : t("atelier.none"),
+          {block(
+            "atelier.queue.revision",
+            "atelier.queue.noRevision",
+            data.revision,
+            "atelier.books.col.awaiting",
+            (s) =>
+              s.awaiting ? t(`atelier.awaiting.${s.awaiting}` as DictKey) : t("atelier.none"),
           )}
-          {block("atelier.queue.failed", "atelier.queue.noFailed", data.failed, "atelier.queue.col.error", (s) =>
-            s.errorSummary ?? t("atelier.none"),
+          {block(
+            "atelier.queue.failed",
+            "atelier.queue.noFailed",
+            data.failed,
+            "atelier.queue.col.error",
+            (s) => s.errorSummary ?? t("atelier.none"),
           )}
 
           <div className="mt-8">

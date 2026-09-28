@@ -24,7 +24,8 @@ export const Route = createFileRoute("/livres/$slug")({
       },
     ],
   }),
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(bookQuery(params.slug, context.lang)),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(bookQuery(params.slug, context.lang)),
   component: BookPage,
 });
 

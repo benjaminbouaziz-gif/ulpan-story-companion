@@ -86,7 +86,11 @@ export function LivrePagesTable({
 
   async function nouvelle() {
     const res = await create({ data: { bookId } });
-    await navigate({ to: "/atelier/livres/$slug/page/$pageId", params: { slug, pageId: res.id }, search: { edition } });
+    await navigate({
+      to: "/atelier/livres/$slug/page/$pageId",
+      params: { slug, pageId: res.id },
+      search: { edition },
+    });
   }
 
   async function basculerPublication(id: string, valeur: boolean) {
@@ -312,13 +316,22 @@ export function LivrePagesTable({
           }}
         >
           {(() => {
-        const n = rows.filter((p) => (edition === "en" ? p.supportMissingEn : p.supportMissingFr)).length;
-        return n > 0 ? (
-          <p className="text-alert mt-3 text-[13px]">
-            {fmt(t(edition === "en" ? "atelier.edition.pagesNoSupportEn" : "atelier.edition.pagesNoSupportFr"), { n })}
-          </p>
-        ) : null;
-      })()}
+            const n = rows.filter((p) =>
+              edition === "en" ? p.supportMissingEn : p.supportMissingFr,
+            ).length;
+            return n > 0 ? (
+              <p className="text-alert mt-3 text-[13px]">
+                {fmt(
+                  t(
+                    edition === "en"
+                      ? "atelier.edition.pagesNoSupportEn"
+                      : "atelier.edition.pagesNoSupportFr",
+                  ),
+                  { n },
+                )}
+              </p>
+            ) : null;
+          })()}
           <table className="mt-4 w-full border-collapse text-[13px]">
             <thead>
               <tr>

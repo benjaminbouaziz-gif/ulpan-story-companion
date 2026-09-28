@@ -194,27 +194,29 @@ function CompanionBook() {
           {data.quiz.length === 0 ? (
             <p className="body-text text-secondary-text mt-6">{t("companion.trainingSoon")}</p>
           ) : (
-          <CompanionTraining
-            questions={data.quiz}
-            chapters={data.chapters}
-            initialAnswers={data.lastAnswers}
-            folioFor={folioFor}
-            onAnswer={async (q, chosen) => {
-              try {
-                await saveAnswer({ data: { book_slug, question_id: q.id, chosen_index: chosen } });
-                return true;
-              } catch {
-                return false;
-              }
-            }}
-            onFinish={(answered, correct) => round.mutate({ answered, correct })}
-            onReread={(pageNo, from) => {
-              setReaderPage(pageNo);
-              setRetour(from);
-              go("lecture");
-            }}
-            onFocusMode={setFocus}
-          />
+            <CompanionTraining
+              questions={data.quiz}
+              chapters={data.chapters}
+              initialAnswers={data.lastAnswers}
+              folioFor={folioFor}
+              onAnswer={async (q, chosen) => {
+                try {
+                  await saveAnswer({
+                    data: { book_slug, question_id: q.id, chosen_index: chosen },
+                  });
+                  return true;
+                } catch {
+                  return false;
+                }
+              }}
+              onFinish={(answered, correct) => round.mutate({ answered, correct })}
+              onReread={(pageNo, from) => {
+                setReaderPage(pageNo);
+                setRetour(from);
+                go("lecture");
+              }}
+              onFocusMode={setFocus}
+            />
           )}
         </div>
 
