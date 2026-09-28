@@ -29,9 +29,9 @@ type Props = {
   pages: CompanionPage[];
   requestAudioUrl: (pageId: string) => Promise<string | null>;
   /** Ouvre le lecteur sur cette page (sans lancer l'audio). */
-  initialPageNo?: number;
+  initialPageNo?: number | undefined;
   /** Lien de retour affiché au-dessus du lecteur. */
-  retour?: { label: string; onClick: () => void };
+  retour?: { label: string; onClick: () => void } | undefined;
 };
 
 export function LecteurLivre({ pages, requestAudioUrl, initialPageNo, retour }: Props) {
