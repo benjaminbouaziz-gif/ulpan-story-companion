@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useI18n } from "@/i18n/context";
@@ -7,17 +8,15 @@ import { fmt } from "@/lib/fmt";
 import { cleErreurAtelier } from "@/lib/atelier-erreurs";
 import {
   controleEdition,
-  glossaireAtelierUrl,
   setEditionEtat,
-  uploadGlossaire,
   EDITION_ETATS,
   type AtelierLivreInfo,
   type EditionEtat,
 } from "@/lib/atelier-livre.functions";
 
 /**
- * Le volet d'une édition dans l'onglet Informations : son glossaire (un PDF)
- * et son état. Passer à « publiée » montre d'abord ce qui manque ; le serveur
+ * Le volet d'une édition dans l'onglet Informations : son état (le glossaire
+ * a son propre onglet). Passer à « publiée » montre d'abord ce qui manque ; le serveur
  * refait la même vérification avant d'écrire.
  */
 
@@ -37,15 +36,11 @@ export function EditionPanel({
   const { t } = useI18n();
   const control = useServerFn(controleEdition);
   const setEtat = useServerFn(setEditionEtat);
-  const upload = useServerFn(uploadGlossaire);
-  const url = useServerFn(glossaireAtelierUrl);
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<DictKey | null>(null);
   const [voulu, setVoulu] = useState<EditionEtat | null>(null);
 
   const actuel = edition === "en" ? info.editionEn : info.editionFr;
-  const glossaire = edition === "en" ? info.glossaireEn : info.glossaireFr;
 
   const controle = useQuery({
     queryKey: ["atelier", "edition-controle", info.id, edition, info],
@@ -67,33 +62,6 @@ export function EditionPanel({
     }
   }
 
-  async function deposer(f: File | undefined) {
-    if (!f) return;
-    setError(null);
-    if (!f.name.toLowerCase().endsWith(".pdf"))
-      return setError("atelier.edition.glossary.err.format");
-    if (glossaire && !window.confirm(t("atelier.edition.glossary.replaceConfirm"))) return;
-    setBusy(true);
-    try {
-      const body = new FormData();
-      body.set("bookId", info.id);
-      body.set("lang", edition);
-      body.set("file", f);
-      await upload({ data: body });
-      onChanged();
-    } catch (e) {
-      setError(cleErreurAtelier(e));
-    } finally {
-      setBusy(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  }
-
-  async function telecharger() {
-    const r = await url({ data: { bookId: info.id, lang: edition } });
-    if (r.url) window.location.href = r.url;
-  }
-
   const c = controle.data;
 
   return (
@@ -102,47 +70,7 @@ export function EditionPanel({
         {t(edition === "en" ? "atelier.edition.panelEn" : "atelier.edition.panelFr")}
       </h2>
 
-      <h3 className="mt-3 font-medium">{t("atelier.edition.glossary.title")}</h3>
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".pdf,application/pdf"
-        className="hidden"
-        onChange={(e) => void deposer(e.target.files?.[0])}
-      />
-      {glossaire ? (
-        <p className="mt-1">
-          {glossaire.name}
-          {glossaire.updatedAt
-            ? ` · ${new Date(glossaire.updatedAt).toLocaleString("fr-FR")}`
-            : ""}{" "}
-          <button
-            type="button"
-            className={`${btn} ml-2`}
-            disabled={busy}
-            onClick={() => fileRef.current?.click()}
-          >
-            {t("atelier.edition.glossary.replace")}
-          </button>{" "}
-          <button type="button" className={btn} onClick={() => void telecharger()}>
-            {t("atelier.edition.glossary.download")}
-          </button>
-        </p>
-      ) : (
-        <p className="mt-1">
-          {t("atelier.edition.glossary.none")}{" "}
-          <button
-            type="button"
-            className={`${btn} ml-2`}
-            disabled={busy}
-            onClick={() => fileRef.current?.click()}
-          >
-            {t("atelier.edition.glossary.upload")}
-          </button>
-        </p>
-      )}
-
-      <h3 className="mt-4 font-medium">{t("atelier.edition.stateTitle")}</h3>
+      <h3 className="mt-3 font-medium">{t("atelier.edition.stateTitle")}</h3>
       <div className="mt-1 flex flex-wrap gap-2">
         {EDITION_ETATS.map((e) => (
           <button
@@ -174,6 +102,19 @@ export function EditionPanel({
                       {fmt(t(`atelier.edition.check.${b.code}.${edition}` as DictKey), {
                         n: b.n ?? 0,
                       })}
+                      {b.code === "glossary" ? (
+                        <>
+                          {" — "}
+                          <Link
+                            to="/atelier/livres/$slug"
+                            params={{ slug: info.slug }}
+                            search={{ onglet: "glossaire", edition }}
+                            className="border-b border-current"
+                          >
+                            {t("atelier.glossaire.goUpload")}
+                          </Link>
+                        </>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

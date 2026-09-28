@@ -6,6 +6,7 @@ import type { DictKey } from "@/i18n/dictionaries";
 import { LivreInfoForm } from "@/components/AtelierLivreInfo";
 import { LivrePagesTable } from "@/components/AtelierLivrePages";
 import { LivreQuiz } from "@/components/AtelierLivreQuiz";
+import { LivreGlossaire } from "@/components/AtelierLivreGlossaire";
 import { EditionPanel, etatKey } from "@/components/AtelierEdition";
 import { atelierLivreCollections, atelierLivreInfo } from "@/lib/atelier-livre.functions";
 
@@ -13,7 +14,7 @@ import { atelierLivreCollections, atelierLivreInfo } from "@/lib/atelier-livre.f
  * LA FICHE DU LIVRE. Deux onglets actifs : Informations et Pages. Les trois
  * autres sont annoncés, désactivés, et n'appellent rien.
  */
-type Onglet = "info" | "pages" | "quiz";
+type Onglet = "info" | "pages" | "quiz" | "glossaire";
 type Edition = "fr" | "en";
 
 export const Route = createFileRoute("/atelier/livres_/$slug")({
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/atelier/livres_/$slug")({
     meta: [{ title: "Livre — Atelier Ulpan Story" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>): { onglet: Onglet; edition?: Edition } => ({
-    onglet: (search["onglet"] === "pages" || search["onglet"] === "quiz"
+    onglet: (search["onglet"] === "pages" || search["onglet"] === "quiz" || search["onglet"] === "glossaire"
       ? search["onglet"]
       : "info") as Onglet,
     ...(search["edition"] === "en" ? { edition: "en" as const } : {}),
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/atelier/livres_/$slug")({
   component: FicheLivre,
 });
 
-const ONGLETS_A_VENIR: DictKey[] = ["atelier.livre.tab.glossary", "atelier.livre.tab.talk"];
+const ONGLETS_A_VENIR: DictKey[] = ["atelier.livre.tab.talk"];
 
 function FicheLivre() {
   const { t } = useI18n();
@@ -110,6 +111,13 @@ function FicheLivre() {
         >
           {t("atelier.livre.tab.quiz")}
         </button>
+        <button
+          type="button"
+          className={`${tab} ${onglet === "glossaire" ? "font-medium" : ""}`}
+          onClick={() => void navigate({ to: ".", search: { onglet: "glossaire", edition } })}
+        >
+          {t("atelier.livre.tab.glossary")}
+        </button>
         {ONGLETS_A_VENIR.map((key) => (
           <span key={key} className={`${tab} opacity-50`}>
             {t(key)} — {t("atelier.livre.tab.soon")}
@@ -138,6 +146,13 @@ function FicheLivre() {
           />
           <EditionPanel info={book} edition={edition} onChanged={() => void info.refetch()} />
         </>
+      ) : onglet === "glossaire" ? (
+        <LivreGlossaire
+          key={`${book.id}-${edition}`}
+          info={book}
+          edition={edition}
+          onChanged={() => void info.refetch()}
+        />
       ) : onglet === "quiz" ? (
         <LivreQuiz key={edition} bookId={book.id} slug={book.slug} edition={edition} />
       ) : (

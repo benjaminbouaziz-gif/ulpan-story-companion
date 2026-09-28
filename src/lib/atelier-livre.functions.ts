@@ -121,7 +121,12 @@ export type AtelierLivreInfo = {
 
 export const EDITION_ETATS = ["absente", "preparation", "publiee"] as const;
 export type EditionEtat = (typeof EDITION_ETATS)[number];
-export type GlossaireFichier = { path: string; name: string; updatedAt: string | null };
+export type GlossaireFichier = {
+  path: string;
+  name: string;
+  updatedAt: string | null;
+  size: number | null;
+};
 
 function lines(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -885,7 +890,13 @@ async function lireGlossaire(
   const name = path.split("/").pop() ?? path;
   const { data } = await admin.storage.from(GLOSSAIRE_BUCKET).list(dir);
   const f = (data ?? []).find((o) => o.name === name);
-  return { path, name, updatedAt: f?.updated_at ?? f?.created_at ?? null };
+  const size = (f?.metadata as { size?: number } | null)?.size;
+  return {
+    path,
+    name,
+    updatedAt: f?.updated_at ?? f?.created_at ?? null,
+    size: typeof size === "number" ? size : null,
+  };
 }
 
 export type ControleEdition = {
@@ -1048,7 +1059,11 @@ export const uploadGlossaire = createServerFn({ method: "POST" })
 
 export const glossaireAtelierUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ bookId: z.string().uuid(), lang: langue }).parse(d))
+  .inputValidator((d) =>
+    z
+      .object({ bookId: z.string().uuid(), lang: langue, inline: z.boolean().optional() })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     const editor = await assertEditor(context.supabase, context.userId);
     const admin = await getAdminClient(editor);
@@ -1061,6 +1076,6 @@ export const glossaireAtelierUrl = createServerFn({ method: "POST" })
     if (!path) return { url: null as string | null };
     const { data: signed } = await admin.storage
       .from(GLOSSAIRE_BUCKET)
-      .createSignedUrl(path, 120, { download: true });
+      .createSignedUrl(path, 600, data.inline ? undefined : { download: true });
     return { url: signed?.signedUrl ?? null };
   });
