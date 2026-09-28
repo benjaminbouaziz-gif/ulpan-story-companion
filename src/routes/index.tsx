@@ -27,9 +27,9 @@ export const Route = createFileRoute("/")({
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(collectionsQuery),
-      context.queryClient.ensureQueryData(publishedBooksQuery),
-      context.queryClient.ensureQueryData(pageQuery(PAGE)),
+      context.queryClient.ensureQueryData(collectionsQuery(context.lang)),
+      context.queryClient.ensureQueryData(publishedBooksQuery(context.lang)),
+      context.queryClient.ensureQueryData(pageQuery(PAGE, context.lang)),
     ]);
   },
   component: Home,
@@ -37,9 +37,9 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { t, lang } = useI18n();
-  const { data: collectionsData } = useSuspenseQuery(collectionsQuery);
-  const { data: booksData } = useSuspenseQuery(publishedBooksQuery);
-  const { data: pageData } = useSuspenseQuery(pageQuery(PAGE));
+  const { data: collectionsData } = useSuspenseQuery(collectionsQuery(lang));
+  const { data: booksData } = useSuspenseQuery(publishedBooksQuery(lang));
+  const { data: pageData } = useSuspenseQuery(pageQuery(PAGE, lang));
   const collections = collectionsData.collections;
   const books = booksData.books;
   const sections = pageData.sections;

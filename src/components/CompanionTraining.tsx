@@ -74,7 +74,7 @@ export function CompanionTraining({
   const title = useCallback(
     (no: number | null) => {
       const c = chapters.find((x) => x.chapter_no === no);
-      return (lang === "en" ? c?.title_en || c?.title_fr : c?.title_fr || c?.title_en) ?? null;
+      return (lang === "en" ? c?.title_en : c?.title_fr) || null;
     },
     [chapters, lang],
   );

@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { I18nProvider } from "@/i18n/context";
 import { detectLang } from "@/i18n/lang.functions";
+import type { Lang } from "@/i18n/dictionaries";
 import { PreferencesProvider } from "@/lib/preferences";
 
 function NotFoundComponent() {
@@ -75,8 +76,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+let cachedLang: Lang | null = null;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async () => ({ lang: await detectLang() }),
+  // La langue active entre dans le contexte : chaque chargement public la reçoit.
+  beforeLoad: async () => {
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem("ulpanstory.lang");
+      if (stored === "fr" || stored === "en") return { lang: stored as Lang };
+      if (cachedLang) return { lang: cachedLang };
+    }
+    cachedLang = await detectLang();
+    return { lang: cachedLang };
+  },
+  loader: ({ context }) => ({ lang: context.lang }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },

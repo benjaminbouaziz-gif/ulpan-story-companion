@@ -24,8 +24,8 @@ export const Route = createFileRoute("/collections/")({
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(collectionsQuery),
-      context.queryClient.ensureQueryData(pageQuery("collections")),
+      context.queryClient.ensureQueryData(collectionsQuery(context.lang)),
+      context.queryClient.ensureQueryData(pageQuery("collections", context.lang)),
     ]);
   },
   component: CollectionsPage,
@@ -33,8 +33,8 @@ export const Route = createFileRoute("/collections/")({
 
 function CollectionsPage() {
   const { t, lang } = useI18n();
-  const { data } = useSuspenseQuery(collectionsQuery);
-  const { data: pageData } = useSuspenseQuery(pageQuery("collections"));
+  const { data } = useSuspenseQuery(collectionsQuery(lang));
+  const { data: pageData } = useSuspenseQuery(pageQuery("collections", lang));
 
   return (
     <PageShell>

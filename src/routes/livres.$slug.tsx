@@ -24,14 +24,14 @@ export const Route = createFileRoute("/livres/$slug")({
       },
     ],
   }),
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(bookQuery(params.slug)),
+  loader: ({ context, params }) => context.queryClient.ensureQueryData(bookQuery(params.slug, context.lang)),
   component: BookPage,
 });
 
 function BookPage() {
   const { slug } = Route.useParams();
   const { t, lang } = useI18n();
-  const { data } = useSuspenseQuery(bookQuery(slug));
+  const { data } = useSuspenseQuery(bookQuery(slug, lang));
   const book = data.book;
   const collection = data.collection;
 

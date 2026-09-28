@@ -3,7 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/SiteChrome";
-import { useI18n } from "@/i18n/context";
+import { pickLang, useI18n } from "@/i18n/context";
 import { supabase } from "@/integrations/supabase/client";
 import { bySlot, Copy } from "@/components/SiteCopy";
 import { listMyBooks } from "@/lib/companion.functions";
@@ -25,13 +25,13 @@ export const Route = createFileRoute("/compagnon/")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("compagnon")),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery("compagnon", context.lang)),
   component: CompanionHome,
 });
 
 function CompanionHome() {
-  const { t } = useI18n();
-  const { data: pageData } = useSuspenseQuery(pageQuery("compagnon"));
+  const { t, lang } = useI18n();
+  const { data: pageData } = useSuspenseQuery(pageQuery("compagnon", lang));
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const fetchBooks = useServerFn(listMyBooks);
 
@@ -74,14 +74,16 @@ function CompanionHome() {
             <p className="body-text mt-4">{t("companion.noBooks")}</p>
           ) : null}
           <ul className="border-line mt-4 border-t">
-            {(query.data?.books ?? []).map((book) => (
+            {(query.data?.books ?? [])
+              .filter((b) => (lang === "en" ? b.edition_en : b.edition_fr) === "publiee")
+              .map((book) => (
               <li key={book.id} className="border-line border-b py-4">
                 <Link
                   to="/compagnon/$book_slug"
                   params={{ book_slug: book.slug }}
                   className="touch flex items-baseline justify-between gap-4"
                 >
-                  <span className="body-text">{book.title_fr}</span>
+                  <span className="body-text">{pickLang(lang, book.title_fr, book.title_en) ?? ""}</span>
                   <span className="label text-secondary-text">{t("companion.open")}</span>
                 </Link>
               </li>

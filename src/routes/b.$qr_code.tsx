@@ -41,7 +41,8 @@ function QrEntry() {
   const { t, lang } = useI18n();
   const { data } = useSuspenseQuery(qrQuery(qr_code));
   const book = data.book;
-  const published = book?.status === "published";
+  // Publié = l'édition de la langue active est publiée.
+  const published = (lang === "en" ? book?.edition_en : book?.edition_fr) === "publiee";
 
   return (
     <PageShell>

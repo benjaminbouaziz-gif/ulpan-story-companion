@@ -25,7 +25,15 @@ import { QuizRound } from "@/components/QuizRound";
 
 const btn = "border-line border px-3 py-1 text-[13px] disabled:opacity-40";
 
-export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
+export function LivreQuiz({
+  bookId,
+  slug,
+  edition,
+}: {
+  bookId: string;
+  slug: string;
+  edition: "fr" | "en";
+}) {
   const { t } = useI18n();
   const refresh = useAtelierRefresh();
   const readStats = useServerFn(statsQuiz);
@@ -35,8 +43,8 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
   const readPages = useServerFn(atelierLivrePages);
 
   const stats = useQuery({
-    queryKey: ["atelier", "quiz-stats", bookId],
-    queryFn: () => readStats({ data: { bookId } }),
+    queryKey: ["atelier", "quiz-stats", bookId, edition],
+    queryFn: () => readStats({ data: { bookId, edition } }),
   });
   const pages = useQuery({
     queryKey: ["atelier", "livre-pages", bookId],
@@ -62,7 +70,7 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
     setMessage(null);
     setBusy(true);
     try {
-      setRapport(await analyse({ data: { bookId, contenu: src } }));
+      setRapport(await analyse({ data: { bookId, edition, contenu: src } }));
     } catch {
       setRapport(null);
       setMessage(t("atelier.quiz.failed"));
@@ -80,7 +88,7 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
   const apercu: QuizQuestion[] = useMemo(() => {
     if (!contenu || !rapport || rapport.erreurs.length > 0) return [];
     const refs = (pages.data ?? []).map((p) => ({ page_no: p.pageNo, chapter_no: p.chapterNo }));
-    return analyserQuizJson(contenu, slug, refs).lignes.map((l, i) => ({
+    return analyserQuizJson(contenu, slug, refs, edition).lignes.map((l, i) => ({
       id: `apercu-${i}`,
       sort_order: l.sort_order,
       chapter_no: l.chapter_no,
@@ -94,14 +102,14 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
       explain_fr: l.explain_fr,
       explain_en: l.explain_en,
     }));
-  }, [contenu, rapport, pages.data, slug]);
+  }, [contenu, rapport, pages.data, slug, edition]);
 
   async function telecharger() {
-    const { json } = await readExport({ data: { bookId } });
+    const { json } = await readExport({ data: { bookId, edition } });
     const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `quiz-${slug}.json`;
+    a.download = `quiz-${slug}-${edition}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -111,7 +119,7 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
     setBusy(true);
     setMessage(null);
     try {
-      const r = await importer({ data: { bookId, contenu } });
+      const r = await importer({ data: { bookId, edition, contenu } });
       setMessage(fmt(t("atelier.quiz.published"), { n: r.inserted }));
       setConfirm(false);
       refresh();
@@ -122,7 +130,10 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
     }
   }
 
-  const libelle = (p: QuizProbleme) => fmt(t(`atelier.quiz.code.${p.code}` as DictKey), p.params);
+  const libelle = (p: QuizProbleme) =>
+    p.code === "langueMismatch"
+      ? t(`atelier.quiz.code.langueMismatch.${String(p.params["recu"])}` as DictKey)
+      : fmt(t(`atelier.quiz.code.${p.code}` as DictKey), p.params);
   const erreurs = rapport?.erreurs ?? [];
   const ok = !!rapport && erreurs.length === 0;
   const total = stats.data?.total ?? 0;
@@ -321,7 +332,7 @@ export function LivreQuiz({ bookId, slug }: { bookId: string; slug: string }) {
             ) : null}
             {confirm && ok ? (
               <div className="border-line mt-3 border p-3">
-                <p>{fmt(t("atelier.quiz.confirm"), { x: total, y: rapport!.resume.total })}</p>
+                <p>{fmt(t(edition === "en" ? "atelier.quiz.confirmEn" : "atelier.quiz.confirmFr"), { x: total, y: rapport!.resume.total })}</p>
                 <div className="mt-2 flex gap-2">
                   <button
                     type="button"

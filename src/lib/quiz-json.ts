@@ -24,6 +24,7 @@ export type QuizCode =
   | "livreMissing"
   | "livreMismatch"
   | "langueInvalid"
+  | "langueMismatch"
   | "questionsEmpty"
   | "questionNotObject"
   | "unknownField"
@@ -94,7 +95,12 @@ const isPosInt = (v: unknown): v is number =>
   typeof v === "number" && Number.isInteger(v) && v >= 1;
 const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
-export function analyserQuizJson(contenu: string, slug: string, pages: PageRef[]): QuizAnalyse {
+export function analyserQuizJson(
+  contenu: string,
+  slug: string,
+  pages: PageRef[],
+  edition?: "fr" | "en",
+): QuizAnalyse {
   const erreurs: QuizProbleme[] = [];
   const avertissements: QuizProbleme[] = [];
   const vide: QuizAnalyse = {
@@ -129,6 +135,9 @@ export function analyserQuizJson(contenu: string, slug: string, pages: PageRef[]
 
   const langue = racine["langue"];
   if (langue !== "fr" && langue !== "en") err(null, "langue", "langueInvalid");
+  // Un fichier ne se dépose que sur l'édition de sa langue.
+  else if (edition && langue !== edition)
+    err(null, "langue", "langueMismatch", { recu: langue, attendu: edition });
   const en = langue === "en";
 
   const qs = racine["questions"];
@@ -256,8 +265,8 @@ export function exporterQuizJson(
     explain_fr: string | null;
     explain_en: string | null;
   }[],
+  langue: "fr" | "en",
 ): string {
-  const langue = rows.some((r) => r.prompt_en && !r.prompt_fr) ? "en" : "fr";
   const en = langue === "en";
   const questions = rows.map((r) => {
     const q: Record<string, unknown> = { chapitre: r.chapter_no ?? 1 };

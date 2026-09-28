@@ -22,13 +22,13 @@ export const Route = createFileRoute("/contact")({
       },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE)),
+  loader: ({ context }) => context.queryClient.ensureQueryData(pageQuery(PAGE, context.lang)),
   component: ContactPage,
 });
 
 function ContactPage() {
-  const { t } = useI18n();
-  const { data } = useSuspenseQuery(pageQuery(PAGE));
+  const { t, lang } = useI18n();
+  const { data } = useSuspenseQuery(pageQuery(PAGE, lang));
   return (
     <PageShell>
       <h1 className="text-[30px]">{t("footer.contact")}</h1>

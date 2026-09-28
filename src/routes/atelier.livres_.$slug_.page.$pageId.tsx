@@ -11,19 +11,22 @@ export const Route = createFileRoute("/atelier/livres_/$slug_/page/$pageId")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { edition?: "fr" | "en" } =>
+    search["edition"] === "en" ? { edition: "en" } : {},
   component: PageDuLivre,
 });
 
 function PageDuLivre() {
   const { t } = useI18n();
   const { slug, pageId } = Route.useParams();
+  const edition = Route.useSearch().edition ?? "fr";
   return (
     <section>
       <p className="text-[13px]">
         <Link
           to="/atelier/livres/$slug"
           params={{ slug }}
-          search={{ onglet: "pages" as const }}
+          search={{ onglet: "pages" as const, edition }}
           className="border-b border-current"
         >
           {t("atelier.livre.page.back")}
@@ -31,7 +34,7 @@ function PageDuLivre() {
       </p>
       <h1 className="font-latin mt-2 text-[24px]">{t("atelier.livre.page.title")}</h1>
       <div className="border-line mt-6 border-t pt-4">
-        <PageEditor pageId={pageId} />
+        <PageEditor pageId={pageId} edition={edition} />
       </div>
     </section>
   );

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { fmt } from "@/lib/fmt";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { cleErreurAtelier } from "@/lib/atelier-erreurs";
@@ -40,7 +41,15 @@ type LotLigne = {
   result: "ok" | "fail" | null;
 };
 
-export function LivrePagesTable({ bookId, slug }: { bookId: string; slug: string }) {
+export function LivrePagesTable({
+  bookId,
+  slug,
+  edition = "fr",
+}: {
+  bookId: string;
+  slug: string;
+  edition?: "fr" | "en";
+}) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const list = useServerFn(atelierLivrePages);
@@ -77,7 +86,7 @@ export function LivrePagesTable({ bookId, slug }: { bookId: string; slug: string
 
   async function nouvelle() {
     const res = await create({ data: { bookId } });
-    await navigate({ to: "/atelier/livres/$slug/page/$pageId", params: { slug, pageId: res.id } });
+    await navigate({ to: "/atelier/livres/$slug/page/$pageId", params: { slug, pageId: res.id }, search: { edition } });
   }
 
   async function basculerPublication(id: string, valeur: boolean) {
@@ -302,6 +311,14 @@ export function LivrePagesTable({ bookId, slug }: { bookId: string; slug: string
             if (files.length > 0) preparerLot(files);
           }}
         >
+          {(() => {
+        const n = rows.filter((p) => (edition === "en" ? p.supportMissingEn : p.supportMissingFr)).length;
+        return n > 0 ? (
+          <p className="text-alert mt-3 text-[13px]">
+            {fmt(t(edition === "en" ? "atelier.edition.pagesNoSupportEn" : "atelier.edition.pagesNoSupportFr"), { n })}
+          </p>
+        ) : null;
+      })()}
           <table className="mt-4 w-full border-collapse text-[13px]">
             <thead>
               <tr>
@@ -391,10 +408,14 @@ export function LivrePagesTable({ bookId, slug }: { bookId: string; slug: string
                       <Link
                         to="/atelier/livres/$slug/page/$pageId"
                         params={{ slug, pageId: p.id }}
+                        search={{ edition }}
                         className="border-b border-current"
                       >
                         {t("atelier.livre.open")}
                       </Link>
+                      {(edition === "en" ? p.supportMissingEn : p.supportMissingFr) ? (
+                        <span className="text-alert ml-2">{t("atelier.edition.noSupport")}</span>
+                      ) : null}
                     </td>
                   </tr>
                 );

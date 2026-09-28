@@ -23,14 +23,14 @@ export const Route = createFileRoute("/collections/$slug")({
     ],
   }),
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(collectionQuery(params.slug)),
+    context.queryClient.ensureQueryData(collectionQuery(params.slug, context.lang)),
   component: CollectionPage,
 });
 
 function CollectionPage() {
   const { slug } = Route.useParams();
   const { t, lang } = useI18n();
-  const { data } = useSuspenseQuery(collectionQuery(slug));
+  const { data } = useSuspenseQuery(collectionQuery(slug, lang));
   const collection = data.collection;
 
   if (!collection) {
