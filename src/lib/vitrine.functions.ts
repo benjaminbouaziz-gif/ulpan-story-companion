@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
+import { getCookie, getRequestHeader, setCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { PAGE_KEYS } from "./site-blocks";
