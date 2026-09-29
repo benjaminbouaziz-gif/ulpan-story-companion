@@ -8,6 +8,7 @@ import { slugProbleme } from "@/lib/slug";
 import { Bandeau } from "@/components/Bandeau";
 import { BlockEditor } from "@/admin/BlockEditor";
 import { LangTabs } from "@/admin/LangTabs";
+import { Apercu } from "@/admin/Apercu";
 import { ERREURS, messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, inputCls, Section } from "@/admin/ui";
 
@@ -38,6 +39,7 @@ function Fiche() {
       <LangTabs>
         {(lang) => (
           <div>
+            <Apercu cible={{ kind: "collection", collectionId: d.collection.id }} lang={lang} />
             <Textes d={d} lang={lang} refresh={refresh} />
             <Section title="Présentation enrichie">
               <BlockEditor target={{ scope: "collection", collectionId: d.collection.id, lang }} kinds={COLLECTION_KINDS} />
