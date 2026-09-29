@@ -64,3 +64,11 @@ export function redirectTarget(pathname: string, lang: Lang): string | null {
   }
   return null;
 }
+
+/** Lien vers la même page dans l'autre langue : autre domaine en production, ?lang= ailleurs. */
+export function otherLangHref(id: PageId, lang: Lang, params: RouteParams = {}, host = ""): string {
+  const o: Lang = lang === "fr" ? "en" : "fr";
+  const h = host.toLowerCase().split(":")[0] ?? "";
+  const prod = /(^|\.)(ulpanstory\.com|oulpanstory\.fr)$/.test(h);
+  return prod ? absoluteUrl(id, o, params) : `${pathFor(id, o, params)}?lang=${o}`;
+}
