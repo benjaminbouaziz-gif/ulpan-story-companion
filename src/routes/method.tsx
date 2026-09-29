@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { comingSoon } from "@/lib/page-route";
+import { blocksRoute } from "@/vitrine/routes";
 
-export const Route = createFileRoute("/method")(comingSoon("methode"));
+export const Route = createFileRoute("/method")(blocksRoute("methode", "methode"));
