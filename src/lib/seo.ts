@@ -9,7 +9,7 @@ type SeoInput = {
   params?: RouteParams;
   /** La page existe-t-elle dans l'autre langue ? */
   alternateExists?: boolean;
-  image?: string;
+  image?: string | undefined;
   noindex?: boolean | undefined;
 };
 

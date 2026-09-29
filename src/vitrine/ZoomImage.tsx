@@ -49,7 +49,7 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     (e.target as Element).setPointerCapture?.(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
-      const [a, b] = [...pointers.current.values()];
+      const [a, b] = [...pointers.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
       pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale };
     } else {
       last.current = { x: e.clientX, y: e.clientY, type: e.pointerType };
@@ -64,7 +64,7 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2 && pinch.current) {
-      const [a, b] = [...pointers.current.values()];
+      const [a, b] = [...pointers.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       const s = clamp((pinch.current.scale * d) / pinch.current.dist, 1, MAX);
       setScale(s);
