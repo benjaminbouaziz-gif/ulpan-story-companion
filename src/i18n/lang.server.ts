@@ -1,4 +1,4 @@
-import { getCookie, getRequestHost } from "@tanstack/react-start/server";
+import { getCookie, getRequestHost, getRequestUrl } from "@tanstack/react-start/server";
 import type { Lang } from "./dictionaries";
 
 export const PREVIEW_COOKIE = "preview_lang";
@@ -18,5 +18,9 @@ export function productionLang(host: string): Lang | null {
 export function requestLang(): { lang: Lang; production: boolean } {
   const prod = productionLang(getRequestHost() ?? "");
   if (prod) return { lang: prod, production: true };
+  // Hors production : ?lang= de la page demandée (rendu serveur), sinon le cookie.
+  let q: string | null = null;
+  try { q = getRequestUrl().searchParams.get("lang"); } catch { q = null; }
+  if (q === "fr" || q === "en") return { lang: q, production: false };
   return { lang: getCookie(PREVIEW_COOKIE) === "en" ? "en" : "fr", production: false };
 }
