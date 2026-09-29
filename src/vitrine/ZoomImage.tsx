@@ -30,6 +30,7 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
   const pinch = useRef<{ dist: number; scale: number } | null>(null);
   const last = useRef<{ x: number; y: number; type: string } | null>(null);
   const lastTap = useRef(0);
+  const lastType = useRef("mouse");
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const reset = useCallback(() => { setScale(1); setPos({ x: 0, y: 0 }); }, []);
@@ -46,6 +47,7 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
   const toggleZoom = () => (scale > 1 ? reset() : setScale(2.5));
 
   const onPointerDown = (e: React.PointerEvent) => {
+    lastType.current = e.pointerType;
     (e.target as Element).setPointerCapture?.(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
@@ -114,7 +116,7 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onDoubleClick={toggleZoom}
+        onDoubleClick={() => { if (lastType.current !== "touch") toggleZoom(); }}
         className="max-h-full max-w-full select-none"
         style={{ transform: `translate(${pos.x}px, ${pos.y + drop}px) scale(${scale})`, cursor: scale > 1 ? "grab" : "zoom-in", transition: pointers.current.size ? "none" : "transform 120ms" }}
       />
