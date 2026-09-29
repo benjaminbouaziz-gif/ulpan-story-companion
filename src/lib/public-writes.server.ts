@@ -43,3 +43,24 @@ export async function checkRateLimit(key: string, limit: number, windowSeconds: 
   if (error) throw new Error("Limitation indisponible");
   return true;
 }
+
+/* ---- Registre des tentatives de connexion à l'admin (admin_login_attempts) ---- */
+
+/** Nombre d'échecs enregistrés depuis `sinceIso` pour une empreinte donnée. */
+export async function countLoginFailures(column: "email_hash" | "ip_hash", value: string, sinceIso: string): Promise<number> {
+  const admin = await serviceClient();
+  const { count, error } = await admin
+    .from("admin_login_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq(column, value)
+    .gte("created_at", sinceIso);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+/** Écrit un échec réel (jamais sur déclaration du client). Empreintes seulement. */
+export async function recordLoginFailure(emailHash: string, ipHash: string | null): Promise<void> {
+  const admin = await serviceClient();
+  const { error } = await admin.from("admin_login_attempts").insert({ email_hash: emailHash, ip_hash: ipHash });
+  if (error) throw new Error(error.message);
+}

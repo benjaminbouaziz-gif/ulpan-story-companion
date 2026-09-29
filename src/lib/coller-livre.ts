@@ -1,5 +1,5 @@
 /**
- * BRIQUE 7 — COLLER UN LIVRE ENTIER.
+ * COLLER L'HÉBREU D'UN LIVRE (repris de la brique 7).
  *
  * Découpage d'un fichier de travail en pages, à partir des marqueurs
  * « פרק <n> · עמוד <n> ». Ce module est volontairement pur : l'écran s'en sert
@@ -114,7 +114,7 @@ export function analyserColle(
 }
 
 /** Une réplique de dialogue s'annonce par un tiret cadratin ou un guillemet hébreu. */
-export function natureDuBloc(ligneVocalisee: string): "narrative" | "dialogue" {
+export function natureDuBloc(ligneVocalisee: string): "narration" | "dialogue" {
   const t = ligneVocalisee.trimStart();
-  return t.startsWith("—") || t.startsWith("״") ? "dialogue" : "narrative";
+  return t.startsWith("—") || t.startsWith("״") ? "dialogue" : "narration";
 }

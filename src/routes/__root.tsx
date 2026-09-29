@@ -5,6 +5,7 @@ import {
   HeadContent,
   Scripts,
   redirect,
+  useLocation,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -101,16 +102,19 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient, lang } = Route.useRouteContext();
   const data = Route.useLoaderData();
+  const { pathname } = useLocation();
+  // L'admin a sa propre enveloppe : pas d'en-tête ni de pied du site public.
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider lang={lang}>
         <div className="bg-background text-foreground flex min-h-screen flex-col">
-          <SiteHeader />
+          {!isAdmin && <SiteHeader />}
           <div className="flex-1">
             {/* Required: nested routes render here. */}
             <Outlet />
           </div>
-          <SiteFooter tagline={data?.tagline ?? null} />
+          {!isAdmin && <SiteFooter tagline={data?.tagline ?? null} />}
         </div>
       </I18nProvider>
     </QueryClientProvider>
