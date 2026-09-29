@@ -36,5 +36,14 @@ export const clickAmazon = createServerFn({ method: "POST" })
     const { recordAmazonClick } = await import("@/lib/public-writes.server");
     const fwd = (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim();
     const ip = fwd || getRequestHeader("cf-connecting-ip") || getRequestHeader("x-real-ip") || "inconnue";
-    return { ok: await recordAmazonClick(data.editionId, ip) };
+    // Préchargement (prefetch/prerender) : jamais compté.
+    const purpose = [getRequestHeader("purpose"), getRequestHeader("sec-purpose"), getRequestHeader("x-purpose"), getRequestHeader("x-moz")].join(" ");
+    if (/prefetch|prerender|preview/i.test(purpose)) return { ok: false };
+    // Identifiant anonyme aléatoire, cookie de session (aucune donnée personnelle).
+    let vid = getCookie("us_vid");
+    if (!vid || !/^[a-f0-9-]{36}$/.test(vid)) {
+      vid = crypto.randomUUID();
+      setCookie("us_vid", vid, { path: "/", sameSite: "lax", httpOnly: true, secure: true });
+    }
+    return { ok: await recordAmazonClick(data.editionId, ip, vid, getRequestHeader("user-agent") ?? null) };
   });

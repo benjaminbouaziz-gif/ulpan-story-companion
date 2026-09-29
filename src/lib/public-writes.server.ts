@@ -72,11 +72,29 @@ export async function recordLoginFailure(emailHash: string, ipHash: string | nul
  * Limité à 30 par minute et par empreinte d'IP ; aucune donnée personnelle
  * n'est écrite (ni IP, ni empreinte : seulement le type et l'édition).
  */
-export async function recordAmazonClick(editionId: string, ip: string): Promise<boolean> {
+const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|embedly|preview|headless|lighthouse|pingdom|monitor|curl|wget|python-requests|httpclient|go-http|axios|node-fetch|whatsapp|telegram|discord|linkedin|twitter/i;
+
+/** Robot : pas de user-agent, ou user-agent d'un robot connu. */
+export function isBotUserAgent(ua: string | null | undefined): boolean {
+  return !ua || !ua.trim() || BOT_UA.test(ua);
+}
+
+/**
+ * Clic Amazon. Ignoré pour les robots et si le même visiteur anonyme
+ * (cookie de session aléatoire) a déjà cliqué ce livre depuis moins de 30 min.
+ */
+export async function recordAmazonClick(editionId: string, ip: string, visitorId: string, userAgent: string | null): Promise<boolean> {
+  if (isBotUserAgent(userAgent)) return false;
   const admin = await serviceClient();
   const { data: visible, error: e1 } = await admin.rpc("edition_visible", { _edition_id: editionId });
   if (e1 || !visible) return false;
   if (!(await checkRateLimit("amazon:" + hashValue(ip), 30, 60))) return false;
+  const vKey = "amazonvis:" + hashValue(visitorId + ":" + editionId);
+  const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  const { data: recent } = await admin.from("rate_limits").select("key").eq("key", vKey).gt("window_start", since).limit(1);
+  if (recent && recent.length) return false;
+  const { error: e2 } = await admin.from("rate_limits").insert({ key: vKey, window_start: new Date().toISOString(), count: 1 });
+  if (e2) return false;
   const { error } = await admin.from("events").insert({ type: "amazon_click", edition_id: editionId });
   if (error) throw new Error(error.message);
   return true;
