@@ -31,12 +31,29 @@ export function EditionQuiz({ editionId, slug, lang, pages, onChanged }: {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [apercu, setApercu] = useState(false);
+  const [copie, setCopie] = useState<string | null>(null);
+
+  async function copierRapport(r: Rapport) {
+    const lignes = [
+      `Rapport d'analyse — quiz-${slug}-${lang}.json`,
+      ...(r.erreurs.length ? [`Erreurs (${r.erreurs.length}) :`, ...r.erreurs.map((p) => `- ${messageQuiz(p)}`)] : ["Aucune erreur."]),
+      ...(r.avertissements.length ? [`Avertissements (${r.avertissements.length}) :`, ...r.avertissements.map((p) => `- ${messageQuiz(p)}`)] : []),
+      `${r.resume.total} question(s) — par chapitre : ${r.resume.parChapitre.map((c) => `${c.chapitre} (${c.n})`).join(", ") || "—"} — par type : ${r.resume.parType.map((t) => `${t.type} (${t.n})`).join(", ") || "—"}`,
+    ];
+    try {
+      await navigator.clipboard.writeText(lignes.join("\n"));
+      setCopie("Rapport copié.");
+    } catch {
+      setCopie("Copie impossible : sélectionnez le texte à la main.");
+    }
+  }
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   async function lancer(src: string) {
     setContenu(src);
     setMsg(null);
     setApercu(false);
+    setCopie(null);
     // Pré-analyse locale, puis analyse serveur (aucune écriture).
     setBusy(true);
     try {
@@ -116,16 +133,21 @@ export function EditionQuiz({ editionId, slug, lang, pages, onChanged }: {
       <div className="mt-4">
         <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
           const f = e.target.files?.[0];
-          if (f) setContenu(await f.text());
           e.target.value = "";
+          if (f) void lancer(await f.text());
         }} />
         <div
           className="border-line border border-dashed p-3"
           onDragOver={(e) => e.preventDefault()}
-          onDrop={async (e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setContenu(await f.text()); }}
+          onDrop={async (e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) void lancer(await f.text()); }}
         >
           <p>Déposez un fichier JSON ici, <button type="button" className="underline" onClick={() => fileRef.current?.click()}>choisissez-le</button>, ou collez son contenu :</p>
-          <textarea className="border-line mt-2 h-40 w-full border p-2 font-mono text-[12px]" value={contenu} onChange={(e) => setContenu(e.target.value)} />
+          <textarea className="border-line mt-2 h-40 w-full border p-2 font-mono text-[12px]" value={contenu} onChange={(e) => setContenu(e.target.value)}
+            onPaste={(e) => {
+              // Collage : analyse automatique du contenu obtenu après collage.
+              const el = e.currentTarget;
+              setTimeout(() => void lancer(el.value), 0);
+            }} />
         </div>
         <div className="mt-2 flex gap-2">
           <button type="button" className={btnCls} disabled={!contenu.trim() || busy} onClick={() => void lancer(contenu)}>Analyser</button>
@@ -148,9 +170,11 @@ export function EditionQuiz({ editionId, slug, lang, pages, onChanged }: {
               <ul className="list-disc pl-5">{rapport.avertissements.map((p, i) => <li key={i}>{messageQuiz(p)}</li>)}</ul>
             </div>
           )}
-          <p>
+          <p data-rapport-resume>
             {rapport.resume.total} question(s) — par chapitre : {rapport.resume.parChapitre.map((c) => `${c.chapitre} (${c.n})`).join(", ") || "—"} — par type : {rapport.resume.parType.map((t) => `${t.type} (${t.n})`).join(", ") || "—"}
           </p>
+          <button type="button" className={btnCls} onClick={() => void copierRapport(rapport)}>Copier le rapport</button>
+          {copie && <span className="ml-2">{copie}</span>}
           {apercuQs.length > 0 && (
             <button type="button" className={btnCls} onClick={() => setApercu(!apercu)}>{apercu ? "Fermer l'aperçu" : "Aperçu jouable"}</button>
           )}
