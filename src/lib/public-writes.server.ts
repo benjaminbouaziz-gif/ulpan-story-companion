@@ -288,7 +288,7 @@ export async function joinWaitlistAsReader(userId: string, email: string, slug: 
  * Validation (lien ou code). Première validation : crée le lecteur avec le
  * choix de la demande ; ensuite, news_status n'est JAMAIS modifié.
  */
-export async function confirmAccess(userId: string, rawEmail: string, editionId: string | null): Promise<{ granted: boolean; slug?: string; lang?: Lang }> {
+export async function confirmAccess(userId: string, rawEmail: string, editionId: string | null): Promise<{ granted: boolean; slug?: string | undefined; lang?: Lang | undefined }> {
   const email = rawEmail.toLowerCase();
   const admin = await serviceClient();
   let req = admin.from("access_requests").select("id, edition_id, news_optout, consent_text_version, confirmed_at, requested_at").eq("email", email);
