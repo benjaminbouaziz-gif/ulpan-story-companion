@@ -20,6 +20,7 @@ import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, hebrewStyle, i
 import { CollerHebreu } from "@/admin/CollerHebreu";
 import { DeposerAudios } from "@/admin/DeposerAudios";
 import { EcouterAudio } from "@/admin/EcouterAudio";
+import { OngletEdition } from "@/admin/OngletEdition";
 
 const ONGLETS = ["livre", "pages", "fr", "en"] as const;
 type Onglet = (typeof ONGLETS)[number];
@@ -77,11 +78,13 @@ function Fiche() {
         {onglet === "livre" && <OngletLivre d={d} refresh={refresh} />}
         {onglet === "pages" && <OngletPages d={d} refresh={refresh} />}
         {(onglet === "fr" || onglet === "en") && (
-          <p className="text-secondary-text">
-            {d.editions.some((e) => e.lang === onglet)
-              ? "Arrive en phase 3."
-              : `Ajouter l'édition ${onglet === "fr" ? "française" : "anglaise"} depuis l'onglet « Livre ». Arrive en phase 3.`}
-          </p>
+          <OngletEdition
+            key={onglet}
+            bookId={d.book.id}
+            lang={onglet}
+            editionId={d.editions.find((e) => e.lang === onglet)?.id ?? null}
+            refreshFiche={refresh}
+          />
         )}
       </div>
     </div>
