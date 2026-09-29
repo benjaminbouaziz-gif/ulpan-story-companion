@@ -81,7 +81,7 @@ function Block({ b, h1 }: { b: VBlock; h1: boolean }) {
     case "image":
       return b.imageUrl ? (
         <figure>
-          <ZoomImage src={b.imageUrl} alt={b.title ?? b.body ?? ""} className="border-line border" />
+          <ZoomImage src={b.imageUrl} alt={b.title ?? b.body ?? "Ulpan Story"} className="border-line border" />
           {(b.title || b.body) && <figcaption className="text-secondary-text mt-2 text-[15px]">{b.title ?? b.body}</figcaption>}
         </figure>
       ) : null;
