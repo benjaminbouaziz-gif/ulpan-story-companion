@@ -43,7 +43,12 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const { speed, setSpeed, autoAdvance, setAutoAdvance } = usePreferences();
   const storeKey = `ulpanstory.page.${editionId}`;
 
-  const [index, setIndex] = useState(0);
+  // Reprise : dernière page ouverte sur cet appareil (composant rendu côté navigateur seulement).
+  const [index, setIndex] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = Number(window.localStorage.getItem(storeKey));
+    return Math.max(0, pages.findIndex((p) => p.page_no === saved));
+  });
   const [nikud, setNikud] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -56,16 +61,6 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const autoRef = useRef(false); // la page affichée doit démarrer d'elle-même
   const page = pages[index];
 
-  // Reprise : dernière page ouverte sur cet appareil.
-  const restored = useRef(false);
-  useEffect(() => {
-    const saved = Number(window.localStorage.getItem(storeKey));
-    const i = pages.findIndex((p) => p.page_no === saved);
-    if (i >= 0) setIndex(i);
-    restored.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeKey]);
-
   useEffect(() => {
     if (!goto) return;
     const i = pages.findIndex((p) => p.page_no === goto.pageNo);
@@ -73,8 +68,7 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   }, [goto, pages]);
 
   useEffect(() => {
-    // Rien n'est écrit avant la reprise, sinon la page 1 écraserait la page retenue.
-    if (page && restored.current) window.localStorage.setItem(storeKey, String(page.page_no));
+    if (page) window.localStorage.setItem(storeKey, String(page.page_no));
   }, [page, storeKey]);
 
   const plainMissing = useMemo(() => !page || page.paragraphs.length === 0 || page.paragraphs.some((b) => !(b.he_plain ?? "").trim()), [page]);
