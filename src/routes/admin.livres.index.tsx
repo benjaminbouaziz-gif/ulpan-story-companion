@@ -6,6 +6,7 @@ import { adminCollectionsChoix, adminLivres, createLivre } from "@/lib/admin-liv
 import { slugProbleme } from "@/lib/slug";
 import { ERREURS, messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, hebrewStyle, inputCls } from "@/admin/ui";
+import { DeposerFiche } from "@/admin/DeposerFiche";
 
 export const Route = createFileRoute("/admin/livres/")({
   component: Livres,
@@ -23,15 +24,20 @@ function Livres() {
   const list = useServerFn(adminLivres);
   const q = useQuery({ queryKey: ["admin", "livres"], queryFn: () => list() });
   const [open, setOpen] = useState(false);
+  const [depot, setDepot] = useState(false);
 
   return (
     <div>
       <div className="flex items-center gap-4">
         <h1 className="text-[26px]">Livres</h1>
-        <button type="button" className={`${btnCls} ml-auto`} onClick={() => setOpen((v) => !v)}>
+        <button type="button" className={`${btnCls} ml-auto`} onClick={() => setDepot((v) => !v)}>
+          Déposer une fiche livre (JSON)
+        </button>
+        <button type="button" className={btnCls} onClick={() => setOpen((v) => !v)}>
           Nouveau livre
         </button>
       </div>
+      {depot && <DeposerFiche onDone={() => void q.refetch()} />}
       {open && <NouveauLivre />}
       {q.isLoading ? (
         <p className="mt-6">…</p>
