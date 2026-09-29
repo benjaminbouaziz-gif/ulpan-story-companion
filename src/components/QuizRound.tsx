@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/context";
-import type { QuizQuestion } from "@/lib/companion.functions";
+import { tr, type Lang } from "@/i18n/dictionaries";
+import type { QuizQuestion } from "@/lib/quiz-types";
 import { fmt } from "@/lib/fmt";
 import { toutEnHebreu } from "@/lib/quiz-progress";
 
@@ -24,6 +25,8 @@ type Props = {
   onReread?: (pageNo: number, from: "question" | "result") => void;
   next?: { label: string; onClick: () => void } | null;
   onStage?: (stage: "question" | "result") => void;
+  /** Langue imposée (aperçu admin d'une édition) ; sinon celle du site. */
+  lang?: Lang;
 };
 
 const HEB = /[\u0590-\u05FF]/;
@@ -65,8 +68,11 @@ export function QuizRound({
   onReread,
   next,
   onStage,
+  lang: forced,
 }: Props) {
-  const { t, lang } = useI18n();
+  const i18n = useI18n();
+  const lang = forced ?? i18n.lang;
+  const t = (k: Parameters<typeof tr>[1]) => tr(lang, k);
   const [list, setList] = useState(() => questions.filter((q) => q.options.length > 1));
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -129,7 +135,7 @@ export function QuizRound({
             <ul className="bg-paper border-line mt-2 border">
               {rates.map((r) => {
                 const good = r.q.options[r.q.answer_index] ?? "";
-                const shown = r.q.prompt_he ? r.q.prompt_he.replace(/＿+/g, good) : null;
+                const shown = r.q.hebrew ? r.q.hebrew.replace(/＿+/g, good) : null;
                 return (
                   <li key={r.q.id} className="border-line border-b p-3 last:border-b-0">
                     <div className="flex items-baseline justify-between gap-3">
@@ -206,9 +212,8 @@ export function QuizRound({
 
   /* ---------- Question ---------- */
   const q = list[index]!;
-  const prompt = (lang === "en" ? q.prompt_en : q.prompt_fr) ?? "";
-  const explain =
-    (lang === "en" ? q.explain_en : q.explain_fr) ?? "";
+  const prompt = q.question;
+  const explain = q.explanation ?? "";
   const answered = picked !== null;
   const juste = answered && picked === q.answer_index;
   const heb = toutEnHebreu(q.options);
@@ -265,7 +270,7 @@ export function QuizRound({
       <p className="label text-secondary-text mt-4">{chapLabel(q.chapter_no)}</p>
       {prompt ? <p className="font-latin mt-1 text-[22px] leading-snug">{prompt}</p> : null}
 
-      {q.prompt_he ? (
+      {q.hebrew ? (
         <div className="bg-paper border-line mt-4 border px-3 py-4 text-center">
           <p
             dir="rtl"
@@ -273,11 +278,11 @@ export function QuizRound({
             style={{
               ...hebStyle,
               fontFamily: "var(--font-hebrew)",
-              fontSize: /[\s＿]/.test(q.prompt_he.trim()) ? 40 : 54,
+              fontSize: /[\s＿]/.test(q.hebrew.trim()) ? 40 : 54,
               lineHeight: 1.4,
             }}
           >
-            {q.prompt_he}
+            {q.hebrew}
           </p>
         </div>
       ) : null}

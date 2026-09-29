@@ -1,4 +1,4 @@
-import type { LastAnswer, QuizQuestion } from "./companion.functions";
+import type { LastAnswer, QuizQuestion } from "./quiz-types";
 
 /**
  * BRIQUE 9 — les états de l'entraînement. Module pur : tout se calcule depuis

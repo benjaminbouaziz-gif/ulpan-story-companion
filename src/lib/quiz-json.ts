@@ -57,13 +57,11 @@ export type QuizLigne = {
   chapter_no: number;
   page_no: number | null;
   kind: "qcm" | "trou";
-  prompt_fr: string | null;
-  prompt_en: string | null;
-  prompt_he: string | null;
+  question: string;
+  hebrew: string | null;
   options: string[];
-  answer: { index: number };
-  explain_fr: string | null;
-  explain_en: string | null;
+  answer_index: number;
+  explanation: string | null;
   sort_order: number;
 };
 
@@ -138,7 +136,6 @@ export function analyserQuizJson(
   // Un fichier ne se dépose que sur l'édition de sa langue.
   else if (edition && langue !== edition)
     err(null, "langue", "langueMismatch", { recu: langue, attendu: edition });
-  const en = langue === "en";
 
   const qs = racine["questions"];
   if (!Array.isArray(qs) || qs.length === 0) {
@@ -219,13 +216,11 @@ export function analyserQuizJson(
       chapter_no: isPosInt(chapitre) ? chapitre : 0,
       page_no: isPosInt(page) ? page : null,
       kind: type === "trou" ? "trou" : "qcm",
-      prompt_fr: en ? null : question || null,
-      prompt_en: en ? question || null : null,
-      prompt_he: text(hebreu) || null,
+      question,
+      hebrew: text(hebreu) || null,
       options: choix,
-      answer: { index: typeof bonne === "number" ? bonne : 0 },
-      explain_fr: en ? null : expl,
-      explain_en: en ? expl : null,
+      answer_index: typeof bonne === "number" ? bonne : 0,
+      explanation: expl,
       sort_order: n,
     });
   });
@@ -254,32 +249,60 @@ export function analyserQuizJson(
 export function exporterQuizJson(
   slug: string,
   rows: {
-    chapter_no: number | null;
+    chapter_no: number;
     page_no: number | null;
     kind: string;
-    prompt_fr: string | null;
-    prompt_en: string | null;
-    prompt_he: string | null;
+    question: string;
+    hebrew: string | null;
     options: unknown;
-    answer: unknown;
-    explain_fr: string | null;
-    explain_en: string | null;
+    answer_index: number;
+    explanation: string | null;
   }[],
   langue: "fr" | "en",
 ): string {
-  const en = langue === "en";
   const questions = rows.map((r) => {
-    const q: Record<string, unknown> = { chapitre: r.chapter_no ?? 1 };
+    const q: Record<string, unknown> = { chapitre: r.chapter_no };
     if (r.page_no != null) q["page"] = r.page_no;
     q["type"] = r.kind;
-    q["question"] = (en ? r.prompt_en : r.prompt_fr) ?? "";
-    if (r.prompt_he) q["hebreu"] = r.prompt_he;
+    q["question"] = r.question;
+    if (r.hebrew) q["hebreu"] = r.hebrew;
     q["choix"] = Array.isArray(r.options) ? r.options.map(String) : [];
-    const idx = (r.answer as { index?: number } | null)?.index;
-    q["bonne"] = typeof idx === "number" ? idx : 0;
-    const ex = en ? r.explain_en : r.explain_fr;
-    if (ex) q["explication"] = ex;
+    q["bonne"] = r.answer_index;
+    if (r.explanation) q["explication"] = r.explanation;
     return q;
   });
   return JSON.stringify({ livre: slug, langue, questions }, null, 2);
+}
+
+/** Message français d'un problème d'analyse (admin). */
+export function messageQuiz(p: QuizProbleme): string {
+  const v = p.params;
+  const m: Record<QuizCode, string> = {
+    syntax: `JSON illisible (ligne ${v["ligne"]}, colonne ${v["colonne"]}).`,
+    notObject: "Le fichier doit être un objet JSON { livre, langue, questions }.",
+    livreMissing: "Le champ « livre » manque.",
+    livreMismatch: `Le fichier est pour le livre « ${v["recu"]} », pas pour « ${v["attendu"]} ».`,
+    langueInvalid: "Le champ « langue » doit valoir \"fr\" ou \"en\".",
+    langueMismatch: `Ce fichier est en langue « ${v["recu"]} » : il ne peut pas être déposé dans l'édition « ${v["attendu"]} ».`,
+    questionsEmpty: "La liste « questions » est vide ou absente.",
+    questionNotObject: "La question n'est pas un objet.",
+    unknownField: `Champ inconnu « ${v["champ"]} » (ignoré).`,
+    chapitreInvalid: "« chapitre » doit être un entier positif.",
+    chapitreUnknown: `Le chapitre ${v["chapitre"]} n'existe pas dans les pages du livre.`,
+    noPages: "Le livre n'a encore aucune page : chapitres et pages ne peuvent pas être vérifiés.",
+    pageInvalid: "« page » doit être un entier positif.",
+    pageUnknown: `La page ${v["page"]} n'existe pas.`,
+    pageWrongChapter: `La page ${v["page"]} n'appartient pas au chapitre ${v["chapitre"]}.`,
+    typeInvalid: "« type » doit valoir \"qcm\" ou \"trou\".",
+    typeUnsupported: `Le type « ${v["type"]} » n'est pas pris en charge.`,
+    questionEmpty: "« question » est vide.",
+    hebreuInvalid: "« hebreu » doit être un texte.",
+    choixCount: "« choix » doit contenir de 2 à 6 réponses.",
+    choixEmpty: "Un des choix est vide.",
+    choixDup: `Le choix « ${v["valeur"]} » apparaît deux fois.`,
+    bonneInvalid: "« bonne » doit être un entier (0 = premier choix).",
+    bonneOut: `« bonne » vaut ${v["bonne"]} mais il n'y a que ${v["n"]} choix (0 à ${v["max"]}).`,
+    explicationInvalid: "« explication » doit être un texte.",
+  };
+  return (p.question != null ? `Question ${p.question} : ` : "") + m[p.code];
 }
