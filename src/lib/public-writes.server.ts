@@ -90,11 +90,19 @@ export async function recordAmazonClick(editionId: string, ip: string, visitorId
   if (e1 || !visible) return false;
   if (!(await checkRateLimit("amazon:" + hashValue(ip), 30, 60))) return false;
   const vKey = "amazonvis:" + hashValue(visitorId + ":" + editionId);
-  const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-  const { data: recent } = await admin.from("rate_limits").select("key").eq("key", vKey).gt("window_start", since).limit(1);
-  if (recent && recent.length) return false;
-  const { error: e2 } = await admin.from("rate_limits").insert({ key: vKey, window_start: new Date().toISOString(), count: 1 });
-  if (e2) return false;
+  // Une seule ligne par visiteur+livre ; count = minute du dernier clic compté.
+  // Mise à jour conditionnelle (compare-and-swap) : sûre face aux clics simultanés.
+  const nowMin = Math.floor(Date.now() / 60000);
+  const { data: cur } = await admin.from("rate_limits").select("window_start, count").eq("key", vKey).maybeSingle();
+  if (!cur) {
+    const { error: e2 } = await admin.from("rate_limits").insert({ key: vKey, window_start: new Date().toISOString(), count: nowMin });
+    if (e2) return false; // un autre clic simultané a gagné
+  } else {
+    if (nowMin - cur.count < 30) return false;
+    const { data: upd } = await admin.from("rate_limits").update({ count: nowMin })
+      .eq("key", vKey).eq("window_start", cur.window_start).eq("count", cur.count).select("key");
+    if (!upd || !upd.length) return false;
+  }
   const { error } = await admin.from("events").insert({ type: "amazon_click", edition_id: editionId });
   if (error) throw new Error(error.message);
   return true;
