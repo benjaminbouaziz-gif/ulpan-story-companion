@@ -1,11 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
-  Link,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
+  redirect,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -14,92 +13,58 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { I18nProvider } from "@/i18n/context";
 import { detectLang } from "@/i18n/lang.functions";
 import type { Lang } from "@/i18n/dictionaries";
-import { PreferencesProvider } from "@/lib/preferences";
+import { redirectTarget, type PageId } from "@/i18n/routes";
+import { getFooterTagline } from "@/lib/site.functions";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { ErrorPage, NotFoundPage } from "@/pages/SystemPages";
+
+declare module "@tanstack/react-router" {
+  interface StaticDataRouteOption {
+    pageId?: PageId;
+  }
+}
 
 function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <NotFoundPage />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+  return <ErrorPage reset={reset} />;
 }
 
-let cachedLang: Lang | null = null;
+// Côté navigateur, la langue de la session est gardée entre deux navigations.
+let clientLang: Lang | null = null;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  // La langue active entre dans le contexte : chaque chargement public la reçoit.
-  beforeLoad: async () => {
-    if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem("ulpanstory.lang");
-      if (stored === "fr" || stored === "en") return { lang: stored as Lang };
-      if (cachedLang) return { lang: cachedLang };
+  beforeLoad: async ({ location }) => {
+    const query = new URLSearchParams(location.searchStr).get("lang") ?? undefined;
+    let lang: Lang;
+    if (typeof window !== "undefined" && clientLang && !query) {
+      lang = clientLang;
+    } else {
+      lang = await detectLang({ data: { query } });
+      if (typeof window !== "undefined") clientLang = lang;
     }
-    cachedLang = await detectLang();
-    return { lang: cachedLang };
+    const target = redirectTarget(location.pathname, lang);
+    if (target) {
+      throw redirect({ href: target + (location.searchStr ?? ""), statusCode: 301 });
+    }
+    return { lang };
   },
-  loader: ({ context }) => ({ lang: context.lang }),
+  loader: async ({ context }) => ({
+    lang: context.lang,
+    tagline: await getFooterTagline({ data: { lang: context.lang } }),
+  }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1, viewport-fit=cover",
-      },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#F3F1EA" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -119,8 +84,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const { lang } = Route.useRouteContext();
   return (
-    <html lang="fr">
+    <html lang={lang ?? "fr"}>
       <head>
         <HeadContent />
       </head>
@@ -133,16 +99,19 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-  const { lang } = Route.useLoaderData();
-
+  const { queryClient, lang } = Route.useRouteContext();
+  const data = Route.useLoaderData();
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider initialLang={lang}>
-        <PreferencesProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </PreferencesProvider>
+      <I18nProvider lang={lang}>
+        <div className="bg-background text-foreground flex min-h-screen flex-col">
+          <SiteHeader />
+          <div className="flex-1">
+            {/* Required: nested routes render here. */}
+            <Outlet />
+          </div>
+          <SiteFooter tagline={data?.tagline ?? null} />
+        </div>
       </I18nProvider>
     </QueryClientProvider>
   );
