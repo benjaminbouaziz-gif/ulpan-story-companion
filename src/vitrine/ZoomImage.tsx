@@ -27,7 +27,11 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [drop, setDrop] = useState(0); // glissé vers le bas (non zoomé)
   const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const pinch = useRef<{ dist: number; scale: number } | null>(null);
+  const pinch = useRef<{ dist: number; scale: number; mid: { x: number; y: number }; pos: { x: number; y: number } } | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  // État courant lu par les gestionnaires (évite les valeurs périmées pendant un geste).
+  const cur = useRef({ scale: 1, pos: { x: 0, y: 0 } });
+  cur.current = { scale, pos };
   const last = useRef<{ x: number; y: number; type: string } | null>(null);
   const lastTap = useRef(0);
   const lastType = useRef("mouse");
@@ -44,7 +48,26 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
   }, [onClose]);
 
-  const toggleZoom = () => (scale > 1 ? reset() : setScale(2.5));
+  /**
+   * Zoom ancré : l'image est centrée dans le cadre (origine de transformation au
+   * centre C). Un point écran p vaut C + pos + s·(q − C). Pour que le point qui
+   * était sous `from` (à l'échelle s0, décalage pos0) se retrouve sous `to` à
+   * l'échelle s : pos = (to − C) − (s / s0)·(from − C − pos0).
+   */
+  const zoomAt = (s: number, from: { x: number; y: number }, to: { x: number; y: number }, s0: number, pos0: { x: number; y: number }) => {
+    if (s <= 1) { reset(); return; }
+    const r = boxRef.current?.getBoundingClientRect();
+    const cx = r ? r.left + r.width / 2 : window.innerWidth / 2;
+    const cy = r ? r.top + r.height / 2 : window.innerHeight / 2;
+    const k = s / s0;
+    setScale(s);
+    setPos({ x: to.x - cx - k * (from.x - cx - pos0.x), y: to.y - cy - k * (from.y - cy - pos0.y) });
+  };
+  const toggleZoom = (at: { x: number; y: number }) => {
+    const { scale: s0, pos: p0 } = cur.current;
+    if (s0 > 1) reset();
+    else zoomAt(2.5, at, at, s0, p0);
+  };
 
   const onPointerDown = (e: React.PointerEvent) => {
     lastType.current = e.pointerType;
@@ -52,12 +75,13 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
-      pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale };
+      pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale: cur.current.scale, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, pos: cur.current.pos };
+      last.current = null;
     } else {
       last.current = { x: e.clientX, y: e.clientY, type: e.pointerType };
       if (e.pointerType === "touch") {
         const now = Date.now();
-        if (now - lastTap.current < 300) toggleZoom();
+        if (now - lastTap.current < 300) toggleZoom({ x: e.clientX, y: e.clientY });
         lastTap.current = now;
       }
     }
@@ -69,8 +93,8 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
       const [a, b] = [...pointers.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       const s = clamp((pinch.current.scale * d) / pinch.current.dist, 1, MAX);
-      setScale(s);
-      if (s === 1) setPos({ x: 0, y: 0 });
+      // Le point entre les doigts au début du geste suit le milieu actuel des doigts.
+      zoomAt(s, pinch.current.mid, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, pinch.current.scale, pinch.current.pos);
       return;
     }
     const l = last.current;
@@ -78,12 +102,17 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     const dx = e.clientX - l.x;
     const dy = e.clientY - l.y;
     last.current = { ...l, x: e.clientX, y: e.clientY };
-    if (scale > 1) setPos((p) => ({ x: p.x + dx, y: p.y + dy }));
+    if (cur.current.scale > 1) setPos((p) => ({ x: p.x + dx, y: p.y + dy }));
     else if (l.type === "touch") setDrop((v) => Math.max(0, v + dy));
   };
   const onPointerUp = (e: React.PointerEvent) => {
     pointers.current.delete(e.pointerId);
     if (pointers.current.size < 2) pinch.current = null;
+    // Un doigt reste posé après le pincement : il reprend le déplacement depuis sa position.
+    if (pointers.current.size === 1) {
+      const [p] = [...pointers.current.values()];
+      last.current = { x: p!.x, y: p!.y, type: "touch" };
+    }
     if (pointers.current.size === 0) {
       last.current = null;
       if (drop > 120) onClose();
@@ -91,13 +120,16 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     }
   };
   const onWheel = (e: React.WheelEvent) => {
-    const s = clamp(scale * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 1, MAX);
-    setScale(s);
-    if (s === 1) setPos({ x: 0, y: 0 });
+    const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+    const { scale: s0, pos: p0 } = cur.current;
+    const s = clamp(s0 * Math.exp(-dy * 0.0015), 1, MAX);
+    const at = { x: e.clientX, y: e.clientY };
+    zoomAt(s, at, at, s0, p0);
   };
 
   return (
     <div
+      ref={boxRef}
       role="dialog"
       aria-modal="true"
       aria-label={alt}
@@ -116,7 +148,7 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onDoubleClick={() => { if (lastType.current !== "touch") toggleZoom(); }}
+        onDoubleClick={(e) => { if (lastType.current !== "touch") toggleZoom({ x: e.clientX, y: e.clientY }); }}
         className="max-h-full max-w-full select-none"
         style={{ transform: `translate(${pos.x}px, ${pos.y + drop}px) scale(${scale})`, cursor: scale > 1 ? "grab" : "zoom-in", transition: pointers.current.size ? "none" : "transform 120ms" }}
       />
