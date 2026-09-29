@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { adminCollections, createCollection } from "@/lib/admin-site.functions";
-import { slugProbleme } from "@/lib/slug";
+import { slugDepuisNom, slugProbleme } from "@/lib/slug";
 import { ERREURS, messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, cellCls, inputCls } from "@/admin/ui";
 
@@ -15,7 +15,9 @@ function Liste() {
   const navigate = useNavigate();
   const q = useQuery({ queryKey: ["admin", "collections"], queryFn: () => list() });
   const [ouvert, setOuvert] = useState(false);
+  const [nom, setNom] = useState("");
   const [slug, setSlug] = useState("");
+  const [slugTouche, setSlugTouche] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   async function creer(e: React.FormEvent) {
@@ -24,7 +26,7 @@ function Liste() {
     const p = slugProbleme(s);
     if (p) return setMsg(ERREURS[p]!);
     try {
-      const r = await create({ data: { slug: s } });
+      const r = await create({ data: { slug: s, nameFr: nom.trim() || undefined } });
       navigate({ to: "/admin/collections/$slug", params: { slug: r.slug } });
     } catch (err) { setMsg(messageErreur(err)); }
   }
@@ -36,10 +38,18 @@ function Liste() {
         <button type="button" className={btnCls} onClick={() => setOuvert(!ouvert)}>Nouvelle collection</button>
       </div>
       {ouvert && (
-        <form onSubmit={creer} className="mt-3 flex items-center gap-2 text-[13px]">
-          <input className={`${inputCls} !w-64`} placeholder="heros-d-israel" value={slug} onChange={(e) => setSlug(e.target.value)} />
-          <button type="submit" className={btnPrimaryCls}>Créer la collection</button>
-          {msg && <span>{msg}</span>}
+        <form onSubmit={creer} className="mt-3 grid max-w-[480px] gap-2 text-[13px]">
+          <label className="grid gap-1">Nom (français)
+            <input className={inputCls} placeholder="Héros d'Israël" value={nom} onChange={(e) => { setNom(e.target.value); if (!slugTouche) setSlug(slugDepuisNom(e.target.value)); }} />
+          </label>
+          <label className="grid gap-1">Slug
+            <input className={inputCls} placeholder="heros-d-israel" value={slug} onChange={(e) => { setSlug(e.target.value); setSlugTouche(true); }} />
+          </label>
+          <p className="text-secondary-text">C'est l'adresse web : oulpanstory.fr/collections/{slug || "heros-d-israel"}. Minuscules, chiffres et tirets. Le nom affiché se règle ensuite en français et en anglais.</p>
+          <div className="flex items-center gap-2">
+            <button type="submit" className={btnPrimaryCls}>Créer la collection</button>
+            {msg && <span>{msg}</span>}
+          </div>
         </form>
       )}
       {q.isLoading ? <p className="mt-4">…</p> : q.error ? <p className="mt-4">{messageErreur(q.error)}</p> : !q.data?.length ? (

@@ -21,3 +21,16 @@ export function extensionAudio(name: string): "mp3" | "m4a" | null {
   if (n.endsWith(".m4a")) return "m4a";
   return null;
 }
+
+/** Slug proposé à partir d'un nom : « Héros d'Israël » → « heros-d-israel ». */
+export function slugDepuisNom(nom: string): string {
+  return nom
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/œ/gi, "oe")
+    .replace(/æ/gi, "ae")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
