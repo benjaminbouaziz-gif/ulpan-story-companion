@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { comingSoon } from "@/lib/page-route";
+import { collectionsRoute } from "@/vitrine/routes";
 
-export const Route = createFileRoute("/collections/")(comingSoon("collections"));
+export const Route = createFileRoute("/collections/")(collectionsRoute());

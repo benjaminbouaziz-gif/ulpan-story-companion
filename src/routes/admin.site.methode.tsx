@@ -6,6 +6,7 @@ import { methodSteps, removeMethodImage, saveMethodLabels, uploadMethodImage } f
 import { KINDS_BY_PAGE } from "@/lib/site-blocks";
 import { BlockEditor } from "@/admin/BlockEditor";
 import { LangTabs } from "@/admin/LangTabs";
+import { Apercu } from "@/admin/Apercu";
 import { messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, Field, inputCls, Section } from "@/admin/ui";
 
@@ -19,6 +20,7 @@ function Methode() {
       <LangTabs>
         {(lang) => (
           <>
+            <Apercu cible={{ kind: "methode" }} lang={lang} />
             <Section title="Les 4 étapes en images"><Etapes lang={lang} /></Section>
             <Section title="Texte de la page">
               <BlockEditor target={{ scope: "site", pageKey: "methode", lang }} kinds={KINDS_BY_PAGE.methode} />

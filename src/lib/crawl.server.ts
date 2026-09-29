@@ -30,7 +30,16 @@ export function robotsTxt(lang: Lang): string {
 
 const SITEMAP_PAGES: PageId[] = ["accueil", "methode", "collections", "contact", "mentions", "confidentialite"];
 
-export function sitemapXml(lang: Lang): string {
-  const urls = SITEMAP_PAGES.map((id) => `  <url><loc>${absoluteUrl(id, lang)}</loc></url>`).join("\n");
+export async function sitemapXml(lang: Lang): Promise<string> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { sitemapEntries } = await import("@/lib/vitrine.data");
+  const e = await sitemapEntries(supabase, lang);
+  const loc = (href: string, lastmod?: string) =>
+    `  <url><loc>${href}</loc>${lastmod ? `<lastmod>${lastmod.slice(0, 10)}</lastmod>` : ""}</url>`;
+  const urls = [
+    ...SITEMAP_PAGES.map((id) => loc(absoluteUrl(id, lang))),
+    ...e.collections.map((c) => loc(absoluteUrl("collection", lang, { slug: c.slug }), c.updatedAt)),
+    ...e.books.map((b) => loc(absoluteUrl("livre", lang, { slug: b.slug }), b.updatedAt)),
+  ].join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }

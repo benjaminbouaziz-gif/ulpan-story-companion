@@ -19,6 +19,7 @@ import { absoluteUrl, DOMAINS, pathFor } from "@/i18n/routes";
 import { messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, Field, hebrewStyle, inputCls, Section } from "@/admin/ui";
 import { EditionQuiz } from "@/admin/EditionQuiz";
+import { Apercu } from "@/admin/Apercu";
 
 type Lang = "fr" | "en";
 type Data = Awaited<ReturnType<typeof adminEdition>>;
@@ -63,6 +64,7 @@ function Edition({ editionId, refreshFiche }: { editionId: string; refreshFiche:
   const d = q.data;
   return (
     <div className="pb-40">
+      <Apercu cible={{ kind: "livre", editionId: d.edition.id }} lang={d.edition.lang as Lang} />
       <Section title="1. Vitrine"><Vitrine d={d} refresh={refresh} /></Section>
       <Section title="2. Titres de chapitre"><Titres d={d} refresh={refresh} /></Section>
       <Section title="3. QR"><Qr d={d} refresh={refresh} /></Section>

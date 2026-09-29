@@ -7,6 +7,9 @@ import { adminWhoAmI } from "@/lib/admin-auth.functions";
 export const Route = createFileRoute("/admin")({
   ssr: false,
   beforeLoad: async () => {
+    // Sans session, inutile d'appeler le serveur : direction la connexion.
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/admin/connexion" });
     try {
       const me = await adminWhoAmI();
       return { editorEmail: me.email };

@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { alwaysNotFound } from "@/lib/page-route";
+import { bookRoute } from "@/vitrine/routes";
 
-export const Route = createFileRoute("/livres/$slug")(alwaysNotFound("livre"));
+export const Route = createFileRoute("/livres/$slug")(bookRoute());

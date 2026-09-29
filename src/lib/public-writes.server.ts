@@ -64,3 +64,20 @@ export async function recordLoginFailure(emailHash: string, ipHash: string | nul
   const { error } = await admin.from("admin_login_attempts").insert({ email_hash: emailHash, ip_hash: ipHash });
   if (error) throw new Error(error.message);
 }
+
+/* ---- Vitrine : clic sur « Acheter sur Amazon » ---- */
+
+/**
+ * Enregistre un événement amazon_click pour une édition visible.
+ * Limité à 30 par minute et par empreinte d'IP ; aucune donnée personnelle
+ * n'est écrite (ni IP, ni empreinte : seulement le type et l'édition).
+ */
+export async function recordAmazonClick(editionId: string, ip: string): Promise<boolean> {
+  const admin = await serviceClient();
+  const { data: visible, error: e1 } = await admin.rpc("edition_visible", { _edition_id: editionId });
+  if (e1 || !visible) return false;
+  if (!(await checkRateLimit("amazon:" + hashValue(ip), 30, 60))) return false;
+  const { error } = await admin.from("events").insert({ type: "amazon_click", edition_id: editionId });
+  if (error) throw new Error(error.message);
+  return true;
+}
