@@ -26,10 +26,8 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminChiffresRouteImport } from './routes/admin.chiffres'
-import { Route as AdminCollectionsRouteImport } from './routes/admin.collections'
 import { Route as AdminLecteursRouteImport } from './routes/admin.lecteurs'
 import { Route as AdminReglagesRouteImport } from './routes/admin.reglages'
-import { Route as AdminSiteRouteImport } from './routes/admin.site'
 import { Route as AdminConnexionRouteImport } from './routes/admin_.connexion'
 import { Route as BooksSlugRouteImport } from './routes/books.$slug'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
@@ -39,8 +37,16 @@ import { Route as CompagnonSlugRouteImport } from './routes/compagnon.$slug'
 import { Route as CompanionIndexRouteImport } from './routes/companion.index'
 import { Route as CompanionSlugRouteImport } from './routes/companion.$slug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
+import { Route as AdminCollectionsIndexRouteImport } from './routes/admin.collections.index'
+import { Route as AdminCollectionsSlugRouteImport } from './routes/admin.collections.$slug'
 import { Route as AdminLivresIndexRouteImport } from './routes/admin.livres.index'
 import { Route as AdminLivresSlugRouteImport } from './routes/admin.livres.$slug'
+import { Route as AdminSiteIndexRouteImport } from './routes/admin.site.index'
+import { Route as AdminSiteAccueilRouteImport } from './routes/admin.site.accueil'
+import { Route as AdminSiteConfidentialiteRouteImport } from './routes/admin.site.confidentialite'
+import { Route as AdminSiteContactRouteImport } from './routes/admin.site.contact'
+import { Route as AdminSiteMentionsRouteImport } from './routes/admin.site.mentions'
+import { Route as AdminSiteMethodeRouteImport } from './routes/admin.site.methode'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as AdminLivresSlugPagesPageNoRouteImport } from './routes/admin.livres.$slug_.pages.$pageNo'
@@ -130,11 +136,6 @@ const AdminChiffresRoute = AdminChiffresRouteImport.update({
   path: '/chiffres',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCollectionsRoute = AdminCollectionsRouteImport.update({
-  id: '/collections',
-  path: '/collections',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminLecteursRoute = AdminLecteursRouteImport.update({
   id: '/lecteurs',
   path: '/lecteurs',
@@ -143,11 +144,6 @@ const AdminLecteursRoute = AdminLecteursRouteImport.update({
 const AdminReglagesRoute = AdminReglagesRouteImport.update({
   id: '/reglages',
   path: '/reglages',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSiteRoute = AdminSiteRouteImport.update({
-  id: '/site',
-  path: '/site',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminConnexionRoute = AdminConnexionRouteImport.update({
@@ -195,6 +191,16 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
   path: '/livres/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCollectionsIndexRoute = AdminCollectionsIndexRouteImport.update({
+  id: '/collections/',
+  path: '/collections/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCollectionsSlugRoute = AdminCollectionsSlugRouteImport.update({
+  id: '/collections/$slug',
+  path: '/collections/$slug',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLivresIndexRoute = AdminLivresIndexRouteImport.update({
   id: '/livres/',
   path: '/livres/',
@@ -203,6 +209,37 @@ const AdminLivresIndexRoute = AdminLivresIndexRouteImport.update({
 const AdminLivresSlugRoute = AdminLivresSlugRouteImport.update({
   id: '/livres/$slug',
   path: '/livres/$slug',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteIndexRoute = AdminSiteIndexRouteImport.update({
+  id: '/site/',
+  path: '/site/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteAccueilRoute = AdminSiteAccueilRouteImport.update({
+  id: '/site/accueil',
+  path: '/site/accueil',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteConfidentialiteRoute =
+  AdminSiteConfidentialiteRouteImport.update({
+    id: '/site/confidentialite',
+    path: '/site/confidentialite',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminSiteContactRoute = AdminSiteContactRouteImport.update({
+  id: '/site/contact',
+  path: '/site/contact',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteMentionsRoute = AdminSiteMentionsRouteImport.update({
+  id: '/site/mentions',
+  path: '/site/mentions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteMethodeRoute = AdminSiteMethodeRouteImport.update({
+  id: '/site/methode',
+  path: '/site/methode',
   getParentRoute: () => AdminRoute,
 } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
@@ -239,10 +276,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/chiffres': typeof AdminChiffresRoute
-  '/admin/collections': typeof AdminCollectionsRoute
   '/admin/lecteurs': typeof AdminLecteursRoute
   '/admin/reglages': typeof AdminReglagesRoute
-  '/admin/site': typeof AdminSiteRoute
   '/admin/connexion': typeof AdminConnexionRoute
   '/books/$slug': typeof BooksSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -253,8 +288,16 @@ export interface FileRoutesByFullPath {
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
   '/companion/': typeof CompanionIndexRoute
+  '/admin/collections/$slug': typeof AdminCollectionsSlugRoute
   '/admin/livres/$slug': typeof AdminLivresSlugRoute
+  '/admin/site/accueil': typeof AdminSiteAccueilRoute
+  '/admin/site/confidentialite': typeof AdminSiteConfidentialiteRoute
+  '/admin/site/contact': typeof AdminSiteContactRoute
+  '/admin/site/mentions': typeof AdminSiteMentionsRoute
+  '/admin/site/methode': typeof AdminSiteMethodeRoute
+  '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/admin/livres/': typeof AdminLivresIndexRoute
+  '/admin/site/': typeof AdminSiteIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/admin/livres/$slug/pages/$pageNo': typeof AdminLivresSlugPagesPageNoRoute
@@ -275,10 +318,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/chiffres': typeof AdminChiffresRoute
-  '/admin/collections': typeof AdminCollectionsRoute
   '/admin/lecteurs': typeof AdminLecteursRoute
   '/admin/reglages': typeof AdminReglagesRoute
-  '/admin/site': typeof AdminSiteRoute
   '/admin/connexion': typeof AdminConnexionRoute
   '/books/$slug': typeof BooksSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -289,8 +330,16 @@ export interface FileRoutesByTo {
   '/collections': typeof CollectionsIndexRoute
   '/compagnon': typeof CompagnonIndexRoute
   '/companion': typeof CompanionIndexRoute
+  '/admin/collections/$slug': typeof AdminCollectionsSlugRoute
   '/admin/livres/$slug': typeof AdminLivresSlugRoute
+  '/admin/site/accueil': typeof AdminSiteAccueilRoute
+  '/admin/site/confidentialite': typeof AdminSiteConfidentialiteRoute
+  '/admin/site/contact': typeof AdminSiteContactRoute
+  '/admin/site/mentions': typeof AdminSiteMentionsRoute
+  '/admin/site/methode': typeof AdminSiteMethodeRoute
+  '/admin/collections': typeof AdminCollectionsIndexRoute
   '/admin/livres': typeof AdminLivresIndexRoute
+  '/admin/site': typeof AdminSiteIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/admin/livres/$slug/pages/$pageNo': typeof AdminLivresSlugPagesPageNoRoute
@@ -313,10 +362,8 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/chiffres': typeof AdminChiffresRoute
-  '/admin/collections': typeof AdminCollectionsRoute
   '/admin/lecteurs': typeof AdminLecteursRoute
   '/admin/reglages': typeof AdminReglagesRoute
-  '/admin/site': typeof AdminSiteRoute
   '/admin_/connexion': typeof AdminConnexionRoute
   '/books/$slug': typeof BooksSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -327,8 +374,16 @@ export interface FileRoutesById {
   '/collections/': typeof CollectionsIndexRoute
   '/compagnon/': typeof CompagnonIndexRoute
   '/companion/': typeof CompanionIndexRoute
+  '/admin/collections/$slug': typeof AdminCollectionsSlugRoute
   '/admin/livres/$slug': typeof AdminLivresSlugRoute
+  '/admin/site/accueil': typeof AdminSiteAccueilRoute
+  '/admin/site/confidentialite': typeof AdminSiteConfidentialiteRoute
+  '/admin/site/contact': typeof AdminSiteContactRoute
+  '/admin/site/mentions': typeof AdminSiteMentionsRoute
+  '/admin/site/methode': typeof AdminSiteMethodeRoute
+  '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/admin/livres/': typeof AdminLivresIndexRoute
+  '/admin/site/': typeof AdminSiteIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/admin/livres/$slug_/pages/$pageNo': typeof AdminLivresSlugPagesPageNoRoute
@@ -352,10 +407,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/chiffres'
-    | '/admin/collections'
     | '/admin/lecteurs'
     | '/admin/reglages'
-    | '/admin/site'
     | '/admin/connexion'
     | '/books/$slug'
     | '/collections/$slug'
@@ -366,8 +419,16 @@ export interface FileRouteTypes {
     | '/collections/'
     | '/compagnon/'
     | '/companion/'
+    | '/admin/collections/$slug'
     | '/admin/livres/$slug'
+    | '/admin/site/accueil'
+    | '/admin/site/confidentialite'
+    | '/admin/site/contact'
+    | '/admin/site/mentions'
+    | '/admin/site/methode'
+    | '/admin/collections/'
     | '/admin/livres/'
+    | '/admin/site/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/admin/livres/$slug/pages/$pageNo'
@@ -388,10 +449,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/chiffres'
-    | '/admin/collections'
     | '/admin/lecteurs'
     | '/admin/reglages'
-    | '/admin/site'
     | '/admin/connexion'
     | '/books/$slug'
     | '/collections/$slug'
@@ -402,8 +461,16 @@ export interface FileRouteTypes {
     | '/collections'
     | '/compagnon'
     | '/companion'
+    | '/admin/collections/$slug'
     | '/admin/livres/$slug'
+    | '/admin/site/accueil'
+    | '/admin/site/confidentialite'
+    | '/admin/site/contact'
+    | '/admin/site/mentions'
+    | '/admin/site/methode'
+    | '/admin/collections'
     | '/admin/livres'
+    | '/admin/site'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/admin/livres/$slug/pages/$pageNo'
@@ -425,10 +492,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/chiffres'
-    | '/admin/collections'
     | '/admin/lecteurs'
     | '/admin/reglages'
-    | '/admin/site'
     | '/admin_/connexion'
     | '/books/$slug'
     | '/collections/$slug'
@@ -439,8 +504,16 @@ export interface FileRouteTypes {
     | '/collections/'
     | '/compagnon/'
     | '/companion/'
+    | '/admin/collections/$slug'
     | '/admin/livres/$slug'
+    | '/admin/site/accueil'
+    | '/admin/site/confidentialite'
+    | '/admin/site/contact'
+    | '/admin/site/mentions'
+    | '/admin/site/methode'
+    | '/admin/collections/'
     | '/admin/livres/'
+    | '/admin/site/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/admin/livres/$slug_/pages/$pageNo'
@@ -596,13 +669,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminChiffresRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/collections': {
-      id: '/admin/collections'
-      path: '/collections'
-      fullPath: '/admin/collections'
-      preLoaderRoute: typeof AdminCollectionsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/lecteurs': {
       id: '/admin/lecteurs'
       path: '/lecteurs'
@@ -615,13 +681,6 @@ declare module '@tanstack/react-router' {
       path: '/reglages'
       fullPath: '/admin/reglages'
       preLoaderRoute: typeof AdminReglagesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/site': {
-      id: '/admin/site'
-      path: '/site'
-      fullPath: '/admin/site'
-      preLoaderRoute: typeof AdminSiteRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin_/connexion': {
@@ -687,6 +746,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivresSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/collections/': {
+      id: '/admin/collections/'
+      path: '/collections'
+      fullPath: '/admin/collections/'
+      preLoaderRoute: typeof AdminCollectionsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/collections/$slug': {
+      id: '/admin/collections/$slug'
+      path: '/collections/$slug'
+      fullPath: '/admin/collections/$slug'
+      preLoaderRoute: typeof AdminCollectionsSlugRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/livres/': {
       id: '/admin/livres/'
       path: '/livres'
@@ -699,6 +772,48 @@ declare module '@tanstack/react-router' {
       path: '/livres/$slug'
       fullPath: '/admin/livres/$slug'
       preLoaderRoute: typeof AdminLivresSlugRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/': {
+      id: '/admin/site/'
+      path: '/site'
+      fullPath: '/admin/site/'
+      preLoaderRoute: typeof AdminSiteIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/accueil': {
+      id: '/admin/site/accueil'
+      path: '/site/accueil'
+      fullPath: '/admin/site/accueil'
+      preLoaderRoute: typeof AdminSiteAccueilRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/confidentialite': {
+      id: '/admin/site/confidentialite'
+      path: '/site/confidentialite'
+      fullPath: '/admin/site/confidentialite'
+      preLoaderRoute: typeof AdminSiteConfidentialiteRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/contact': {
+      id: '/admin/site/contact'
+      path: '/site/contact'
+      fullPath: '/admin/site/contact'
+      preLoaderRoute: typeof AdminSiteContactRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/mentions': {
+      id: '/admin/site/mentions'
+      path: '/site/mentions'
+      fullPath: '/admin/site/mentions'
+      preLoaderRoute: typeof AdminSiteMentionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/methode': {
+      id: '/admin/site/methode'
+      path: '/site/methode'
+      fullPath: '/admin/site/methode'
+      preLoaderRoute: typeof AdminSiteMethodeRouteImport
       parentRoute: typeof AdminRoute
     }
     '/lovable/email/auth/preview': {
@@ -727,25 +842,37 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminChiffresRoute: typeof AdminChiffresRoute
-  AdminCollectionsRoute: typeof AdminCollectionsRoute
   AdminLecteursRoute: typeof AdminLecteursRoute
   AdminReglagesRoute: typeof AdminReglagesRoute
-  AdminSiteRoute: typeof AdminSiteRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCollectionsSlugRoute: typeof AdminCollectionsSlugRoute
   AdminLivresSlugRoute: typeof AdminLivresSlugRoute
+  AdminSiteAccueilRoute: typeof AdminSiteAccueilRoute
+  AdminSiteConfidentialiteRoute: typeof AdminSiteConfidentialiteRoute
+  AdminSiteContactRoute: typeof AdminSiteContactRoute
+  AdminSiteMentionsRoute: typeof AdminSiteMentionsRoute
+  AdminSiteMethodeRoute: typeof AdminSiteMethodeRoute
+  AdminCollectionsIndexRoute: typeof AdminCollectionsIndexRoute
   AdminLivresIndexRoute: typeof AdminLivresIndexRoute
+  AdminSiteIndexRoute: typeof AdminSiteIndexRoute
   AdminLivresSlugPagesPageNoRoute: typeof AdminLivresSlugPagesPageNoRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminChiffresRoute: AdminChiffresRoute,
-  AdminCollectionsRoute: AdminCollectionsRoute,
   AdminLecteursRoute: AdminLecteursRoute,
   AdminReglagesRoute: AdminReglagesRoute,
-  AdminSiteRoute: AdminSiteRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminCollectionsSlugRoute: AdminCollectionsSlugRoute,
   AdminLivresSlugRoute: AdminLivresSlugRoute,
+  AdminSiteAccueilRoute: AdminSiteAccueilRoute,
+  AdminSiteConfidentialiteRoute: AdminSiteConfidentialiteRoute,
+  AdminSiteContactRoute: AdminSiteContactRoute,
+  AdminSiteMentionsRoute: AdminSiteMentionsRoute,
+  AdminSiteMethodeRoute: AdminSiteMethodeRoute,
+  AdminCollectionsIndexRoute: AdminCollectionsIndexRoute,
   AdminLivresIndexRoute: AdminLivresIndexRoute,
+  AdminSiteIndexRoute: AdminSiteIndexRoute,
   AdminLivresSlugPagesPageNoRoute: AdminLivresSlugPagesPageNoRoute,
 }
 
