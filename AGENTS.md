@@ -12,3 +12,5 @@
 - Phase P0 : écritures visiteurs/lecteurs uniquement via src/lib/public-writes.server.ts ; éditeurs via getAdminClient. Pourquoi : le client de service n'est atteignable que par ces deux portes.
 - reprise/ garde les briques de l'ancien site, hors compilation ; ne jamais l'importer. Pourquoi : référence pour les phases suivantes.
 - P1 : la langue vient du domaine seul (src/i18n/lang.functions.ts ; ?lang= + cookie preview_lang hors production) et tous les liens passent par pathFor de src/i18n/routes.ts. Pourquoi : un domaine = une langue, adresses cohérentes et redirections 301 automatiques.
+- P2 : l'admin vit sous /admin (enveloppe ssr:false qui vérifie le rôle via adminWhoAmI) ; ses textes sont en français seul dans src/admin/textes.ts, hors des dictionnaires publics. Pourquoi : outil interne mono-langue, les dictionnaires FR/EN restent réservés au site public.
+- P2 : le registre admin_login_attempts s'écrit via public-writes.server.ts (countLoginFailures/recordLoginFailure). Pourquoi : garder deux seules portes vers le client de service.
