@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { adminCollectionsChoix, adminLivres, createLivre } from "@/lib/admin-livres.functions";
-import { slugProbleme } from "@/lib/slug";
+import { slugDepuisNom, slugProbleme } from "@/lib/slug";
 import { ERREURS, messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, hebrewStyle, inputCls } from "@/admin/ui";
 import { DeposerFiche } from "@/admin/DeposerFiche";
@@ -93,7 +93,9 @@ function NouveauLivre() {
   const create = useServerFn(createLivre);
   const colsFn = useServerFn(adminCollectionsChoix);
   const cols = useQuery({ queryKey: ["admin", "collections-choix"], queryFn: () => colsFn() });
+  const [titreFr, setTitreFr] = useState("");
   const [slug, setSlug] = useState("");
+  const [slugTouche, setSlugTouche] = useState(false);
   const [collectionId, setCollectionId] = useState("");
   const [tome, setTome] = useState("");
   const [titleHe, setTitleHe] = useState("");
@@ -120,8 +122,12 @@ function NouveauLivre() {
 
   return (
     <form onSubmit={submit} className="border-line mt-4 grid max-w-[640px] gap-3 border p-4 sm:grid-cols-2">
+      <Field label="Titre (français)">
+        <input className={inputCls} value={titreFr} placeholder="Notre homme à Damas" onChange={(e) => { setTitreFr(e.target.value); if (!slugTouche) setSlug(slugDepuisNom(e.target.value)); }} />
+      </Field>
       <Field label="Slug">
-        <input className={inputCls} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="eli-cohen" />
+        <input className={inputCls} value={slug} onChange={(e) => { setSlug(e.target.value); setSlugTouche(true); }} placeholder="eli-cohen" />
+        <span className="text-secondary-text mt-1 block text-[12px]">C'est l'adresse web : oulpanstory.fr/livres/{slug || "eli-cohen"}. Minuscules, chiffres et tirets. Le nom affiché se règle ensuite en français et en anglais.</span>
       </Field>
       <Field label="Collection">
         <select className={inputCls} value={collectionId} onChange={(e) => setCollectionId(e.target.value)}>

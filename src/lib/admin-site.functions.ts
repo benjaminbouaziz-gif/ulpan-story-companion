@@ -276,13 +276,17 @@ export const adminCollections = createServerFn({ method: "GET" })
 
 export const createCollection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ slug: z.string().trim().max(80) }).parse(d))
+  .inputValidator((d) => z.object({ slug: z.string().trim().max(80), nameFr: z.string().trim().max(200).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const admin = await editorAdmin(context);
     await slugLibre(admin, data.slug);
     const { data: last } = await admin.from("collections").select("sort_order").order("sort_order", { ascending: false }).limit(1).maybeSingle();
-    const { error } = await admin.from("collections").insert({ slug: data.slug, sort_order: (last?.sort_order ?? 0) + 1, is_visible: false });
+    const { data: created, error } = await admin.from("collections").insert({ slug: data.slug, sort_order: (last?.sort_order ?? 0) + 1, is_visible: false }).select("id").single();
     if (error) throw new Error(error.code === "23505" ? "SLUG_TAKEN" : "SAVE_FAILED");
+    if (data.nameFr) {
+      const { error: e2 } = await admin.from("collection_texts").insert({ collection_id: created.id, lang: "fr", name: data.nameFr });
+      if (e2) throw new Error("SAVE_FAILED");
+    }
     return { slug: data.slug };
   });
 
