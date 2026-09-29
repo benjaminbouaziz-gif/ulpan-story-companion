@@ -1,0 +1,45 @@
+/**
+ * SEULE porte d'écriture pour les visiteurs et les lecteurs (événements,
+ * demandes d'accès, lecteurs, accès, réponses aux quiz, désinscription,
+ * suppression de compte). Chaque fonction exportée contrôle elle-même ses
+ * entrées et les droits du lecteur avant d'utiliser le client de service.
+ *
+ * Le client de service s'obtient par import DYNAMIQUE, à l'intérieur des
+ * fonctions : la clé n'entre jamais dans le graphe client.
+ */
+import { createHmac } from "node:crypto";
+
+async function serviceClient() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+/** HMAC-SHA256 avec le secret IP_HASH_SECRET. Sert aux IP et aux e-mails utilisés comme clés de limitation. */
+export function hashValue(value: string): string {
+  const secret = process.env["IP_HASH_SECRET"];
+  if (!secret) throw new Error("Secret IP_HASH_SECRET manquant : le créer dans les secrets du projet.");
+  return createHmac("sha256", secret).update(value).digest("hex");
+}
+
+/**
+ * Compteur par fenêtre fixe dans rate_limits. `key` est toujours déjà hachée.
+ * Renvoie false si la limite est atteinte.
+ */
+export async function checkRateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
+  const admin = await serviceClient();
+  const ms = windowSeconds * 1000;
+  const windowStart = new Date(Math.floor(Date.now() / ms) * ms).toISOString();
+  const { data: row } = await admin
+    .from("rate_limits")
+    .select("count")
+    .eq("key", key)
+    .eq("window_start", windowStart)
+    .maybeSingle();
+  const count = row?.count ?? 0;
+  if (count >= limit) return false;
+  const { error } = await admin
+    .from("rate_limits")
+    .upsert({ key, window_start: windowStart, count: count + 1 }, { onConflict: "key,window_start" });
+  if (error) throw new Error("Limitation indisponible");
+  return true;
+}
