@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as ActivationRouteImport } from './routes/activation'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DesinscriptionRouteImport } from './routes/desinscription'
@@ -20,6 +21,8 @@ import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodRouteImport } from './routes/method'
 import { Route as MethodeRouteImport } from './routes/methode'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as BooksSlugRouteImport } from './routes/books.$slug'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
@@ -45,6 +48,11 @@ const SlugRoute = SlugRouteImport.update({
 const ActivationRoute = ActivationRouteImport.update({
   id: '/activation',
   path: '/activation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
@@ -85,6 +93,16 @@ const MethodeRoute = MethodeRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -147,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/activation': typeof ActivationRoute
+  '/admin': typeof AdminRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/desinscription': typeof DesinscriptionRoute
@@ -155,6 +174,8 @@ export interface FileRoutesByFullPath {
   '/method': typeof MethodRoute
   '/methode': typeof MethodeRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/books/$slug': typeof BooksSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -171,6 +192,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/activation': typeof ActivationRoute
+  '/admin': typeof AdminRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/desinscription': typeof DesinscriptionRoute
@@ -179,6 +201,8 @@ export interface FileRoutesByTo {
   '/method': typeof MethodRoute
   '/methode': typeof MethodeRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/books/$slug': typeof BooksSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -196,6 +220,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/activation': typeof ActivationRoute
+  '/admin': typeof AdminRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/desinscription': typeof DesinscriptionRoute
@@ -204,6 +229,8 @@ export interface FileRoutesById {
   '/method': typeof MethodRoute
   '/methode': typeof MethodeRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/books/$slug': typeof BooksSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
@@ -222,6 +249,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/activation'
+    | '/admin'
     | '/confidentialite'
     | '/contact'
     | '/desinscription'
@@ -230,6 +258,8 @@ export interface FileRouteTypes {
     | '/method'
     | '/methode'
     | '/privacy'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/unsubscribe'
     | '/books/$slug'
     | '/collections/$slug'
@@ -246,6 +276,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/activation'
+    | '/admin'
     | '/confidentialite'
     | '/contact'
     | '/desinscription'
@@ -254,6 +285,8 @@ export interface FileRouteTypes {
     | '/method'
     | '/methode'
     | '/privacy'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/unsubscribe'
     | '/books/$slug'
     | '/collections/$slug'
@@ -270,6 +303,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/activation'
+    | '/admin'
     | '/confidentialite'
     | '/contact'
     | '/desinscription'
@@ -278,6 +312,8 @@ export interface FileRouteTypes {
     | '/method'
     | '/methode'
     | '/privacy'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/unsubscribe'
     | '/books/$slug'
     | '/collections/$slug'
@@ -295,6 +331,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
   ActivationRoute: typeof ActivationRoute
+  AdminRoute: typeof AdminRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   DesinscriptionRoute: typeof DesinscriptionRoute
@@ -303,6 +340,8 @@ export interface RootRouteChildren {
   MethodRoute: typeof MethodRoute
   MethodeRoute: typeof MethodeRoute
   PrivacyRoute: typeof PrivacyRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   BooksSlugRoute: typeof BooksSlugRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
@@ -337,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/activation'
       fullPath: '/activation'
       preLoaderRoute: typeof ActivationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/confidentialite': {
@@ -393,6 +439,20 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe': {
@@ -479,6 +539,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
   ActivationRoute: ActivationRoute,
+  AdminRoute: AdminRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   DesinscriptionRoute: DesinscriptionRoute,
@@ -487,6 +548,8 @@ const rootRouteChildren: RootRouteChildren = {
   MethodRoute: MethodRoute,
   MethodeRoute: MethodeRoute,
   PrivacyRoute: PrivacyRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   BooksSlugRoute: BooksSlugRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,

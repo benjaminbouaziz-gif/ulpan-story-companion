@@ -10,7 +10,7 @@ type SeoInput = {
   /** La page existe-t-elle dans l'autre langue ? */
   alternateExists?: boolean;
   image?: string;
-  noindex?: boolean;
+  noindex?: boolean | undefined;
 };
 
 export function seo({ lang, title, description, pageId, params = {}, alternateExists = true, image, noindex }: SeoInput) {
