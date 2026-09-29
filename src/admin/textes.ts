@@ -25,6 +25,7 @@ export const ERREURS: Record<string, string> = {
   BLOCK_NOT_FOUND: "Ce bloc n'existe plus : rechargez la page.",
   IMAGE_BAD_FORMAT: "Formats acceptés : PNG, JPG, WebP.",
   IMAGE_TOO_BIG: "Image trop lourde (10 Mo au plus).",
+  COLL_PUBLISHED_SLUG: "Le slug ne change plus : un livre de la collection a une édition publiée.",
   Forbidden: "Accès refusé : ce compte n'a pas le rôle éditeur.",
   Unauthorized: "Session expirée : reconnectez-vous.",
 };

@@ -321,7 +321,7 @@ export const saveCollection = createServerFn({ method: "POST" })
       const ids = (books ?? []).map((b) => b.id);
       if (ids.length) {
         const { count } = await admin.from("book_editions").select("id", { count: "exact", head: true }).in("book_id", ids).eq("status", "publiee");
-        if (count) throw new Error("SLUG_LOCKED");
+        if (count) throw new Error("COLL_PUBLISHED_SLUG");
       }
       await slugLibre(admin, data.slug, data.id);
     }
