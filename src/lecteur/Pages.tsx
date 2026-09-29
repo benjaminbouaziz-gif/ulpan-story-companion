@@ -157,8 +157,9 @@ export function ActivationPage() {
   async function finish() {
     setState("opening");
     try {
-      await confirm({ data: { editionId: editionId() } });
-      void navigate({ to: pathFor("espace_lecteur", lang) as "/" });
+      const r = await confirm({ data: { editionId: editionId() } });
+      if (r.granted && r.slug && r.lang === lang) void navigate({ to: pathFor("compagnon", lang, { slug: r.slug }) as "/" });
+      else void navigate({ to: pathFor("espace_lecteur", lang) as "/" });
     } catch {
       setState("idle");
       setExpire(true);

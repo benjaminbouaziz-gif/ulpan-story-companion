@@ -73,11 +73,17 @@ export async function recordLoginFailure(emailHash: string, ipHash: string | nul
  * n'est écrite (ni IP, ni empreinte : seulement le type et l'édition).
  */
 const VIS_WINDOW = "2000-01-01T00:00:00Z"; // fixe : une ligne unique par clé (clé primaire key+window_start)
-const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|embedly|preview|headless|lighthouse|pingdom|monitor|curl|wget|python-requests|httpclient|go-http|axios|node-fetch|whatsapp|telegram|discord|linkedin|twitter/i;
+// Robots d'aperçu de lien seulement : les navigateurs intégrés des applications
+// (LinkedInApp, Twitter for iPhone, WhatsApp dans Mobile Safari…) sont de vrais visiteurs.
+const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|embedly|preview|headless|lighthouse|pingdom|monitor|curl|wget|python-requests|httpclient|go-http|axios|node-fetch/i;
+const LINK_PREVIEW_UA = /LinkedInBot|Twitterbot|TelegramBot|Discordbot/i;
+const WHATSAPP_PREVIEW = /WhatsApp\/\d/i;
 
 /** Robot : pas de user-agent, ou user-agent d'un robot connu. */
 export function isBotUserAgent(ua: string | null | undefined): boolean {
-  return !ua || !ua.trim() || BOT_UA.test(ua);
+  if (!ua || !ua.trim()) return true;
+  if (BOT_UA.test(ua) || LINK_PREVIEW_UA.test(ua)) return true;
+  return WHATSAPP_PREVIEW.test(ua) && !/Mobile Safari/i.test(ua);
 }
 
 /**
@@ -282,7 +288,7 @@ export async function joinWaitlistAsReader(userId: string, email: string, slug: 
  * Validation (lien ou code). Première validation : crée le lecteur avec le
  * choix de la demande ; ensuite, news_status n'est JAMAIS modifié.
  */
-export async function confirmAccess(userId: string, rawEmail: string, editionId: string | null): Promise<{ granted: boolean }> {
+export async function confirmAccess(userId: string, rawEmail: string, editionId: string | null): Promise<{ granted: boolean; slug?: string | undefined; lang?: Lang | undefined }> {
   const email = rawEmail.toLowerCase();
   const admin = await serviceClient();
   let req = admin.from("access_requests").select("id, edition_id, news_optout, consent_text_version, confirmed_at, requested_at").eq("email", email);
@@ -320,7 +326,9 @@ export async function confirmAccess(userId: string, rawEmail: string, editionId:
     await admin.from("access_requests").update({ confirmed_at: now }).eq("id", demande.id);
     await logEvent("access_confirmed", ed.id);
   }
-  return { granted: true };
+  const { data: b } = await admin.from("book_editions").select("books(slug)").eq("id", ed.id).maybeSingle();
+  const slug = (b as { books?: { slug?: string } | null } | null)?.books?.slug;
+  return { granted: true, slug, lang: ed.lang as Lang };
 }
 
 export type EspaceLivre = { lang: Lang; slug: string; title: string | null; coverUrl: string | null };
@@ -374,4 +382,91 @@ export async function unsubscribeByToken(token: string): Promise<boolean> {
   const admin = await serviceClient();
   const { data } = await admin.from("readers").update({ news_status: "oppose", news_changed_at: new Date().toISOString() }).eq("unsubscribe_token", token).select("user_id");
   return Boolean(data?.length);
+}
+
+/* ================================================================== */
+/* Phase 7 — le compagnon                                               */
+/* ================================================================== */
+
+type EditionOk = { id: string; book_id: string; lang: Lang; glossary_path: string | null };
+
+/**
+ * Condition d'accès, refaite à chaque appel : ligne edition_access de cet
+ * utilisateur + édition de la langue du domaine + publiée + collection visible.
+ */
+async function accesCompagnon(userId: string, editionId: string, lang: Lang): Promise<EditionOk | null> {
+  const admin = await serviceClient();
+  const [{ data: acc }, { data: ed }, { data: vis }] = await Promise.all([
+    admin.from("edition_access").select("edition_id").eq("user_id", userId).eq("edition_id", editionId).maybeSingle(),
+    admin.from("book_editions").select("id, book_id, lang, status, glossary_path").eq("id", editionId).maybeSingle(),
+    admin.rpc("edition_visible", { _edition_id: editionId }),
+  ]);
+  if (!acc || !ed || ed.status !== "publiee" || ed.lang !== lang || !vis) return null;
+  return { id: ed.id, book_id: ed.book_id, lang: ed.lang as Lang, glossary_path: ed.glossary_path };
+}
+
+/** Ouverture du compagnon : met à jour edition_access.last_seen_at et readers.last_seen_at. */
+export async function touchCompanion(userId: string, editionId: string, lang: Lang): Promise<boolean> {
+  if (!(await accesCompagnon(userId, editionId, lang))) return false;
+  const admin = await serviceClient();
+  const now = new Date().toISOString();
+  await admin.from("edition_access").update({ last_seen_at: now }).eq("user_id", userId).eq("edition_id", editionId);
+  await admin.from("readers").update({ last_seen_at: now }).eq("user_id", userId);
+  return true;
+}
+
+/** Lien signé de 15 minutes vers l'audio d'une page publiée de ce livre. */
+export async function signCompanionAudio(userId: string, editionId: string, lang: Lang, pageId: string): Promise<string | null> {
+  const ed = await accesCompagnon(userId, editionId, lang);
+  if (!ed) throw new Error("FORBIDDEN");
+  const admin = await serviceClient();
+  const { data: p } = await admin.from("book_pages").select("book_id, is_published, audio_path").eq("id", pageId).maybeSingle();
+  if (!p || p.book_id !== ed.book_id || !p.is_published || !p.audio_path) return null;
+  const { data, error } = await admin.storage.from("audios").createSignedUrl(p.audio_path, 900);
+  if (error) return null;
+  return data.signedUrl;
+}
+
+/** Lien signé de 5 minutes vers le glossaire PDF de l'édition. */
+export async function signCompanionGlossary(userId: string, editionId: string, lang: Lang): Promise<string | null> {
+  const ed = await accesCompagnon(userId, editionId, lang);
+  if (!ed) throw new Error("FORBIDDEN");
+  if (!ed.glossary_path) return null;
+  const admin = await serviceClient();
+  const { data, error } = await admin.storage.from("glossaires").createSignedUrl(ed.glossary_path, 300, { download: true });
+  if (error) return null;
+  return data.signedUrl;
+}
+
+/**
+ * Réponse au quiz : la justesse est calculée ici, jamais reçue du navigateur.
+ * Le bilan (reader_progress) est recalculé depuis la dernière réponse à chaque question.
+ */
+export async function recordQuizAnswer(userId: string, editionId: string, lang: Lang, questionId: string, chosen: number): Promise<{ correct: boolean }> {
+  const ed = await accesCompagnon(userId, editionId, lang);
+  if (!ed) throw new Error("FORBIDDEN");
+  const admin = await serviceClient();
+  const { data: q } = await admin.from("quiz_questions").select("id, edition_id, answer_index, options").eq("id", questionId).maybeSingle();
+  if (!q || q.edition_id !== ed.id) throw new Error("FORBIDDEN");
+  const n = Array.isArray(q.options) ? q.options.length : 0;
+  if (!Number.isInteger(chosen) || chosen < 0 || chosen >= n) throw new Error("INVALID");
+  const correct = chosen === q.answer_index;
+  const { error } = await admin.from("quiz_answers").insert({ user_id: userId, question_id: q.id, chosen_index: chosen, is_correct: correct });
+  if (error) throw new Error("SAVE_FAILED");
+
+  const { data: ids } = await admin.from("quiz_questions").select("id").eq("edition_id", ed.id);
+  const qids = (ids ?? []).map((r) => r.id);
+  const last = new Map<string, boolean>();
+  for (let i = 0; i < qids.length; i += 200) {
+    const { data: rows } = await admin.from("quiz_answers").select("question_id, is_correct, answered_at")
+      .eq("user_id", userId).in("question_id", qids.slice(i, i + 200)).order("answered_at", { ascending: true });
+    for (const r of rows ?? []) last.set(r.question_id, r.is_correct);
+  }
+  const answered = last.size;
+  const good = [...last.values()].filter(Boolean).length;
+  await admin.from("reader_progress").upsert(
+    { user_id: userId, edition_id: ed.id, quiz_answered: answered, quiz_correct: good },
+    { onConflict: "user_id,edition_id" },
+  );
+  return { correct };
 }
