@@ -72,6 +72,7 @@ export async function recordLoginFailure(emailHash: string, ipHash: string | nul
  * Limité à 30 par minute et par empreinte d'IP ; aucune donnée personnelle
  * n'est écrite (ni IP, ni empreinte : seulement le type et l'édition).
  */
+const VIS_WINDOW = "2000-01-01T00:00:00Z"; // fixe : une ligne unique par clé (clé primaire key+window_start)
 const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|embedly|preview|headless|lighthouse|pingdom|monitor|curl|wget|python-requests|httpclient|go-http|axios|node-fetch|whatsapp|telegram|discord|linkedin|twitter/i;
 
 /** Robot : pas de user-agent, ou user-agent d'un robot connu. */
@@ -93,9 +94,9 @@ export async function recordAmazonClick(editionId: string, ip: string, visitorId
   // Une seule ligne par visiteur+livre ; count = minute du dernier clic compté.
   // Mise à jour conditionnelle (compare-and-swap) : sûre face aux clics simultanés.
   const nowMin = Math.floor(Date.now() / 60000);
-  const { data: cur } = await admin.from("rate_limits").select("window_start, count").eq("key", vKey).maybeSingle();
+  const { data: cur } = await admin.from("rate_limits").select("window_start, count").eq("key", vKey).eq("window_start", VIS_WINDOW).maybeSingle();
   if (!cur) {
-    const { error: e2 } = await admin.from("rate_limits").insert({ key: vKey, window_start: new Date().toISOString(), count: nowMin });
+    const { error: e2 } = await admin.from("rate_limits").insert({ key: vKey, window_start: VIS_WINDOW, count: nowMin });
     if (e2) return false; // un autre clic simultané a gagné
   } else {
     if (nowMin - cur.count < 30) return false;
