@@ -19,6 +19,12 @@ export const ERREURS: Record<string, string> = {
   AUDIO_BAD_FORMAT: "Seuls les fichiers .mp3 et .m4a sont acceptés.",
   AUDIO_TOO_BIG: "Fichier trop lourd (50 Mo au plus).",
   AUDIO_: "L'envoi de l'audio a échoué.",
+  COLLECTION_NOT_FOUND: "Cette collection n'existe pas.",
+  COLLECTION_HAS_BOOKS: "Impossible : la collection contient des livres.",
+  KIND_NOT_ALLOWED: "Ce type de bloc n'est pas permis ici.",
+  BLOCK_NOT_FOUND: "Ce bloc n'existe plus : rechargez la page.",
+  IMAGE_BAD_FORMAT: "Formats acceptés : PNG, JPG, WebP.",
+  IMAGE_TOO_BIG: "Image trop lourde (10 Mo au plus).",
   Forbidden: "Accès refusé : ce compte n'a pas le rôle éditeur.",
   Unauthorized: "Session expirée : reconnectez-vous.",
 };
