@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "@/i18n/context";
 import type { DictKey } from "@/i18n/dictionaries";
 import { Bandeau } from "@/components/Bandeau";
@@ -135,6 +135,23 @@ export function CollectionPage({ d }: { d: CollectionData }) {
 
 export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }) {
   const { t } = useI18n();
+  // Barre fixe mobile : visible seulement quand le bouton d'origine est hors écran.
+  const amazonRef = useRef<HTMLAnchorElement>(null);
+  const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    const el = amazonRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([en]) => setShowBar(!en!.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [d.amazonUrl]);
+  // Marge en bas du document pour que la barre ne masque jamais le pied de page.
+  useEffect(() => {
+    if (!showBar || !d.amazonUrl || !window.matchMedia("(max-width: 767px)").matches) return;
+    const prev = document.body.style.paddingBottom;
+    document.body.style.paddingBottom = "80px";
+    return () => { document.body.style.paddingBottom = prev; };
+  }, [showBar, d.amazonUrl]);
   const level = [
     d.chapters ? tn(t("vitrine.chapters"), d.chapters) : null,
     d.vocab ? tn(t("vitrine.vocab"), d.vocab) : null,
@@ -162,10 +179,12 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
           {d.blurb && <Paragraphs text={d.blurb} className="mt-4" />}
           {d.amazonUrl && (
             <a
+              ref={amazonRef}
               href={d.amazonUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onAmazon}
+              data-amazon="main"
               className="bg-foreground text-background mt-5 inline-flex items-center px-6 py-3 text-[17px] font-medium hover:opacity-90"
             >
               {t("vitrine.buyAmazon")}
@@ -200,6 +219,22 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
           <h2 className="text-[26px]">{t("vitrine.sameCollection")}</h2>
           <div className="mt-6"><CoverGrid cards={d.sameCollection} /></div>
         </section>
+      )}
+      {d.amazonUrl && showBar && (
+        <>
+          <div className="bg-background border-line fixed inset-x-0 bottom-0 z-40 border-t p-3 md:hidden">
+            <a
+              href={d.amazonUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onAmazon}
+              data-amazon="bar"
+              className="bg-foreground text-background flex w-full items-center justify-center px-6 py-3 text-[17px] font-medium"
+            >
+              {t("vitrine.buyAmazon")}
+            </a>
+          </div>
+        </>
       )}
     </main>
   );
