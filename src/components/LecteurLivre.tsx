@@ -17,7 +17,7 @@ function formatTime(s: number): string {
   if (!Number.isFinite(s) || s < 0) return "0:00";
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 }
-const speedLabel = (v: number) => v.toFixed(2).replace(/0$/, "").replace(".", ",");
+const speedLabel = (v: number) => String(v).replace(".", ",");
 
 type Props = {
   editionId: string;
@@ -138,6 +138,9 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const onError = async () => {
     const el = audioRef.current;
     if (!el || !page?.has_audio || !el.getAttribute("src")) return;
+    // Lien tout juste obtenu : ce n'est pas une expiration, on n'insiste pas.
+    const c = urls.current.get(page.id);
+    if (c && Date.now() - c.at < 30_000) { setPlaying(false); autoRef.current = false; return; }
     const pos = el.currentTime;
     const url = await urlFor(page.id, true).catch(() => null);
     if (!url) return;

@@ -52,7 +52,7 @@ export function ReadingSettings() {
               <div className="mt-2 flex gap-2">
                 {SPEEDS.map((v) => (
                   <button key={v} type="button" onClick={() => setSpeed(v)} aria-pressed={speed === v} className={choice(speed === v)}>
-                    <span className="tabular-nums">{v.toFixed(2).replace(/0$/, "").replace(".", ",")}</span>
+                    <span className="tabular-nums">{String(v).replace(".", ",")}</span>
                   </button>
                 ))}
               </div>
