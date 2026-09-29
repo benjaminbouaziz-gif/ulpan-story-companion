@@ -73,11 +73,17 @@ export async function recordLoginFailure(emailHash: string, ipHash: string | nul
  * n'est écrite (ni IP, ni empreinte : seulement le type et l'édition).
  */
 const VIS_WINDOW = "2000-01-01T00:00:00Z"; // fixe : une ligne unique par clé (clé primaire key+window_start)
-const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|embedly|preview|headless|lighthouse|pingdom|monitor|curl|wget|python-requests|httpclient|go-http|axios|node-fetch|whatsapp|telegram|discord|linkedin|twitter/i;
+// Robots d'aperçu de lien seulement : les navigateurs intégrés des applications
+// (LinkedInApp, Twitter for iPhone, WhatsApp dans Mobile Safari…) sont de vrais visiteurs.
+const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|embedly|preview|headless|lighthouse|pingdom|monitor|curl|wget|python-requests|httpclient|go-http|axios|node-fetch/i;
+const LINK_PREVIEW_UA = /LinkedInBot|Twitterbot|TelegramBot|Discordbot/i;
+const WHATSAPP_PREVIEW = /WhatsApp\/\d/i;
 
 /** Robot : pas de user-agent, ou user-agent d'un robot connu. */
 export function isBotUserAgent(ua: string | null | undefined): boolean {
-  return !ua || !ua.trim() || BOT_UA.test(ua);
+  if (!ua || !ua.trim()) return true;
+  if (BOT_UA.test(ua) || LINK_PREVIEW_UA.test(ua)) return true;
+  return WHATSAPP_PREVIEW.test(ua) && !/Mobile Safari/i.test(ua);
 }
 
 /**
