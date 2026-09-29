@@ -145,6 +145,13 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
     io.observe(el);
     return () => io.disconnect();
   }, [d.amazonUrl]);
+  // Marge en bas du document pour que la barre ne masque jamais le pied de page.
+  useEffect(() => {
+    if (!showBar || !d.amazonUrl || !window.matchMedia("(max-width: 767px)").matches) return;
+    const prev = document.body.style.paddingBottom;
+    document.body.style.paddingBottom = "80px";
+    return () => { document.body.style.paddingBottom = prev; };
+  }, [showBar, d.amazonUrl]);
   const level = [
     d.chapters ? tn(t("vitrine.chapters"), d.chapters) : null,
     d.vocab ? tn(t("vitrine.vocab"), d.vocab) : null,
@@ -215,7 +222,6 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
       )}
       {d.amazonUrl && showBar && (
         <>
-          <div className="h-20 md:hidden" aria-hidden />
           <div className="bg-background border-line fixed inset-x-0 bottom-0 z-40 border-t p-3 md:hidden">
             <a
               href={d.amazonUrl}
