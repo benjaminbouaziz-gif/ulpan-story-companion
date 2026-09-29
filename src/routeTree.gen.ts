@@ -46,6 +46,7 @@ import { Route as AdminSiteAccueilRouteImport } from './routes/admin.site.accuei
 import { Route as AdminSiteConfidentialiteRouteImport } from './routes/admin.site.confidentialite'
 import { Route as AdminSiteContactRouteImport } from './routes/admin.site.contact'
 import { Route as AdminSiteMentionsRouteImport } from './routes/admin.site.mentions'
+import { Route as AdminSiteMethodeRouteImport } from './routes/admin.site.methode'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as AdminLivresSlugPagesPageNoRouteImport } from './routes/admin.livres.$slug_.pages.$pageNo'
@@ -236,6 +237,11 @@ const AdminSiteMentionsRoute = AdminSiteMentionsRouteImport.update({
   path: '/site/mentions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSiteMethodeRoute = AdminSiteMethodeRouteImport.update({
+  id: '/site/methode',
+  path: '/site/methode',
+  getParentRoute: () => AdminRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/admin/site/confidentialite': typeof AdminSiteConfidentialiteRoute
   '/admin/site/contact': typeof AdminSiteContactRoute
   '/admin/site/mentions': typeof AdminSiteMentionsRoute
+  '/admin/site/methode': typeof AdminSiteMethodeRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/admin/livres/': typeof AdminLivresIndexRoute
   '/admin/site/': typeof AdminSiteIndexRoute
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/admin/site/confidentialite': typeof AdminSiteConfidentialiteRoute
   '/admin/site/contact': typeof AdminSiteContactRoute
   '/admin/site/mentions': typeof AdminSiteMentionsRoute
+  '/admin/site/methode': typeof AdminSiteMethodeRoute
   '/admin/collections': typeof AdminCollectionsIndexRoute
   '/admin/livres': typeof AdminLivresIndexRoute
   '/admin/site': typeof AdminSiteIndexRoute
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   '/admin/site/confidentialite': typeof AdminSiteConfidentialiteRoute
   '/admin/site/contact': typeof AdminSiteContactRoute
   '/admin/site/mentions': typeof AdminSiteMentionsRoute
+  '/admin/site/methode': typeof AdminSiteMethodeRoute
   '/admin/collections/': typeof AdminCollectionsIndexRoute
   '/admin/livres/': typeof AdminLivresIndexRoute
   '/admin/site/': typeof AdminSiteIndexRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/admin/site/confidentialite'
     | '/admin/site/contact'
     | '/admin/site/mentions'
+    | '/admin/site/methode'
     | '/admin/collections/'
     | '/admin/livres/'
     | '/admin/site/'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/site/confidentialite'
     | '/admin/site/contact'
     | '/admin/site/mentions'
+    | '/admin/site/methode'
     | '/admin/collections'
     | '/admin/livres'
     | '/admin/site'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/admin/site/confidentialite'
     | '/admin/site/contact'
     | '/admin/site/mentions'
+    | '/admin/site/methode'
     | '/admin/collections/'
     | '/admin/livres/'
     | '/admin/site/'
@@ -797,6 +809,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSiteMentionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/site/methode': {
+      id: '/admin/site/methode'
+      path: '/site/methode'
+      fullPath: '/admin/site/methode'
+      preLoaderRoute: typeof AdminSiteMethodeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -832,6 +851,7 @@ interface AdminRouteChildren {
   AdminSiteConfidentialiteRoute: typeof AdminSiteConfidentialiteRoute
   AdminSiteContactRoute: typeof AdminSiteContactRoute
   AdminSiteMentionsRoute: typeof AdminSiteMentionsRoute
+  AdminSiteMethodeRoute: typeof AdminSiteMethodeRoute
   AdminCollectionsIndexRoute: typeof AdminCollectionsIndexRoute
   AdminLivresIndexRoute: typeof AdminLivresIndexRoute
   AdminSiteIndexRoute: typeof AdminSiteIndexRoute
@@ -849,6 +869,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSiteConfidentialiteRoute: AdminSiteConfidentialiteRoute,
   AdminSiteContactRoute: AdminSiteContactRoute,
   AdminSiteMentionsRoute: AdminSiteMentionsRoute,
+  AdminSiteMethodeRoute: AdminSiteMethodeRoute,
   AdminCollectionsIndexRoute: AdminCollectionsIndexRoute,
   AdminLivresIndexRoute: AdminLivresIndexRoute,
   AdminSiteIndexRoute: AdminSiteIndexRoute,
