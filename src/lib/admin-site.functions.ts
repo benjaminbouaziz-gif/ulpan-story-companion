@@ -91,7 +91,7 @@ export const listBlocks = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const admin = await editorAdmin(context);
     const blocs = await lireBlocs(admin, data);
-    return blocs.map((b) => ({ ...b, imageUrl: publicUrl(admin, b.image_path, String(b.sort_order) + b.id) }));
+    return blocs.map((b) => ({ ...b, imageUrl: publicUrl(admin, b.image_path, String(Date.now())) }));
   });
 
 export const addBlock = createServerFn({ method: "POST" })
