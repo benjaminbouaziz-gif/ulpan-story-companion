@@ -184,23 +184,6 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
             </a>
           )}
         </div>
-        {d.amazonUrl && showBar && (
-          <>
-            <div className="h-20 md:hidden" aria-hidden />
-            <div className="bg-background border-line fixed inset-x-0 bottom-0 z-40 border-t p-3 md:hidden">
-              <a
-                href={d.amazonUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onAmazon}
-                data-amazon="bar"
-                className="bg-foreground text-background flex w-full items-center justify-center px-6 py-3 text-[17px] font-medium"
-              >
-                {t("vitrine.buyAmazon")}
-              </a>
-            </div>
-          </>
-        )}
       </div>
 
       {d.excerptUrl && (
@@ -229,6 +212,23 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
           <h2 className="text-[26px]">{t("vitrine.sameCollection")}</h2>
           <div className="mt-6"><CoverGrid cards={d.sameCollection} /></div>
         </section>
+      )}
+      {d.amazonUrl && showBar && (
+        <>
+          <div className="h-20 md:hidden" aria-hidden />
+          <div className="bg-background border-line fixed inset-x-0 bottom-0 z-40 border-t p-3 md:hidden">
+            <a
+              href={d.amazonUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onAmazon}
+              data-amazon="bar"
+              className="bg-foreground text-background flex w-full items-center justify-center px-6 py-3 text-[17px] font-medium"
+            >
+              {t("vitrine.buyAmazon")}
+            </a>
+          </div>
+        </>
       )}
     </main>
   );
