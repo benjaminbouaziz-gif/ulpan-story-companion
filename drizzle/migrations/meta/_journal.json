@@ -29,6 +29,13 @@
       "when": 1790603302379,
       "tag": "0003_deux_editions_par_livre",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790696440243,
+      "tag": "0004_p0_table_rase_nouveau_schema",
+      "breakpoints": true
     }
   ]
 }
