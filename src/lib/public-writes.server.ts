@@ -364,18 +364,8 @@ export async function setReaderNews(userId: string, on: boolean): Promise<void> 
  * par adresse. Refusé pour un compte admin ou editor.
  */
 export async function eraseReader(userId: string): Promise<"ok" | "staff"> {
-  if (await estAdminOuEditeur(userId)) return "staff";
-  const admin = await serviceClient();
-  const { data: u } = await admin.auth.admin.getUserById(userId);
-  const { data: r } = await admin.from("readers").select("email").eq("user_id", userId).maybeSingle();
-  const emails = [...new Set([u.user?.email, r?.email].filter((e): e is string => Boolean(e)).map((e) => e.toLowerCase()))];
-  for (const e of emails) {
-    await admin.from("access_requests").delete().eq("email", e);
-    await admin.from("launch_waitlist").delete().eq("email", e);
-  }
-  const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) throw new Error("DELETE_FAILED");
-  return "ok";
+  const { effacerLecteur } = await import("@/lib/effacement.server");
+  return effacerLecteur(await serviceClient(), userId);
 }
 
 /** Désinscription par jeton, sans connexion. L'accès au compagnon ne change pas. */
