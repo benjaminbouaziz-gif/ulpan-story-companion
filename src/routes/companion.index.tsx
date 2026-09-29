@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { comingSoon } from "@/lib/page-route";
+import { espaceRoute } from "@/lecteur/routes";
 
-export const Route = createFileRoute("/companion/")(comingSoon("espace_lecteur", { noindex: true }));
+export const Route = createFileRoute("/companion/")(espaceRoute());

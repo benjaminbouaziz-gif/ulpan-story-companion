@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { comingSoon } from "@/lib/page-route";
+import { desinscriptionRoute } from "@/lecteur/routes";
 
-export const Route = createFileRoute("/desinscription")(comingSoon("desinscription", { noindex: true }));
+export const Route = createFileRoute("/desinscription")(desinscriptionRoute());
