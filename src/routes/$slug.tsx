@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { alwaysNotFound } from "@/lib/page-route";
+import { qrRoute } from "@/lecteur/routes";
 
-export const Route = createFileRoute("/$slug")(alwaysNotFound("entree_qr"));
+export const Route = createFileRoute("/$slug")(qrRoute());

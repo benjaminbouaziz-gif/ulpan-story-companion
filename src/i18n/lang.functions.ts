@@ -2,15 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie, getRequestHost, setCookie } from "@tanstack/react-start/server";
 import { z } from "zod";
 import type { Lang } from "./dictionaries";
-
-const PREVIEW_COOKIE = "preview_lang";
-
-function productionLang(host: string): Lang | null {
-  const h = host.toLowerCase().split(":")[0];
-  if (h === "ulpanstory.com" || h === "www.ulpanstory.com") return "en";
-  if (h === "oulpanstory.fr" || h === "www.oulpanstory.fr") return "fr";
-  return null;
-}
+import { PREVIEW_COOKIE, productionLang } from "./lang.server";
 
 /**
  * La langue vient du domaine, et de lui seul. Hors production (aperçu,

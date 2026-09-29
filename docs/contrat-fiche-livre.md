@@ -21,7 +21,7 @@ nettoyés des espaces au début et à la fin ; un texte vide vaut « absent ».
 | Champ | Type | Obligatoire | Limites |
 |---|---|---|---|
 | slug | texte | oui | 80 car., minuscules/chiffres/tirets (`^[a-z0-9]+(-[a-z0-9]+)*$`), non réservé, doit être égal à `livre.collection`, pas déjà le slug d'un livre |
-| couleur | texte | non | une des 12 couleurs du nuancier : #1f3a5f, #2e5e4e, #6b2d2d, #7a5c2e, #4a3b5c, #2f4f4f, #8c4a2f, #3d5a80, #5c6b3a, #6d4c41, #34495e, #7b3f61 |
+| couleur | texte | non | toute couleur hexadécimale `#RRGGBB` (6 chiffres hexadécimaux, majuscules ou minuscules, enregistrée en minuscules). Le nuancier de l'écran Collection n'est qu'une aide au choix. |
 | ordre | entier | non | 0 à 100 000 |
 | fr / en | objet | non | textes de la collection dans la langue |
 | fr/en.nom | texte | oui si la langue est présente | 300 car. |

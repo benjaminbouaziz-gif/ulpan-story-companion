@@ -1,5 +1,4 @@
 import { slugProbleme } from "@/lib/slug";
-import { NUANCIER } from "@/lib/nuancier";
 
 /**
  * Analyse PURE d'une fiche livre JSON (contrat : docs/contrat-fiche-livre.md).
@@ -125,7 +124,7 @@ export function analyserFicheJson(src: string): { fiche: Fiche | null; erreurs: 
       let couleur: string | null = null;
       if (rc["couleur"] !== undefined && rc["couleur"] !== null) {
         const c = typeof rc["couleur"] === "string" ? rc["couleur"].toLowerCase() : "";
-        if (!(NUANCIER as readonly string[]).includes(c)) err("collection.couleur", null, `doit être une couleur du nuancier : ${NUANCIER.join(", ")}`);
+        if (!/^#[0-9a-f]{6}$/.test(c)) err("collection.couleur", null, "doit être une couleur hexadécimale #RRGGBB (ex. #16407a)");
         else couleur = c;
       }
       const ordre = entier(rc, "ordre", "collection", 0, 100000, null);

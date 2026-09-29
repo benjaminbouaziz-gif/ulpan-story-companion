@@ -7,6 +7,7 @@ import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import { MAIL, mailLang } from '@/lib/email-templates/lecteur-texts'
 
 // Configuration
 const SITE_NAME = "Ulpan Story"
@@ -27,16 +28,19 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           senderDomain: SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
-            signup: {
-              subject: 'Confirmez votre adresse — Ulpan Story',
-              render: (data) =>
-                React.createElement(SignupEmail, {
+            signup: (data) => {
+              const lang = mailLang(data.url)
+              return {
+                subject: MAIL[lang].subjectSignup,
+                element: React.createElement(SignupEmail, {
                   siteName: SITE_NAME,
                   siteUrl: SITE_URL,
                   recipient: data.email,
                   confirmationUrl: data.url,
                   token: data.token ?? undefined,
+                  lang,
                 }),
+              }
             },
             invite: {
               subject: "Votre invitation — Ulpan Story",
@@ -47,14 +51,17 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                   confirmationUrl: data.url,
                 }),
             },
-            magiclink: {
-              subject: 'Votre lien d’accès — Ulpan Story',
-              render: (data) =>
-                React.createElement(MagicLinkEmail, {
+            magiclink: (data) => {
+              const lang = mailLang(data.url)
+              return {
+                subject: MAIL[lang].subjectMagic,
+                element: React.createElement(MagicLinkEmail, {
                   siteName: SITE_NAME,
                   confirmationUrl: data.url,
                   token: data.token ?? undefined,
+                  lang,
                 }),
+              }
             },
             recovery: {
               subject: 'Nouveau mot de passe — Ulpan Story',
