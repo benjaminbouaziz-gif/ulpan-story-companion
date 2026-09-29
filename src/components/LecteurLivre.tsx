@@ -57,10 +57,12 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const page = pages[index];
 
   // Reprise : dernière page ouverte sur cet appareil.
+  const restored = useRef(false);
   useEffect(() => {
     const saved = Number(window.localStorage.getItem(storeKey));
     const i = pages.findIndex((p) => p.page_no === saved);
     if (i >= 0) setIndex(i);
+    restored.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeKey]);
 
@@ -71,7 +73,8 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   }, [goto, pages]);
 
   useEffect(() => {
-    if (page) window.localStorage.setItem(storeKey, String(page.page_no));
+    // Rien n'est écrit avant la reprise, sinon la page 1 écraserait la page retenue.
+    if (page && restored.current) window.localStorage.setItem(storeKey, String(page.page_no));
   }, [page, storeKey]);
 
   const plainMissing = useMemo(() => !page || page.paragraphs.length === 0 || page.paragraphs.some((b) => !(b.he_plain ?? "").trim()), [page]);
