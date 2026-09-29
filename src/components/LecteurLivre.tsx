@@ -17,7 +17,7 @@ function formatTime(s: number): string {
   if (!Number.isFinite(s) || s < 0) return "0:00";
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 }
-const speedLabel = (v: number) => v.toFixed(2).replace(/0$/, "").replace(".", ",");
+const speedLabel = (v: number) => String(v).replace(".", ",");
 
 type Props = {
   editionId: string;
@@ -43,7 +43,12 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const { speed, setSpeed, autoAdvance, setAutoAdvance } = usePreferences();
   const storeKey = `ulpanstory.page.${editionId}`;
 
-  const [index, setIndex] = useState(0);
+  // Reprise : dernière page ouverte sur cet appareil (composant rendu côté navigateur seulement).
+  const [index, setIndex] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = Number(window.localStorage.getItem(storeKey));
+    return Math.max(0, pages.findIndex((p) => p.page_no === saved));
+  });
   const [nikud, setNikud] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -55,14 +60,6 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const urls = useRef(new Map<string, { url: string; at: number }>());
   const autoRef = useRef(false); // la page affichée doit démarrer d'elle-même
   const page = pages[index];
-
-  // Reprise : dernière page ouverte sur cet appareil.
-  useEffect(() => {
-    const saved = Number(window.localStorage.getItem(storeKey));
-    const i = pages.findIndex((p) => p.page_no === saved);
-    if (i >= 0) setIndex(i);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeKey]);
 
   useEffect(() => {
     if (!goto) return;
@@ -138,6 +135,9 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const onError = async () => {
     const el = audioRef.current;
     if (!el || !page?.has_audio || !el.getAttribute("src")) return;
+    // Lien tout juste obtenu : ce n'est pas une expiration, on n'insiste pas.
+    const c = urls.current.get(page.id);
+    if (c && Date.now() - c.at < 30_000) { setPlaying(false); autoRef.current = false; return; }
     const pos = el.currentTime;
     const url = await urlFor(page.id, true).catch(() => null);
     if (!url) return;
