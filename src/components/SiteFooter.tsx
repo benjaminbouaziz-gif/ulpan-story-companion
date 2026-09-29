@@ -12,7 +12,9 @@ export function SiteFooter({ tagline }: { tagline: string | null }) {
   const pageId: PageId = leaf?.staticData?.pageId ?? "accueil";
   const params = (leaf?.params ?? {}) as Record<string, string>;
   const other = lang === "fr" ? "en" : "fr";
-  const otherHref = absoluteUrl(pageId, other, params);
+  // Même page dans l'autre langue si elle y existe, sinon accueil de l'autre domaine.
+  const alt = (leaf?.loaderData as { alternateExists?: boolean } | undefined)?.alternateExists;
+  const otherHref = alt === false ? absoluteUrl("accueil", other) : absoluteUrl(pageId, other, params);
 
   return (
     <footer className="border-line mt-16 border-t">
