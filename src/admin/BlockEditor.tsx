@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { addBlock, blockHistory, listBlocks, removeBlock, restoreVersion, saveBlocks, uploadBlockImage } from "@/lib/admin-site.functions";
+import { addBlock, blockHistory, listBlocks, removeBlock, removeBlockImage, restoreVersion, saveBlocks, uploadBlockImage } from "@/lib/admin-site.functions";
 import { KIND_LABELS, type BlockKind, type PageKey } from "@/lib/site-blocks";
 import { messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, Field, inputCls } from "@/admin/ui";
@@ -153,6 +153,7 @@ function Formulaire({ r, scope, upd, onImage }: { r: Row; scope: "site" | "colle
 
 function ImageBloc({ r, scope, upd, onImage }: { r: Row; scope: "site" | "collection"; upd: (p: Partial<Row>) => void; onImage: () => void }) {
   const up = useServerFn(uploadBlockImage);
+  const rmImg = useServerFn(removeBlockImage);
   const ref = useRef<HTMLInputElement | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   async function deposer(f: File | undefined) {
@@ -170,6 +171,10 @@ function ImageBloc({ r, scope, upd, onImage }: { r: Row; scope: "site" | "collec
       <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => { void deposer(e.target.files?.[0]); e.target.value = ""; }} />
       {r.imageUrl ? <img src={r.imageUrl} alt={r.title ?? ""} className="border-line max-h-56 border" /> : <p className="text-secondary-text">Aucune image.</p>}
       <button type="button" className={btnCls} onClick={() => ref.current?.click()}>{r.imageUrl ? "Remplacer" : "Déposer une image"}</button>
+      {r.imageUrl && <button type="button" className={`${btnCls} ml-2`} onClick={async () => {
+        if (!window.confirm("Retirer cette image ?")) return;
+        try { await rmImg({ data: { scope, id: r.id } }); onImage(); } catch (e) { setMsg(messageErreur(e)); }
+      }}>Retirer l'image</button>}
       {msg && <p>{msg}</p>}
       <Field label="Légende"><input className={inputCls} value={r.title ?? ""} onChange={(e) => upd({ title: e.target.value })} /></Field>
     </div>
