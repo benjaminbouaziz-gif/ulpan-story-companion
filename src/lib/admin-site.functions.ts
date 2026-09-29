@@ -162,6 +162,20 @@ export const removeBlock = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const removeBlockImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ scope: scopeSchema, id: uuid }).parse(d))
+  .handler(async ({ context, data }) => {
+    const admin = await editorAdmin(context);
+    const row = await unBloc(admin, data.scope, data.id);
+    const old = row["image_path"] as string | null;
+    const { data: nrow, error } = await admin.from(table(data.scope)).update({ image_path: null } as never).eq("id", data.id).select("*").single();
+    if (error || !nrow) throw new Error("SAVE_FAILED");
+    if (old) await admin.storage.from(SITE).remove([old]);
+    await instantane(admin, data.scope, nrow as Record<string, unknown>, context.userId);
+    return { ok: true };
+  });
+
 export const uploadBlockImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: FormData) => {
