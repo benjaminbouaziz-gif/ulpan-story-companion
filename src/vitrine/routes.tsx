@@ -107,7 +107,14 @@ export function bookRoute() {
     component: function Book() {
       const d = useLoaderData({ strict: false }) as BookData;
       const click = useServerFn(clickAmazon);
-      return <BookPage d={d} onAmazon={() => void click({ data: { editionId: d.editionId } }).catch(() => {})} />;
+      const onAmazon = () => {
+        // Identifiant anonyme de session créé avant l'appel, pour que des clics rapides partagent le même.
+        if (!/(?:^|; )us_vid=/.test(document.cookie)) {
+          document.cookie = `us_vid=${crypto.randomUUID()}; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+        }
+        void click({ data: { editionId: d.editionId } }).catch(() => {});
+      };
+      return <BookPage d={d} onAmazon={onAmazon} />;
     },
   };
 }
