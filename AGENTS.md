@@ -11,3 +11,4 @@
 
 - Phase P0 : écritures visiteurs/lecteurs uniquement via src/lib/public-writes.server.ts ; éditeurs via getAdminClient. Pourquoi : le client de service n'est atteignable que par ces deux portes.
 - reprise/ garde les briques de l'ancien site, hors compilation ; ne jamais l'importer. Pourquoi : référence pour les phases suivantes.
+- P1 : la langue vient du domaine seul (src/i18n/lang.functions.ts ; ?lang= + cookie preview_lang hors production) et tous les liens passent par pathFor de src/i18n/routes.ts. Pourquoi : un domaine = une langue, adresses cohérentes et redirections 301 automatiques.
