@@ -54,7 +54,6 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [sommaire, setSommaire] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urls = useRef(new Map<string, { url: string; at: number }>());
@@ -183,8 +182,18 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
         onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)}
         onEnded={onEnded} onError={() => void onError()} />
 
+      <select aria-label={t("reader.chapters")} data-chapter-select value={page.chapter_no}
+        className="label border-line bg-background text-foreground mb-3 min-h-[44px] w-full border px-3 sm:w-auto"
+        onChange={(e) => {
+          const c = chapters.find((x) => x.chapter_no === Number(e.target.value));
+          const i = c?.first_page != null ? pages.findIndex((p) => p.page_no === c.first_page) : -1;
+          if (i >= 0) { pause(); goIndex(i, false); }
+        }}>
+        {chapters.filter((c) => c.pages.length).map((c) => (
+          <option key={c.chapter_no} value={c.chapter_no}>{fmt(t("quiz.chapter"), { n: c.chapter_no })}{c.title ? ` · ${c.title}` : ""}</option>
+        ))}
+      </select>
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className={btn} onClick={() => setSommaire(true)}>{t("reader.chapters")}</button>
         <button type="button" className={btn} disabled={plainMissing} aria-pressed={nikud} onClick={() => setNikud((v) => !v)} data-nikud={nikud ? "on" : "off"}>
           {t("reader.nikud")}
         </button>
@@ -236,29 +245,6 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
         </div>
       </div>
 
-      {sommaire ? (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <button type="button" aria-label={t("nav.close")} onClick={() => setSommaire(false)} className="bg-foreground/40 absolute inset-0" />
-          <div className="bg-background border-line safe-bottom relative max-h-[80vh] overflow-y-auto border-t px-4 pt-4">
-            <div className="mx-auto w-full max-w-xl">
-              <p className="label text-secondary-text">{t("reader.chapters")}</p>
-              <ul className="mt-2">
-                {chapters.filter((c) => c.pages.length).map((c) => (
-                  <li key={c.chapter_no} className="border-line border-b py-3">
-                    <p className="body-text">{fmt(t("quiz.chapter"), { n: c.chapter_no })}{c.title ? ` · ${c.title}` : ""}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {c.pages.map((n) => (
-                        <button key={n} type="button" className={btn} aria-current={n === page.page_no} onClick={() => { goIndex(pages.findIndex((p) => p.page_no === n), false); setSommaire(false); }}>{n}</button>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <button type="button" onClick={() => setSommaire(false)} className="label touch bg-foreground text-background mt-4 mb-2 w-full">{t("nav.close")}</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }
