@@ -26,7 +26,7 @@ export function Blocks({ blocks, firstTitleH1 = false, h1ClassName }: { blocks: 
   );
 }
 
-function Block({ b, h1, h1ClassName }: { b: VBlock; h1: boolean; h1ClassName?: string }) {
+function Block({ b, h1, h1ClassName }: { b: VBlock; h1: boolean; h1ClassName?: string | undefined }) {
   switch (b.kind) {
     case "titre":
       if (!b.title) return null;

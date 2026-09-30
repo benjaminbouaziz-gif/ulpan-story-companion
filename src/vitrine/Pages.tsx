@@ -51,7 +51,7 @@ function paragraphsOf(blocks: VBlock[]) {
   return blocks.filter((b) => b.kind === "texte" && b.body).flatMap((b) => b.body!.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean));
 }
 
-function Featured({ c, onAmazon }: { c: HomeCard; onAmazon?: (id: string) => void }) {
+function Featured({ c, onAmazon }: { c: HomeCard; onAmazon?: ((id: string) => void) | undefined }) {
   const { t } = useI18n();
   const kicker = [c.collectionName, c.tome != null ? tn(t("vitrine.tome"), c.tome) : null].filter(Boolean).join(" · ");
   return (
