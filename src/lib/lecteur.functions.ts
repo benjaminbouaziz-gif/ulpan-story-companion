@@ -87,7 +87,7 @@ export const confirmerAcces = createServerFn({ method: "POST" })
 
 export const monEspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => (await pw()).readerSpace(context.userId));
+  .handler(async ({ context }) => (await pw()).readerSpace(context.userId, emailOf(context.claims)));
 
 export const regleNouveautes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
