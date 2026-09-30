@@ -11,6 +11,9 @@ export function Paragraphs({ text, className = "" }: { text: string; className?:
   );
 }
 
+/** Ancre stable d'un bloc Titre. */
+export const anchorOf = (b: { id: string }) => `t-${b.id}`;
+
 /** Affiche des blocs de contenu selon leur type. `firstTitleH1` : le premier titre devient h1. */
 export function Blocks({ blocks, firstTitleH1 = false, h1ClassName }: { blocks: VBlock[]; firstTitleH1?: boolean; h1ClassName?: string }) {
   const firstTitle = firstTitleH1 ? blocks.find((b) => b.kind === "titre" && b.title)?.id : undefined;
@@ -30,16 +33,16 @@ function Block({ b, h1, h1ClassName }: { b: VBlock; h1: boolean; h1ClassName?: s
   switch (b.kind) {
     case "titre":
       if (!b.title) return null;
-      return h1 ? <h1 className={h1ClassName ?? "text-[34px] sm:text-[40px]"}>{b.title}</h1> : <h2 className="text-[26px]">{b.title}</h2>;
+      return h1 ? <h1 className={h1ClassName ?? "text-[34px] sm:text-[40px]"}>{b.title}</h1> : <h2 id={anchorOf(b)} className="scroll-mt-20 text-[26px]">{b.title}</h2>;
     case "texte":
       return b.body ? <Paragraphs text={b.body} /> : null;
     case "etapes":
       return (
-        <ol className="space-y-4">
+        <ol className="space-y-6">
           {b.items.map((it, i) => (
-            <li key={i} className="flex gap-4">
-              <span className="label text-secondary-text min-w-6 pt-1">{it["numero"] || i + 1}</span>
-              <div>
+            <li key={i} className="flex gap-5">
+              <span className="text-collection min-w-10 shrink-0 text-[34px] leading-none">{it["numero"] || i + 1}</span>
+              <div className="min-w-0">
                 {it["titre"] && <p className="font-medium">{it["titre"]}</p>}
                 {it["texte"] && <Paragraphs text={it["texte"]} className="text-secondary-text" />}
               </div>
@@ -49,9 +52,9 @@ function Block({ b, h1, h1ClassName }: { b: VBlock; h1: boolean; h1ClassName?: s
       );
     case "faq":
       return (
-        <div className="border-line divide-line divide-y border-y">
+        <div className="border-line divide-line max-w-[70ch] divide-y border-y">
           {b.items.map((it, i) => (
-            <details key={i} className="py-3">
+            <details key={i} className="py-4">
               <summary className="cursor-pointer font-bold">{it["question"]}</summary>
               {it["reponse"] && <Paragraphs text={it["reponse"]} className="mt-2" />}
             </details>
@@ -69,11 +72,11 @@ function Block({ b, h1, h1ClassName }: { b: VBlock; h1: boolean; h1ClassName?: s
       ) : null;
     case "chiffres":
       return (
-        <dl className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+        <dl className="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
           {b.items.map((it, i) => (
-            <div key={i}>
-              <dt className="text-[32px] leading-none">{it["valeur"]}</dt>
-              <dd className="text-secondary-text mt-1">{it["libelle"]}</dd>
+            <div key={i} className="border-foreground border-t pt-3">
+              <dt className="text-[36px] leading-none">{it["valeur"]}</dt>
+              <dd className="text-secondary-text mt-2">{it["libelle"]}</dd>
             </div>
           ))}
         </dl>

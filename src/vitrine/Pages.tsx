@@ -6,7 +6,7 @@ import { HebrewText } from "@/components/HebrewText";
 import { SiteLink } from "@/components/SiteLink";
 import { BookOpen, Headphones, ListChecks } from "lucide-react";
 import type { BlocksPageData, BookData, CollectionData, HomeCard, HomeData, VBlock, VCollCard } from "@/lib/vitrine.data";
-import { Blocks, Paragraphs } from "./Blocks";
+import { anchorOf, Blocks, Paragraphs } from "./Blocks";
 import { CoverGrid } from "./CoverGrid";
 import { MethodTabs } from "./MethodTabs";
 import { ZoomImage } from "./ZoomImage";
@@ -184,13 +184,78 @@ export function HomePage({ d, onAmazon }: { d: HomeData; onAmazon?: (editionId: 
   );
 }
 
+/** Découpe les blocs en sections, chacune ouverte par un bloc Titre. */
+function sectionsOf(blocks: VBlock[]) {
+  const out: VBlock[][] = [];
+  for (const b of blocks) {
+    if (b.kind === "titre" && b.title) out.push([b]);
+    else if (out.length) out[out.length - 1]!.push(b);
+    else out.push([b]);
+  }
+  return out;
+}
+
+function PageToc({ titles }: { titles: VBlock[] }) {
+  const { t } = useI18n();
+  const [active, setActive] = useState<string | null>(titles[0] ? anchorOf(titles[0]) : null);
+  useEffect(() => {
+    const onScroll = () => {
+      let cur: string | null = titles[0] ? anchorOf(titles[0]) : null;
+      for (const b of titles) {
+        const el = document.getElementById(anchorOf(b));
+        if (el && el.getBoundingClientRect().top <= 120) cur = anchorOf(b);
+      }
+      setActive(cur);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [titles]);
+  return (
+    <nav aria-label={t("vitrine.onThisPage")} className="sticky top-20">
+      <p className="label text-secondary-text">{t("vitrine.onThisPage")}</p>
+      <ul className="border-line mt-3 border-l">
+        {titles.map((b) => {
+          const id = anchorOf(b);
+          return (
+            <li key={b.id}>
+              <a
+                href={`#${id}`}
+                aria-current={active === id ? "location" : undefined}
+                className={`-ml-px block truncate border-l-2 py-1.5 pl-3 text-[15px] ${active === id ? "border-foreground text-foreground" : "text-secondary-text hover:text-foreground border-transparent"}`}
+              >
+                {b.title}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 export function MethodPage({ d }: { d: BlocksPageData }) {
   const { t } = useI18n();
+  const sections = sectionsOf(d.blocks);
+  const titles = d.blocks.filter((b) => b.kind === "titre" && b.title);
+  const hasTabs = d.steps.some((s) => s.imageUrl);
   return (
-    <main className={`${READ} py-10`}>
+    <main className="frame py-10">
       <h1 className="text-[34px]">{t("page.methode")}</h1>
-      <div className="mt-6"><MethodTabs steps={d.steps} /></div>
-      <div className="mt-8"><Blocks blocks={d.blocks} /></div>
+      {hasTabs && (
+        <>
+          <div className="mt-6"><MethodTabs steps={d.steps} /></div>
+          <p className="text-secondary-text mt-4 text-[15px]">{t("vitrine.tapToZoom")}</p>
+        </>
+      )}
+      <div className="mt-16 lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-16">
+        <div className="hidden lg:block">{titles.length > 0 && <PageToc titles={titles} />}</div>
+        <div className="flex min-w-0 flex-col gap-16">
+          {sections.map((sec) => (
+            <div key={sec[0]!.id} className="[&>*]:read"><Blocks blocks={sec} /></div>
+          ))}
+        </div>
+      </div>
     </main>
   );
 }
