@@ -45,7 +45,7 @@ export function MethodTabs({ steps }: { steps: VStep[] }) {
         ))}
       </div>
       <div role="tabpanel" id={`${base}-p${cur}`} aria-labelledby={`${base}-t${cur}`} className="mt-4">
-        <ZoomImage key={step.stepNo} src={step.imageUrl!} alt={step.label} className="border-line border" />
+        <ZoomImage key={step.stepNo} src={step.imageUrl!} alt={step.label} className="border-line border" gallery={{ items: shown.map((x) => ({ src: x.imageUrl!, alt: x.label, label: x.label })), index: cur, onIndex: setActive }} />
       </div>
     </div>
   );

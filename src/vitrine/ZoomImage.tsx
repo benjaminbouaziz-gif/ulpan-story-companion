@@ -4,12 +4,15 @@ import { useI18n } from "@/i18n/context";
 const MAX = 5;
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
+export type ZoomItem = { src: string; alt: string; label: string };
+
 /**
- * Image cliquable qui s'ouvre en plein écran sur fond sombre.
+ * Image cliquable qui s'ouvre en plein écran sur le fond du site.
  * Zoom : deux doigts, double-toucher / double-clic, molette. Déplacement de
  * l'image zoomée. Fermeture : croix, Échap, ou glissé vers le bas au doigt.
+ * `gallery` : plusieurs images (étapes de la Méthode) parcourues sans fermer.
  */
-export function ZoomImage({ src, alt, className = "", imgClassName = "" }: { src: string; alt: string; className?: string; imgClassName?: string }) {
+export function ZoomImage({ src, alt, className = "", imgClassName = "", gallery }: { src: string; alt: string; className?: string; imgClassName?: string; gallery?: { items: ZoomItem[]; index: number; onIndex?: (i: number) => void } }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   return (
@@ -17,12 +20,19 @@ export function ZoomImage({ src, alt, className = "", imgClassName = "" }: { src
       <button type="button" className={`block w-full cursor-zoom-in ${className}`} onClick={() => setOpen(true)} aria-label={`${t("vitrine.zoomOpen")} : ${alt}`}>
         <img src={src} alt={alt} loading="lazy" className={`block h-auto w-full ${imgClassName}`} />
       </button>
-      {open && <Viewer src={src} alt={alt} onClose={() => setOpen(false)} closeLabel={t("vitrine.zoomClose")} />}
+      {open && <Viewer items={gallery?.items ?? [{ src, alt, label: alt }]} start={gallery?.index ?? 0} multi={!!gallery && gallery.items.length > 1} onIndex={gallery?.onIndex} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; onClose: () => void; closeLabel: string }) {
+function Viewer({ items, start, multi, onIndex, onClose }: { items: ZoomItem[]; start: number; multi: boolean; onIndex?: (i: number) => void; onClose: () => void }) {
+  const { t } = useI18n();
+  const [idx, setIdx] = useState(Math.min(start, items.length - 1));
+  const item = items[idx]!;
+  const { src, alt } = item;
+  const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
+  const [area, setArea] = useState<{ w: number; h: number } | null>(null);
+  const [portrait, setPortrait] = useState(false);
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [drop, setDrop] = useState(0); // glissé vers le bas (non zoomé)
@@ -36,17 +46,47 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
   const lastTap = useRef(0);
   const lastType = useRef("mouse");
   const closeRef = useRef<HTMLButtonElement>(null);
+  const goRef = useRef((d: number) => {});
+  goRef.current = (d: number) => goTo(idx + d);
 
   const reset = useCallback(() => { setScale(1); setPos({ x: 0, y: 0 }); }, []);
+  const goTo = useCallback((i: number) => {
+    if (i < 0 || i >= items.length) return;
+    setIdx(i); setNat(null); setScale(1); setPos({ x: 0, y: 0 }); onIndex?.(i);
+  }, [items.length, onIndex]);
+
+  // Taille de la zone disponible : l'image y est ajustée, agrandie si besoin.
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const measure = () => {
+      const cs = getComputedStyle(el);
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      setArea({ w: Math.max(0, w), h: Math.max(0, h) });
+      setPortrait(window.innerHeight > window.innerWidth && window.innerWidth < 768);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
+  const fit = nat && area ? Math.min(area.w / nat.w, area.h / nat.h) : 0;
+  const showRotate = portrait && !!nat && nat.w > nat.h;
 
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (multi && e.key === "ArrowRight") goRef.current(1);
+      else if (multi && e.key === "ArrowLeft") goRef.current(-1);
+    };
     window.addEventListener("keydown", onKey);
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
-  }, [onClose]);
+  }, [onClose, multi]);
 
   /**
    * Zoom ancré : l'image est centrée dans le cadre (origine de transformation au
@@ -127,31 +167,55 @@ function Viewer({ src, alt, onClose, closeLabel }: { src: string; alt: string; o
     zoomAt(s, at, at, s0, p0);
   };
 
+  const arrowCls = "text-foreground bg-background/80 border-line absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center border text-[24px] leading-none disabled:opacity-30";
   return (
     <div
-      ref={boxRef}
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      className="bg-night fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+      className="bg-background text-foreground fixed inset-0 z-50 flex flex-col overflow-hidden"
       style={{ touchAction: "none", opacity: drop ? Math.max(0.3, 1 - drop / 400) : 1 }}
       onWheel={onWheel}
     >
-      <button ref={closeRef} type="button" onClick={onClose} aria-label={closeLabel} className="text-night-ink absolute top-3 right-3 z-10 flex h-11 w-11 items-center justify-center text-[28px] leading-none">
-        ×
-      </button>
-      <img
-        src={src}
-        alt={alt}
-        draggable={false}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onDoubleClick={(e) => { if (lastType.current !== "touch") toggleZoom({ x: e.clientX, y: e.clientY }); }}
-        className="max-h-full max-w-full select-none"
-        style={{ transform: `translate(${pos.x}px, ${pos.y + drop}px) scale(${scale})`, cursor: scale > 1 ? "grab" : "zoom-in", transition: pointers.current.size ? "none" : "transform 120ms" }}
-      />
+      <div className="flex min-h-14 shrink-0 items-center gap-3 px-4 sm:px-8">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-x-5">
+          {multi && items.map((it, i) => (
+            <button key={i} type="button" onClick={() => goTo(i)} aria-current={i === idx}
+              className={`label touch border-b-2 py-2 ${i === idx ? "border-current" : "text-secondary-text border-transparent"}`}>
+              {it.label}
+            </button>
+          ))}
+        </div>
+        <button ref={closeRef} type="button" onClick={onClose} aria-label={t("vitrine.zoomClose")} className="text-foreground flex h-11 w-11 shrink-0 items-center justify-center text-[28px] leading-none">
+          ×
+        </button>
+      </div>
+      <div ref={boxRef} className="relative flex min-h-0 flex-1 items-center justify-center p-4 sm:p-8">
+        {multi && <button type="button" className={`${arrowCls} left-1 sm:left-2`} disabled={idx === 0} onClick={() => goTo(idx - 1)} aria-label={t("vitrine.zoomPrev")}>‹</button>}
+        {multi && <button type="button" className={`${arrowCls} right-1 sm:right-2`} disabled={idx === items.length - 1} onClick={() => goTo(idx + 1)} aria-label={t("vitrine.zoomNext")}>›</button>}
+        <img
+          key={src}
+          src={src}
+          alt={alt}
+          draggable={false}
+          onLoad={(e) => setNat({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onDoubleClick={(e) => { if (lastType.current !== "touch") toggleZoom({ x: e.clientX, y: e.clientY }); }}
+          className="border-line max-w-none border shadow-[0_2px_14px_rgba(0,0,0,0.12)] select-none"
+          style={{
+            width: fit ? nat!.w * fit : undefined,
+            height: fit ? nat!.h * fit : undefined,
+            visibility: fit ? "visible" : "hidden",
+            transform: `translate(${pos.x}px, ${pos.y + drop}px) scale(${scale})`,
+            cursor: scale > 1 ? "grab" : "zoom-in",
+            transition: pointers.current.size ? "none" : "transform 120ms",
+          }}
+        />
+      </div>
+      {showRotate && <p className="text-secondary-text shrink-0 px-4 pb-4 text-center text-[13px]">{t("vitrine.zoomRotate")}</p>}
     </div>
   );
 }
