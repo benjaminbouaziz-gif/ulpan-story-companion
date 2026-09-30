@@ -25,7 +25,7 @@ export function ZoomImage({ src, alt, className = "", imgClassName = "", gallery
   );
 }
 
-function Viewer({ items, start, multi, onIndex, onClose }: { items: ZoomItem[]; start: number; multi: boolean; onIndex?: (i: number) => void; onClose: () => void }) {
+function Viewer({ items, start, multi, onIndex, onClose }: { items: ZoomItem[]; start: number; multi: boolean; onIndex?: ((i: number) => void) | undefined; onClose: () => void }) {
   const { t } = useI18n();
   const [idx, setIdx] = useState(Math.min(start, items.length - 1));
   const item = items[idx]!;
