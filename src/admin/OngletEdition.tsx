@@ -1,3 +1,4 @@
+import { TailleImage } from "@/admin/TailleImage";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -109,6 +110,7 @@ function ImageEdition({ d, kind, url, refresh }: { d: Data; kind: "cover" | "exc
           try { await rm({ data: { editionId: d.edition.id, kind } }); refresh(); } catch (e) { setMsg(messageErreur(e)); }
         }}>Retirer</button>}
       </div>
+      {kind === "excerpt" && <div className="mt-2"><TailleImage url={url} /></div>}
       {msg && <p className="mt-1 text-[13px]">{msg}</p>}
     </div>
   );
