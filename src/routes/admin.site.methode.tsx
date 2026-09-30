@@ -1,3 +1,4 @@
+import { TailleImage } from "@/admin/TailleImage";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -91,6 +92,7 @@ function ImageEtape({ lang, stepNo, url, onDone }: { lang: "fr" | "en"; stepNo: 
           try { await rm({ data: { lang, stepNo } }); onDone(); } catch (e) { setMsg(messageErreur(e)); }
         }}>Retirer</button>}
       </div>
+      <TailleImage url={url} />
       {msg && <p>{msg}</p>}
     </div>
   );

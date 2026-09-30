@@ -46,14 +46,14 @@ function Viewer({ items, start, multi, onIndex, onClose }: { items: ZoomItem[]; 
   const lastTap = useRef(0);
   const lastType = useRef("mouse");
   const closeRef = useRef<HTMLButtonElement>(null);
-  const goRef = useRef((d: number) => {});
-  goRef.current = (d: number) => goTo(idx + d);
+  const goRef = useRef<(d: number) => void>(() => {});
 
   const reset = useCallback(() => { setScale(1); setPos({ x: 0, y: 0 }); }, []);
   const goTo = useCallback((i: number) => {
     if (i < 0 || i >= items.length) return;
     setIdx(i); setNat(null); setScale(1); setPos({ x: 0, y: 0 }); onIndex?.(i);
   }, [items.length, onIndex]);
+  goRef.current = (d: number) => goTo(idx + d);
 
   // Taille de la zone disponible : l'image y est ajustée, agrandie si besoin.
   useEffect(() => {
