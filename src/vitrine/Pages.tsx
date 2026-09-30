@@ -344,7 +344,7 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
         </div>
         <div className="min-w-0 lg:col-span-7">
           {kicker && (d.collection ? (
-            <SiteLink page="collection" params={{ slug: d.collection.slug }} className="label hover:underline" style={accent}>{kicker}</SiteLink>
+            <SiteLink page="collection" params={{ slug: d.collection.slug }} className="label hover:underline"><span style={accent}>{kicker}</span></SiteLink>
           ) : <p className="label">{kicker}</p>)}
           <h1 className="mt-2 text-[30px] md:text-[40px]">{d.title}</h1>
           {d.subtitle && <p className="text-secondary-text mt-1 text-[19px]">{d.subtitle}</p>}
