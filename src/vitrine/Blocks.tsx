@@ -12,25 +12,25 @@ export function Paragraphs({ text, className = "" }: { text: string; className?:
 }
 
 /** Affiche des blocs de contenu selon leur type. `firstTitleH1` : le premier titre devient h1. */
-export function Blocks({ blocks, firstTitleH1 = false }: { blocks: VBlock[]; firstTitleH1?: boolean }) {
+export function Blocks({ blocks, firstTitleH1 = false, h1ClassName }: { blocks: VBlock[]; firstTitleH1?: boolean; h1ClassName?: string }) {
   const firstTitle = firstTitleH1 ? blocks.find((b) => b.kind === "titre" && b.title)?.id : undefined;
   if (!blocks.length) return null;
   return (
     <div className="space-y-6">
       {blocks.map((b) => (
         <div key={b.id} className={b.hidden ? "outline-line outline-1 outline-offset-4 outline-dashed" : ""}>
-          <Block b={b} h1={b.id === firstTitle} />
+          <Block b={b} h1={b.id === firstTitle} h1ClassName={h1ClassName} />
         </div>
       ))}
     </div>
   );
 }
 
-function Block({ b, h1 }: { b: VBlock; h1: boolean }) {
+function Block({ b, h1, h1ClassName }: { b: VBlock; h1: boolean; h1ClassName?: string | undefined }) {
   switch (b.kind) {
     case "titre":
       if (!b.title) return null;
-      return h1 ? <h1 className="text-[34px] sm:text-[40px]">{b.title}</h1> : <h2 className="text-[26px]">{b.title}</h2>;
+      return h1 ? <h1 className={h1ClassName ?? "text-[34px] sm:text-[40px]"}>{b.title}</h1> : <h2 className="text-[26px]">{b.title}</h2>;
     case "texte":
       return b.body ? <Paragraphs text={b.body} /> : null;
     case "etapes":

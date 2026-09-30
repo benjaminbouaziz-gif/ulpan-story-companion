@@ -32,7 +32,14 @@ export function homeRoute() {
       return seo({ lang, pageId: "accueil", title: f.title ?? tr(lang, "page.accueil"), description: cut(f.text ?? tr(lang, "site.description")) });
     },
     component: function Home() {
-      return <HomePage d={useLoaderData({ strict: false }) as HomeData} />;
+      const click = useServerFn(clickAmazon);
+      const onAmazon = (editionId: string) => {
+        if (!/(?:^|; )us_vid=/.test(document.cookie)) {
+          document.cookie = `us_vid=${crypto.randomUUID()}; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+        }
+        void click({ data: { editionId } }).catch(() => {});
+      };
+      return <HomePage d={useLoaderData({ strict: false }) as HomeData} onAmazon={onAmazon} />;
     },
   };
 }
