@@ -20,7 +20,7 @@ export function MethodTabs({ steps }: { steps: VStep[] }) {
   const step = shown[cur]!;
   return (
     <div>
-      <div role="tablist" aria-label={t("vitrine.methodTabs")} className="border-line flex flex-wrap gap-x-5 border-b">
+      <div role="tablist" aria-label={t("vitrine.methodTabs")} className="border-line grid grid-cols-2 gap-x-5 border-b sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
         {shown.map((s, i) => (
           <button
             key={s.stepNo}
@@ -38,7 +38,7 @@ export function MethodTabs({ steps }: { steps: VStep[] }) {
               else if (e.key === "Home") go(0);
               else if (e.key === "End") go(shown.length - 1);
             }}
-            className={`label -mb-px border-b-2 py-2 ${i === cur ? "border-current" : "text-secondary-text border-transparent"}`}
+            className={`label -mb-px min-h-11 border-b-2 py-2 text-left ${i === cur ? "border-current" : "text-secondary-text border-transparent"}`}
           >
             {s.label}
           </button>

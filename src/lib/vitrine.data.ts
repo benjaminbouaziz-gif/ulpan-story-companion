@@ -142,8 +142,10 @@ async function collectionCards(db: Db, lang: Lang, mode: Mode): Promise<VCollCar
 
 export type HomeData = {
   ouverture: VBlock[]; methode: VBlock[]; livres: VBlock[]; collectionsBlocks: VBlock[]; lecteur: VBlock[];
-  steps: VStep[]; editions: VCard[]; collections: VCollCard[]; hidden: boolean; alternateExists: true;
+  steps: VStep[]; editions: HomeCard[]; collections: VCollCard[]; hidden: boolean; alternateExists: true;
 };
+/** Carte de l'accueil : ce qu'il faut pour la présentation « à la une ». */
+export type HomeCard = VCard & { blurb: string | null; amazonUrl: string | null; collectionName: string | null };
 
 export async function homeData(db: Db, lang: Lang, mode: Mode): Promise<HomeData> {
   const [ouverture, methode, livres, collectionsBlocks, lecteur, steps, eds, collections] = await Promise.all([
@@ -157,7 +159,14 @@ export async function homeData(db: Db, lang: Lang, mode: Mode): Promise<HomeData
     collectionCards(db, lang, mode),
   ]);
   const sorted = [...eds].sort((a, b) => (b.published_at ?? b.updated_at).localeCompare(a.published_at ?? a.updated_at));
-  const cards = sorted.map((e) => toCard(db, e));
+  const collIds = [...new Set(sorted.map((e) => e.books.collections?.id).filter((x): x is string => !!x))];
+  const names = new Map(await Promise.all(collIds.map(async (id) => [id, clean((await collectionText(db, id, lang))?.name)] as const)));
+  const cards: HomeCard[] = sorted.map((e) => ({
+    ...toCard(db, e),
+    blurb: clean(e.blurb),
+    amazonUrl: clean(e.amazon_url),
+    collectionName: e.books.collections ? names.get(e.books.collections.id) ?? null : null,
+  }));
   const hidden = [ouverture, methode, livres, collectionsBlocks, lecteur].flat().some((b) => b.hidden) || cards.some((c) => c.hidden) || collections.some((c) => c.hidden);
   return { ouverture, methode, livres, collectionsBlocks, lecteur, steps, editions: cards, collections, hidden, alternateExists: true };
 }
