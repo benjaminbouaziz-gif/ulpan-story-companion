@@ -4,7 +4,8 @@ import type { DictKey } from "@/i18n/dictionaries";
 import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
 import { SiteLink } from "@/components/SiteLink";
-import type { BlocksPageData, BookData, CollectionData, HomeData, VCollCard } from "@/lib/vitrine.data";
+import { BookOpen, Headphones, ListChecks } from "lucide-react";
+import type { BlocksPageData, BookData, CollectionData, HomeCard, HomeData, VBlock, VCollCard } from "@/lib/vitrine.data";
 import { Blocks, Paragraphs } from "./Blocks";
 import { CoverGrid } from "./CoverGrid";
 import { MethodTabs } from "./MethodTabs";
@@ -26,7 +27,7 @@ function Section({ children, wide = false }: { children: ReactNode; wide?: boole
 function CollectionCards({ items }: { items: VCollCard[] }) {
   if (!items.length) return null;
   return (
-    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))]">
       {items.map((c) => (
         <li key={c.slug} className={`border-line border ${c.hidden ? "opacity-70" : ""}`}>
           <SiteLink page="collection" params={{ slug: c.slug }} className="block">
@@ -42,38 +43,142 @@ function CollectionCards({ items }: { items: VCollCard[] }) {
   );
 }
 
-export function HomePage({ d }: { d: HomeData }) {
+const btnFull = "bg-foreground text-background inline-flex min-h-12 items-center justify-center px-6 py-3 text-[17px] font-medium hover:opacity-90";
+const btnLine = "border-foreground text-foreground inline-flex min-h-12 items-center justify-center border px-6 py-3 text-[17px] font-medium hover:bg-ivory-2";
+
+/** Paragraphes de tous les blocs texte d'une zone. */
+function paragraphsOf(blocks: VBlock[]) {
+  return blocks.filter((b) => b.kind === "texte" && b.body).flatMap((b) => b.body!.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean));
+}
+
+function Featured({ c, onAmazon }: { c: HomeCard; onAmazon?: (id: string) => void }) {
+  const { t } = useI18n();
+  const kicker = [c.collectionName, c.tome != null ? tn(t("vitrine.tome"), c.tome) : null].filter(Boolean).join(" · ");
+  return (
+    <article className={`border-line bg-paper grid gap-6 border p-5 sm:p-8 md:grid-cols-12 md:gap-10 ${c.hidden ? "opacity-70" : ""}`}>
+      <div className="mx-auto w-[60%] max-w-[300px] md:col-span-4 md:w-full">
+        <div className="border-line bg-background aspect-[148/210] overflow-hidden border shadow-[0_12px_30px_-14px_color-mix(in_oklab,var(--on-surface)_45%,transparent)]">
+          {c.coverUrl && <img src={c.coverUrl} alt={c.title} loading="lazy" className="h-full w-full object-cover" />}
+        </div>
+      </div>
+      <div className="min-w-0 md:col-span-8 md:self-center">
+        {kicker && <p className="label text-secondary-text">{kicker}</p>}
+        <h3 className="mt-2 text-[28px] md:text-[34px]">{c.title}</h3>
+        {c.blurb && <Paragraphs text={c.blurb} className="mt-4" />}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {c.amazonUrl && (
+            <a href={c.amazonUrl} target="_blank" rel="noopener noreferrer" onClick={() => onAmazon?.(c.editionId)} data-amazon="home" className={btnFull}>
+              {t("vitrine.buyAmazon")}
+            </a>
+          )}
+          <SiteLink page="livre" params={{ slug: c.slug }} className={btnLine}>{t("vitrine.discoverBook")}</SiteLink>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+const FEAT_ICONS = [Headphones, ListChecks, BookOpen];
+const FEAT_KEYS: DictKey[] = ["vitrine.featAudio", "vitrine.featQuiz", "vitrine.featGlossary"];
+
+export function HomePage({ d, onAmazon }: { d: HomeData; onAmazon?: (editionId: string) => void }) {
   const { t } = useI18n();
   const hasMethod = d.methode.length > 0 || d.steps.some((s) => s.imageUrl);
+  const latest = d.editions[0];
+  const step1 = d.steps.find((s) => s.imageUrl);
+  const lecteurTitle = d.lecteur.find((b) => b.kind === "titre" && b.title)?.title;
+  const paras = paragraphsOf(d.lecteur);
+  const withCards = paras.length >= 5;
   return (
-    <main>
-      {d.ouverture.length > 0 && (
-        <Section><Blocks blocks={d.ouverture} firstTitleH1 /></Section>
+    <main className="flex flex-col gap-16 py-10 lg:gap-24 lg:py-16">
+      {(d.ouverture.length > 0 || latest || step1) && (
+        <section className="frame grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-12">
+          <div className="min-w-0 lg:col-span-7 [&>*]:read">
+            <Blocks blocks={d.ouverture} firstTitleH1 h1ClassName="text-[clamp(34px,5vw,56px)]" />
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {latest && <SiteLink page="livre" params={{ slug: latest.slug }} className={btnFull}>{t("vitrine.seeBook")}</SiteLink>}
+              <SiteLink page="methode" className={latest ? btnLine : btnFull}>{t("vitrine.theMethod")}</SiteLink>
+            </div>
+          </div>
+          {(latest?.coverUrl || step1) && (
+            <div className="mx-auto w-full max-w-[360px] lg:col-span-5 lg:max-w-none">
+              {latest?.coverUrl ? (
+                <div className="relative pb-[28%]">
+                  <img src={latest.coverUrl} alt={latest.title} className="border-line relative w-[62%] border shadow-[0_18px_40px_-18px_color-mix(in_oklab,var(--on-surface)_50%,transparent)]" />
+                  {step1 && (
+                    <img src={step1.imageUrl!} alt={step1.label} loading="lazy" className="border-line absolute right-0 bottom-0 z-10 w-[64%] border shadow-[0_18px_40px_-18px_color-mix(in_oklab,var(--on-surface)_50%,transparent)]" />
+                  )}
+                </div>
+              ) : (
+                step1 && <img src={step1.imageUrl!} alt={step1.label} className="border-line w-full border" />
+              )}
+            </div>
+          )}
+        </section>
       )}
       {hasMethod && (
-        <Section>
-          <Blocks blocks={d.methode} />
+        <section className="frame">
+          <div className="[&>*]:read"><Blocks blocks={d.methode} /></div>
           <div className="mt-6"><MethodTabs steps={d.steps} /></div>
-          <div className="mt-6"><SiteLink page="methode" className={linkBtn}>{t("vitrine.discoverMethod")}</SiteLink></div>
-        </Section>
+          <p className="text-secondary-text mt-4 flex flex-wrap items-center gap-x-2 text-[15px]">
+            <span>{t("vitrine.tapToZoom")}</span>
+            <span aria-hidden>·</span>
+            <SiteLink page="methode" className="text-foreground underline-offset-4 hover:underline">{t("vitrine.discoverMethod")} →</SiteLink>
+          </p>
+        </section>
       )}
       {(d.livres.length > 0 || d.editions.length > 0) && (
-        <section className={`${WIDE} py-10`}>
-          <div className="max-w-[65ch]"><Blocks blocks={d.livres} /></div>
-          <div className="mt-6"><CoverGrid cards={d.editions} /></div>
+        <section className="frame">
+          <div className="[&>*]:read"><Blocks blocks={d.livres} /></div>
+          <div className="mt-8">
+            {d.editions.length < 3 ? (
+              <div className="space-y-8">{d.editions.map((c) => <Featured key={c.editionId} c={c} onAmazon={onAmazon} />)}</div>
+            ) : (
+              <CoverGrid cards={d.editions} />
+            )}
+          </div>
         </section>
       )}
       {(d.collectionsBlocks.length > 0 || d.collections.length > 0) && (
-        <section className={`${WIDE} py-10`}>
-          <div className="max-w-[65ch]"><Blocks blocks={d.collectionsBlocks} /></div>
-          <div className="mt-6"><CollectionCards items={d.collections} /></div>
+        <section className="frame">
+          <div className="[&>*]:read"><Blocks blocks={d.collectionsBlocks} /></div>
+          <div className="mt-8"><CollectionCards items={d.collections} /></div>
         </section>
       )}
       {d.lecteur.length > 0 && (
-        <Section>
-          <Blocks blocks={d.lecteur} />
-          <div className="mt-6"><SiteLink page="espace_lecteur" className={linkBtn}>{t("nav.companion")}</SiteLink></div>
-        </Section>
+        <section className="frame">
+          {withCards ? (
+            <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+              <div className="read min-w-0 lg:col-span-7">
+                {lecteurTitle && <h2 className="text-[26px]">{lecteurTitle}</h2>}
+                <div className="mt-6 space-y-4">
+                  <p className="whitespace-pre-line">{paras[0]}</p>
+                  <p className="whitespace-pre-line">{paras[paras.length - 1]}</p>
+                </div>
+                <div className="mt-8"><SiteLink page="espace_lecteur" className={btnFull}>{t("nav.companion")}</SiteLink></div>
+              </div>
+              <ul className="space-y-4 lg:col-span-5">
+                {FEAT_KEYS.map((k, i) => {
+                  const Icon = FEAT_ICONS[i]!;
+                  return (
+                    <li key={k} className="border-line bg-paper flex gap-4 border p-5">
+                      <span className="border-line grid size-11 shrink-0 place-items-center border"><Icon aria-hidden className="size-5" /></span>
+                      <div className="min-w-0">
+                        <h3 className="text-[20px]">{t(k)}</h3>
+                        <p className="text-secondary-text mt-1 whitespace-pre-line">{paras[i + 1]}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : (
+            <div className="[&>*]:read">
+              <Blocks blocks={d.lecteur} />
+              <div className="mt-8"><SiteLink page="espace_lecteur" className={btnFull}>{t("nav.companion")}</SiteLink></div>
+            </div>
+          )}
+        </section>
       )}
     </main>
   );
