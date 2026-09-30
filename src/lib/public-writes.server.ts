@@ -331,10 +331,14 @@ export async function confirmAccess(userId: string, rawEmail: string, editionId:
   return { granted: true, slug, lang: ed.lang as Lang };
 }
 
-export type EspaceLivre = { lang: Lang; slug: string; title: string | null; coverUrl: string | null };
+export type EspaceLivre = {
+  lang: Lang; slug: string; editionId: string; title: string | null; coverUrl: string | null;
+  tome: number | null; collection: { fr: string | null; en: string | null } | null;
+  pages: { page_no: number; chapter_no: number }[];
+};
 
 /** Espace lecteur : ses éditions visibles, son choix de nouveautés. Met à jour last_seen_at. */
-export async function readerSpace(userId: string) {
+export async function readerSpace(userId: string, email: string) {
   const admin = await serviceClient();
   await toucherLecteur(userId);
   const [{ data: r }, { data: acc }] = await Promise.all([
@@ -345,19 +349,35 @@ export async function readerSpace(userId: string) {
   const livres: EspaceLivre[] = [];
   if (ids.length) {
     const { data: eds } = await admin.from("book_editions").select("id, lang, status, title, cover_path, book_id").in("id", ids).eq("status", "publiee");
+    const bookIds = [...new Set((eds ?? []).map((e) => e.book_id))];
+    const [{ data: books }, { data: pages }] = await Promise.all([
+      admin.from("books").select("id, slug, tome_no, collection_id").in("id", bookIds),
+      admin.from("book_pages").select("book_id, page_no, chapter_no").in("book_id", bookIds).eq("is_published", true).order("page_no"),
+    ]);
+    const collIds = [...new Set((books ?? []).map((b) => b.collection_id).filter(Boolean))] as string[];
+    const { data: texts } = collIds.length
+      ? await admin.from("collection_texts").select("collection_id, lang, name").in("collection_id", collIds)
+      : { data: [] };
     for (const e of eds ?? []) {
       const { data: vis } = await admin.rpc("edition_visible", { _edition_id: e.id });
       if (!vis) continue;
-      const { data: b } = await admin.from("books").select("slug").eq("id", e.book_id).single();
+      const b = (books ?? []).find((x) => x.id === e.book_id);
+      const noms = (texts ?? []).filter((x) => x.collection_id === b?.collection_id);
       livres.push({
         lang: e.lang as Lang,
         slug: b?.slug ?? "",
+        editionId: e.id,
         title: e.title,
         coverUrl: e.cover_path ? admin.storage.from("site").getPublicUrl(e.cover_path).data.publicUrl : null,
+        tome: b?.tome_no ?? null,
+        collection: b?.collection_id
+          ? { fr: noms.find((x) => x.lang === "fr")?.name ?? null, en: noms.find((x) => x.lang === "en")?.name ?? null }
+          : null,
+        pages: (pages ?? []).filter((p) => p.book_id === e.book_id).map((p) => ({ page_no: p.page_no, chapter_no: p.chapter_no })),
       });
     }
   }
-  return { isReader: Boolean(r), news: r?.news_status === "inscrit", livres, isStaff: await estAdminOuEditeur(userId) };
+  return { email, isReader: Boolean(r), news: r?.news_status === "inscrit", livres, isStaff: await estAdminOuEditeur(userId) };
 }
 
 export async function setReaderNews(userId: string, on: boolean): Promise<void> {

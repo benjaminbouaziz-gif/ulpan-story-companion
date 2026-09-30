@@ -312,53 +312,98 @@ export function EspacePage() {
   const host = typeof window !== "undefined" ? window.location.host : "";
 
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-12">
-      <h1 className="text-[28px]">{t("lecteur.myBooks")}</h1>
-      {ici.length === 0 ? <p className="body-text text-secondary-text mt-4">{t("lecteur.noBooks")}</p> : (
-        <ul className="mt-6 grid gap-4">
-          {ici.map((l) => (
-            <li key={l.slug}>
-              <SiteLink page="compagnon" params={{ slug: l.slug }} className="flex items-center gap-4">
-                {l.coverUrl ? <img src={l.coverUrl} alt="" className="border-line h-20 w-14 border object-cover" /> : <span className="border-line inline-block h-20 w-14 border border-dashed" />}
-                <span className="body-text underline">{l.title ?? l.slug}</span>
-              </SiteLink>
-            </li>
-          ))}
-        </ul>
-      )}
-      {ailleurs && <p className="body-text mt-4"><a className="underline" href={otherLangHref("espace_lecteur", lang, {}, host)}>{t("lecteur.otherDomain")}</a></p>}
+    <main className="frame py-12">
+      <div className="grid gap-12 lg:grid-cols-[8fr_4fr] lg:gap-16">
+        {/* Mes livres */}
+        <section>
+          <h1 className="text-[28px]">{t("lecteur.myBooks")}</h1>
+          {ici.length === 0 ? <p className="body-text text-secondary-text mt-4">{t("lecteur.noBooks")}</p> : (
+            <ul className="mt-8 grid grid-cols-2 gap-6 md:grid-cols-3">
+              {ici.map((l) => (
+                <li key={l.editionId}>
+                  <SiteLink page="compagnon" params={{ slug: l.slug }} className="block">
+                    {l.coverUrl
+                      ? <img src={l.coverUrl} alt="" className="border-line aspect-[148/210] w-full border object-cover shadow-sm" />
+                      : <span className="border-line block aspect-[148/210] w-full border border-dashed" />}
+                  </SiteLink>
+                  {l.collection && (
+                    <p className="label text-secondary-text mt-3">
+                      {(l.collection[lang] ?? l.collection.fr ?? l.collection.en) + (l.tome ? ` · ${t("lecteur.tome").replace("{n}", String(l.tome))}` : "")}
+                    </p>
+                  )}
+                  <p className="body-text mt-1 font-semibold">{l.title ?? l.slug}</p>
+                  <DernierePage livre={l} />
+                  <SiteLink page="compagnon" params={{ slug: l.slug }} className="label border-line mt-3 inline-flex min-h-11 items-center border px-4 py-2">
+                    {t("lecteur.openCompanion")}
+                  </SiteLink>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="body-text text-secondary-text mt-8">{t("lecteur.anotherBook")}</p>
+          {ailleurs && <p className="body-text mt-4"><a className="underline" href={otherLangHref("espace_lecteur", lang, {}, host)}>{t("lecteur.otherDomain")}</a></p>}
+        </section>
 
-      {d.isReader && (
-        <label className="body-text mt-10 flex items-center gap-3">
-          <input type="checkbox" checked={d.news} onChange={async (e) => { const on = e.target.checked; setD({ ...d, news: on }); await regler({ data: { on } }); }} />
-          <span>{t("lecteur.news")}</span>
-        </label>
-      )}
+        {/* Mon compte */}
+        <aside className="border-line bg-paper self-start border p-6">
+          <h2 className="text-[22px]">{t("lecteur.myAccount")}</h2>
+          <p className="body-text mt-4 break-all">{d.email}</p>
 
-      <div className="border-line mt-10 border-t pt-6">
-        {!ouvrirSuppr ? (
-          <button type="button" className="label underline" onClick={() => setOuvrirSuppr(true)}>{t("lecteur.delete")}</button>
-        ) : d.isStaff ? (
-          <p className="body-text" role="alert">{t("lecteur.deleteStaff")}</p>
-        ) : (
-          <div>
-            <p className="body-text">{t("lecteur.deleteConfirm")}</p>
-            <input aria-label={t("lecteur.deleteWord")} className={input} value={confirmation} onChange={(e) => setConfirmation(e.target.value)} />
-            <button type="button" className={primary} disabled={busy || confirmation.trim() !== t("lecteur.deleteWord")} onClick={async () => {
-              setBusy(true);
-              try {
-                const r = await supprimer({ data: { confirmation: t("lecteur.deleteWord") as "SUPPRIMER" | "DELETE" } });
-                if (r.result === "staff") setInfo(t("lecteur.deleteStaff"));
-                else await deconnecter(t("lecteur.deleted"));
-              } catch { setInfo(t("lecteur.error")); } finally { setBusy(false); }
-            }}>{t("lecteur.delete")}</button>
+          {d.isReader && (
+            <div className="border-line mt-6 border-t pt-6">
+              <label className="body-text flex items-center gap-3">
+                <input type="checkbox" checked={d.news} onChange={async (e) => { const on = e.target.checked; setD({ ...d, news: on }); await regler({ data: { on } }); }} />
+                <span>{t("lecteur.news")}</span>
+              </label>
+              <p className="body-text text-secondary-text mt-2">{t("lecteur.newsPhrase")}</p>
+            </div>
+          )}
+
+          <div className="border-line mt-6 border-t pt-6">
+            <button type="button" className="label underline" onClick={() => void deconnecter()}>{t("lecteur.signOut")}</button>
           </div>
-        )}
-        {info && <p className="body-text mt-3">{info}</p>}
-        <div className="mt-6"><button type="button" className="label underline" onClick={() => void deconnecter()}>{t("lecteur.signOut")}</button></div>
+
+          <div className="border-line mt-6 border-t pt-6">
+            {!ouvrirSuppr ? (
+              <>
+                <button type="button" className="label text-red-700 underline dark:text-red-400" onClick={() => setOuvrirSuppr(true)}>{t("lecteur.delete")}</button>
+                <p className="body-text text-secondary-text mt-2">{t("lecteur.deleteInfo")}</p>
+              </>
+            ) : d.isStaff ? (
+              <p className="body-text" role="alert">{t("lecteur.deleteStaff")}</p>
+            ) : (
+              <div>
+                <p className="body-text">{t("lecteur.deleteConfirm")}</p>
+                <input aria-label={t("lecteur.deleteWord")} className={input} value={confirmation} onChange={(e) => setConfirmation(e.target.value)} />
+                <button type="button" className={primary} disabled={busy || confirmation.trim() !== t("lecteur.deleteWord")} onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const r = await supprimer({ data: { confirmation: t("lecteur.deleteWord") as "SUPPRIMER" | "DELETE" } });
+                    if (r.result === "staff") setInfo(t("lecteur.deleteStaff"));
+                    else await deconnecter(t("lecteur.deleted"));
+                  } catch { setInfo(t("lecteur.error")); } finally { setBusy(false); }
+                }}>{t("lecteur.delete")}</button>
+              </div>
+            )}
+            {info && <p className="body-text mt-3">{info}</p>}
+          </div>
+        </aside>
       </div>
     </main>
   );
+}
+
+/** « Dernière page lue : chapitre C, page P », lue sur l'appareil (localStorage du compagnon). */
+function DernierePage({ livre }: { livre: Espace["livres"][number] }) {
+  const { t } = useI18n();
+  const [lu, setLu] = useState<{ c: number; p: number } | null>(null);
+  useEffect(() => {
+    const p = Number(window.localStorage.getItem(`ulpanstory.page.${livre.editionId}`));
+    const page = livre.pages.find((x) => x.page_no === p);
+    if (page) setLu({ c: page.chapter_no, p: page.page_no });
+  }, [livre]);
+  if (!lu) return null;
+  return <p className="body-text text-secondary-text mt-1">{t("lecteur.lastRead").replace("{c}", String(lu.c)).replace("{p}", String(lu.p))}</p>;
 }
 
 /* ------------------------------------------------------------------ */
