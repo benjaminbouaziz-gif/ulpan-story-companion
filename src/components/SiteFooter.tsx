@@ -18,7 +18,7 @@ export function SiteFooter({ tagline }: { tagline: string | null }) {
 
   return (
     <footer className="border-line mt-16 border-t">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-6">
+      <div className="frame flex flex-col gap-3 py-6">
         {tagline && <p className="text-secondary-text">{tagline}</p>}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <SiteLink page="contact" className={linkCls}>{t("footer.contact")}</SiteLink>

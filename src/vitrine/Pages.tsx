@@ -12,8 +12,9 @@ import { ZoomImage } from "./ZoomImage";
 
 /** Pages de la vitrine : mêmes composants pour le site public et les aperçus de l'admin. */
 
-const READ = "mx-auto w-full max-w-[65ch] px-4";
-const WIDE = "mx-auto w-full max-w-[1100px] px-4";
+// Cadre commun (frame) ; les textes longs gardent la colonne de lecture (read), calée à gauche.
+const READ = "frame [&>*]:read";
+const WIDE = "frame";
 const linkBtn = "label border-line inline-flex items-center border px-4 py-2 text-foreground hover:bg-ivory-2";
 
 const tn = (s: string, n: number) => s.replace("{n}", String(n));
