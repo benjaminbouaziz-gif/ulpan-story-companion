@@ -36,6 +36,7 @@ const fr = {
 
   "vitrine.discoverMethod": "Découvrir la méthode",
   "vitrine.seeBook": "Voir le livre",
+  "vitrine.onThisPage": "Sur cette page",
   "vitrine.theMethod": "La méthode",
   "vitrine.discoverBook": "Découvrir le livre",
   "vitrine.tapToZoom": "Touchez la double page pour l'agrandir",
@@ -201,6 +202,7 @@ const en: Record<DictKey, string> = {
 
   "vitrine.discoverMethod": "Discover the method",
   "vitrine.seeBook": "See the book",
+  "vitrine.onThisPage": "On this page",
   "vitrine.theMethod": "The method",
   "vitrine.discoverBook": "Discover the book",
   "vitrine.tapToZoom": "Tap the spread to enlarge it",
