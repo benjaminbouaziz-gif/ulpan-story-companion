@@ -323,31 +323,31 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
     document.body.style.paddingBottom = "80px";
     return () => { document.body.style.paddingBottom = prev; };
   }, [showBar, d.amazonUrl]);
-  const level = [
-    d.chapters ? tn(t("vitrine.chapters"), d.chapters) : null,
-    d.vocab ? tn(t("vitrine.vocab"), d.vocab) : null,
-    d.pages ? tn(t("vitrine.pages"), d.pages) : null,
-  ].filter(Boolean) as string[];
+  const stats = ([
+    [d.chapters, "vitrine.statChapter1", "vitrine.statChapterN"],
+    [d.vocab, "vitrine.statVocab1", "vitrine.statVocabN"],
+    [d.pages, "vitrine.statPage1", "vitrine.statPageN"],
+  ] as [number | null, DictKey, DictKey][]).filter(([n]) => !!n && n > 0);
+  const kicker = [d.collection?.name, d.tome != null ? tn(t("vitrine.tome"), d.tome) : null].filter(Boolean).join(" · ");
+  const accent = d.collection ? { color: d.collection.color } : undefined;
   return (
     <main className="py-6 lg:py-10">
-      <div className={`${WIDE} grid gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12`}>
-        <div className="mx-auto w-[42%] max-w-[420px] md:w-full">
-          {d.coverUrl ? (
-            <ZoomImage src={d.coverUrl} alt={d.title} className="border-line border" />
-          ) : (
-            <div className="border-line bg-paper aspect-[148/210] border" />
-          )}
+      <div className="frame grid gap-8 lg:grid-cols-12 lg:gap-16">
+        <div className="mx-auto w-full max-w-[300px] lg:col-span-5 lg:max-w-[440px]">
+          <div className="lg:sticky lg:top-20">
+            {d.coverUrl ? (
+              <ZoomImage src={d.coverUrl} alt={d.title} className="border-line border" />
+            ) : (
+              <div className="border-line bg-paper aspect-[148/210] border" />
+            )}
+          </div>
         </div>
-        <div className="min-w-0">
-          {d.collection?.name && (
-            <SiteLink page="collection" params={{ slug: d.collection.slug }} className="label text-secondary-text hover:underline">{d.collection.name}</SiteLink>
-          )}
-          {d.tome != null && <p className="label text-secondary-text mt-2">{tn(t("vitrine.tome"), d.tome)}</p>}
-          <h1 className="mt-1 text-[30px] md:text-[40px]">{d.title}</h1>
+        <div className="min-w-0 lg:col-span-7">
+          {kicker && (d.collection ? (
+            <SiteLink page="collection" params={{ slug: d.collection.slug }} className="label hover:underline"><span style={accent}>{kicker}</span></SiteLink>
+          ) : <p className="label">{kicker}</p>)}
+          <h1 className="mt-2 text-[30px] md:text-[40px]">{d.title}</h1>
           {d.subtitle && <p className="text-secondary-text mt-1 text-[19px]">{d.subtitle}</p>}
-          {d.titleHe && <HebrewText size="lg" className="mt-2">{d.titleHe}</HebrewText>}
-          {d.collection && <div className="mt-3"><Bandeau color={d.collection.color} /></div>}
-          {d.blurb && <Paragraphs text={d.blurb} className="mt-4" />}
           {d.amazonUrl && (
             <a
               ref={amazonRef}
@@ -356,39 +356,53 @@ export function BookPage({ d, onAmazon }: { d: BookData; onAmazon?: () => void }
               rel="noopener noreferrer"
               onClick={onAmazon}
               data-amazon="main"
-              className="bg-foreground text-background mt-5 inline-flex items-center px-6 py-3 text-[17px] font-medium hover:opacity-90"
+              className="bg-foreground text-background mt-5 inline-flex min-h-12 items-center px-6 py-3 text-[17px] font-medium hover:opacity-90"
             >
               {t("vitrine.buyAmazon")}
             </a>
+          )}
+          {stats.length > 0 && (
+            <dl className="border-line mt-8 flex flex-wrap gap-x-10 gap-y-4 border-y py-5">
+              {stats.map(([n, one, many]) => (
+                <div key={one}>
+                  <dt className="text-[32px] leading-none">{n}</dt>
+                  <dd className="label text-secondary-text mt-2">{t(n === 1 ? one : many)}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {d.blurb && <Paragraphs text={d.blurb} className="read mt-8" />}
+          {d.learnItems.length > 0 && (
+            <section className="read mt-12">
+              <h2 className="text-[26px]">{t("vitrine.learn")}</h2>
+              <ul className="mt-4 list-disc space-y-2 pl-5">
+                {d.learnItems.map((it, i) => <li key={i}>{it}</li>)}
+              </ul>
+            </section>
+          )}
+          {d.levelNote && (
+            <section className="read mt-12">
+              <h2 className="text-[26px]">{t("vitrine.level")}</h2>
+              <Paragraphs text={d.levelNote} className="text-secondary-text mt-3" />
+            </section>
           )}
         </div>
       </div>
 
       {d.excerptUrl && (
-        <section className={`${READ} mt-14`}>
+        <section className="frame mt-16 lg:mt-24">
           <h2 className="text-[26px]">{t("vitrine.sample")}</h2>
           <div className="mt-4"><ZoomImage src={d.excerptUrl} alt={`${t("vitrine.sample")} — ${d.title}`} className="border-line border" /></div>
+          <p className="text-secondary-text mt-3 text-[15px]">{t("vitrine.tapExcerpt")}</p>
         </section>
       )}
-      {d.learnItems.length > 0 && (
-        <section className={`${READ} mt-12`}>
-          <h2 className="text-[26px]">{t("vitrine.learn")}</h2>
-          <ul className="mt-4 list-disc space-y-2 pl-5">
-            {d.learnItems.map((it, i) => <li key={i}>{it}</li>)}
-          </ul>
-        </section>
-      )}
-      {(level.length > 0 || d.levelNote) && (
-        <section className={`${READ} mt-12`}>
-          <h2 className="text-[26px]">{t("vitrine.level")}</h2>
-          {level.length > 0 && <p className="mt-3">{level.join(" · ")}</p>}
-          {d.levelNote && <Paragraphs text={d.levelNote} className="text-secondary-text mt-3" />}
-        </section>
-      )}
-      {d.sameCollection.length > 0 && (
-        <section className={`${WIDE} mt-14`}>
-          <h2 className="text-[26px]">{t("vitrine.sameCollection")}</h2>
-          <div className="mt-6"><CoverGrid cards={d.sameCollection} /></div>
+      {d.collection && d.sameCollection.length > 1 && (
+        <section className="frame mt-16 lg:mt-24">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+            <h2 className="text-[26px]">{t("vitrine.sameCollection")}</h2>
+            <SiteLink page="collection" params={{ slug: d.collection.slug }} className="hover:underline">{t("vitrine.seeCollection")} →</SiteLink>
+          </div>
+          <div className="mt-6"><CoverGrid cards={d.sameCollection} currentId={d.editionId} cols4 /></div>
         </section>
       )}
       {d.amazonUrl && showBar && (
