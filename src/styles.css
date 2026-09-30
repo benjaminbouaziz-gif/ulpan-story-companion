@@ -198,3 +198,19 @@
 @media (prefers-reduced-motion: reduce) {
   .quiz-panel { animation: none; }
 }
+
+/* Cadre commun des pages publiques : un seul bord gauche partout. */
+@utility frame {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 16px;
+  @media (width >= 640px) {
+    padding-inline: 32px;
+  }
+}
+
+/* Colonne de lecture : 65ch, calée à gauche dans le cadre. */
+@utility read {
+  max-width: 65ch;
+}

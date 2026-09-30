@@ -7,8 +7,8 @@ const navCls = "label whitespace-nowrap border-b border-transparent py-1 text-fo
 export function SiteHeader() {
   const { t } = useI18n();
   return (
-    <header className="border-line bg-background border-b">
-      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
+    <header className="border-line bg-background sticky z-30 border-b" style={{ top: "env(safe-area-inset-top, 0px)" }}>
+      <div className="frame flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
         <SiteLink page="accueil" className="flex items-center gap-2">
           <span className="text-[26px] leading-none">
             <Lamed />
