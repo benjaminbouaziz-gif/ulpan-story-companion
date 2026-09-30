@@ -108,7 +108,7 @@ function Compagnon() {
         {ONGLETS.map((o) => {
           const active = onglet === o.id;
           return (
-            <button key={o.id} role="tab" type="button" aria-selected={active} onClick={() => go(o.id)} className={`label touch border-b-2 pb-2 ${o.id === "glossaire" ? "hidden md:inline-flex" : ""}`}
+            <button key={o.id} role="tab" type="button" aria-selected={active} onClick={() => go(o.id)} className={`label touch border-b-2 pb-2 ${o.id === "glossaire" ? "max-md:hidden" : ""}`}
               style={{ borderColor: active ? "currentColor" : "transparent", opacity: active ? 1 : 0.6 }}>
               {t(o.key)}
             </button>
