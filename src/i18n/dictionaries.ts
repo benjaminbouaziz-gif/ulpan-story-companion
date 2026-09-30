@@ -36,6 +36,11 @@ const fr = {
 
   "vitrine.discoverMethod": "Découvrir la méthode",
   "vitrine.seeBook": "Voir le livre",
+  "vitrine.collectionLabel": "Collection",
+  "vitrine.theCollection": "La collection",
+  "vitrine.tomesTitle": "Les tomes",
+  "vitrine.tomesOut1": "{n} tome paru",
+  "vitrine.tomesOutN": "{n} tomes parus",
   "vitrine.youAreHere": "Vous êtes ici",
   "vitrine.seeCollection": "Voir la collection",
   "vitrine.tapExcerpt": "Touchez l'extrait pour l'agrandir",
@@ -211,6 +216,11 @@ const en: Record<DictKey, string> = {
 
   "vitrine.discoverMethod": "Discover the method",
   "vitrine.seeBook": "See the book",
+  "vitrine.collectionLabel": "Collection",
+  "vitrine.theCollection": "The collection",
+  "vitrine.tomesTitle": "The volumes",
+  "vitrine.tomesOut1": "{n} volume published",
+  "vitrine.tomesOutN": "{n} volumes published",
   "vitrine.youAreHere": "You are here",
   "vitrine.seeCollection": "See the collection",
   "vitrine.tapExcerpt": "Tap the sample to enlarge it",

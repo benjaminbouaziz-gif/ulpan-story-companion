@@ -5,7 +5,8 @@ import { Bandeau } from "@/components/Bandeau";
 import { HebrewText } from "@/components/HebrewText";
 import { SiteLink } from "@/components/SiteLink";
 import { BookOpen, Headphones, ListChecks } from "lucide-react";
-import type { BlocksPageData, BookData, CollectionData, HomeCard, HomeData, VBlock, VCollCard } from "@/lib/vitrine.data";
+import type { BlocksPageData, BookData, CollectionData, HomeCard, HomeData, VBlock, VCard, VCollCard } from "@/lib/vitrine.data";
+import { Lamed } from "@/components/Lamed";
 import { anchorOf, Blocks, Paragraphs } from "./Blocks";
 import { CoverGrid } from "./CoverGrid";
 import { MethodTabs } from "./MethodTabs";
@@ -280,26 +281,125 @@ export function CollectionsPage({ d }: { d: { collections: VCollCard[] } }) {
   );
 }
 
+/** Luminance relative WCAG d'une couleur #RRGGBB. */
+function luminance(hex: string) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return 0;
+  const n = parseInt(m[1]!, 16);
+  const ch = [n >> 16, (n >> 8) & 255, n & 255].map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * ch[0]! + 0.7152 * ch[1]! + 0.0722 * ch[2]!;
+}
+
+function CoverImg({ c, className = "" }: { c: VCard; className?: string }) {
+  return (
+    <SiteLink page="livre" params={{ slug: c.slug }} className={`block ${className}`}>
+      <div className="bg-paper aspect-[148/210] overflow-hidden shadow-[0_18px_40px_-16px_rgb(0_0_0/0.45)]">
+        {c.coverUrl && <img src={c.coverUrl} alt={c.title} className="h-full w-full object-cover" />}
+      </div>
+    </SiteLink>
+  );
+}
+
+function EmptySlot({ className = "" }: { className?: string }) {
+  return (
+    <div aria-hidden className={`grid aspect-[148/210] place-items-center border border-dashed border-current opacity-35 ${className}`}>
+      <span className="text-[34px]"><Lamed /></span>
+    </div>
+  );
+}
+
+/** Blocs enrichis : dès 1024 px, une image et le texte qui la suit côte à côte. */
+function RichBlocks({ blocks }: { blocks: VBlock[] }) {
+  const out: ReactNode[] = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i]!;
+    const next = blocks[i + 1];
+    if (b.kind === "image" && next?.kind === "texte") {
+      out.push(
+        <div key={b.id} className="grid gap-6 lg:grid-cols-2 lg:items-center lg:gap-12">
+          <Blocks blocks={[b]} />
+          <div className="read"><Blocks blocks={[next]} /></div>
+        </div>,
+      );
+      i++;
+    } else {
+      out.push(<div key={b.id} className={b.kind === "image" ? "" : "read"}><Blocks blocks={[b]} /></div>);
+    }
+  }
+  return <div className="space-y-12">{out}</div>;
+}
+
 export function CollectionPage({ d }: { d: CollectionData }) {
   const { t } = useI18n();
+  const light = luminance(d.color) > 0.45;
+  const n = d.tomes.length;
+  // Couvertures d'ouverture : les 3 plus récentes, la plus récente au centre et devant.
+  const recent = [...d.tomes].sort((x, y) => (y.tome ?? 0) - (x.tome ?? 0)).slice(0, 3);
+  const [first, second, third] = recent;
   return (
-    <main className="py-10">
-      <div className={READ}>
-        <h1 className="text-[34px]">{d.name}</h1>
-        {d.tagline && <p className="text-secondary-text mt-2 text-[20px]">{d.tagline}</p>}
-      </div>
-      <div className={`${READ} mt-6`}><Bandeau color={d.color} /></div>
-      <div className={`${READ} mt-8 space-y-8`}>
-        {d.description && <Paragraphs text={d.description} />}
-        <Blocks blocks={d.blocks} />
-        {d.forWhom && (
-          <div>
-            <h2 className="text-[26px]">{t("vitrine.forWhom")}</h2>
-            <Paragraphs text={d.forWhom} className="mt-3" />
+    <main>
+      <section style={{ backgroundColor: d.color }} className={light ? "text-ink" : "text-ivory"}>
+        <div className="frame grid gap-10 py-14 lg:grid-cols-12 lg:items-center lg:gap-12 lg:py-[72px]">
+          <div className="min-w-0 lg:col-span-7">
+            <p className="label opacity-80">{t("vitrine.collectionLabel")}</p>
+            <h1 className="mt-3 text-[clamp(40px,6vw,72px)] leading-[1.05]">{d.name}</h1>
+            {d.tagline && <p className="read mt-4 text-[22px] opacity-90">{d.tagline}</p>}
+            {n > 0 && (
+              <p className="label mt-8 inline-block border border-current px-3 py-2">
+                {tn(t(n === 1 ? "vitrine.tomesOut1" : "vitrine.tomesOutN"), n)}
+              </p>
+            )}
           </div>
+          {first && (
+            <div className="lg:col-span-5">
+              <div className="mx-auto flex max-w-[460px] items-center justify-center">
+                {n === 1 ? (
+                  <>
+                    <EmptySlot className="hidden w-[30%] lg:grid" />
+                    <CoverImg c={first} className="relative z-10 w-[45%] lg:mx-[4%] lg:w-[36%]" />
+                    <EmptySlot className="hidden w-[30%] lg:grid" />
+                  </>
+                ) : (
+                  <>
+                    {third && <CoverImg c={third} className="hidden w-[30%] lg:block" />}
+                    <CoverImg c={first} className="relative z-10 -mr-[6%] w-[45%] lg:-mx-[4%] lg:mr-0 lg:w-[40%]" />
+                    {second && <CoverImg c={second} className="w-[40%] lg:w-[30%]" />}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="flex flex-col gap-16 py-16 lg:gap-24 lg:py-24">
+        {(d.description || d.forWhom) && (
+          <section className="frame grid gap-8 lg:grid-cols-12 lg:gap-12">
+            {d.description && (
+              <div className="read min-w-0 lg:col-span-7">
+                <h2 className="text-[26px]">{t("vitrine.theCollection")}</h2>
+                <Paragraphs text={d.description} className="mt-4" />
+              </div>
+            )}
+            {d.forWhom && (
+              <aside className="border-line bg-paper border p-6 lg:col-span-5 lg:self-start">
+                <h2 className="text-[22px]">{t("vitrine.forWhom")}</h2>
+                <Paragraphs text={d.forWhom} className="mt-3" />
+              </aside>
+            )}
+          </section>
+        )}
+        {d.blocks.length > 0 && <section className="frame"><RichBlocks blocks={d.blocks} /></section>}
+        {n > 0 && (
+          <section className="frame">
+            <h2 className="text-[26px]">{t("vitrine.tomesTitle")}</h2>
+            <div className="mt-6"><CoverGrid cards={d.tomes} cols4 /></div>
+          </section>
         )}
       </div>
-      {d.tomes.length > 0 && <div className={`${WIDE} mt-12`}><CoverGrid cards={d.tomes} /></div>}
     </main>
   );
 }
