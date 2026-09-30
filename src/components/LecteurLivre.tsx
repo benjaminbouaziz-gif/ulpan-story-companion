@@ -59,6 +59,7 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const urls = useRef(new Map<string, { url: string; at: number }>());
   const autoRef = useRef(false); // la page affichée doit démarrer d'elle-même
   const page = pages[index];
+  const textRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!goto) return;
@@ -204,7 +205,7 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
       </div>
       {plainMissing ? <p className="label text-secondary-text mt-2">{t("reader.noPlain")}</p> : null}
 
-      <div className="mx-auto mt-6" style={{ maxWidth: "65ch" }} data-page={page.page_no}>
+      <div ref={textRef} className="mx-auto mt-6 scroll-mt-4" style={{ maxWidth: "65ch" }} data-page={page.page_no}>
         {opensChapter ? (
           <header className="border-line border-b pb-4">
             {chap?.title_he ? <p dir="rtl" lang="he" style={{ ...heb, fontSize: "calc(24px * var(--text-scale))", lineHeight: 1.7 }}>{chap.title_he}</p> : null}
@@ -218,6 +219,22 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
             <p key={b.id} dir="rtl" lang="he" style={{ ...heb, fontSize: "calc(21px * var(--text-scale))", lineHeight: 1.95, marginTop: b.kind === "dialogue" ? "1.9em" : "1.3em" }}>{text}</p>
           );
         })}
+        <nav className="mt-10 flex flex-col gap-3 sm:flex-row-reverse sm:items-center" data-page-nav>
+          {index < pages.length - 1 ? (
+            <button type="button" data-next-page className="bg-foreground text-background label touch min-h-[48px] w-full px-4 sm:flex-1"
+              onClick={() => { goIndex(index + 1, playing); requestAnimationFrame(() => textRef.current?.scrollIntoView({ block: "start" })); }}>
+              {t("reader.nextPage")} →
+            </button>
+          ) : (
+            <p className="label text-secondary-text min-h-[48px] w-full py-3 text-center sm:flex-1" data-end-book>{t("reader.endOfBook")}</p>
+          )}
+          {index > 0 ? (
+            <button type="button" data-prev-page className="border-line label touch text-secondary-text min-h-[48px] w-full border px-4 sm:w-auto"
+              onClick={() => { goIndex(index - 1, playing); requestAnimationFrame(() => textRef.current?.scrollIntoView({ block: "start" })); }}>
+              ← {t("reader.prevPage")}
+            </button>
+          ) : null}
+        </nav>
       </div>
 
       {/* Barre de lecture fixe, au-dessus de la zone de sécurité du téléphone. */}
@@ -227,7 +244,19 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
             onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = Number(e.target.value); }}
             aria-label={t("reader.seek")} className="block w-full" />
           <div className="mt-1 flex items-center justify-between gap-2">
-            <span className="label tabular-nums" data-where>{where}</span>
+            <select aria-label={t("reader.pagePicker")} data-where data-page-select value={page.page_no}
+              className="label border-line bg-background text-foreground min-h-[44px] border px-2 tabular-nums"
+              onChange={(e) => {
+                const i = pages.findIndex((p) => p.page_no === Number(e.target.value));
+                if (i >= 0) { pause(); goIndex(i, false); requestAnimationFrame(() => textRef.current?.scrollIntoView({ block: "start" })); }
+              }}>
+              <option value={page.page_no} hidden>{fmt(t("reader.pageOf"), { p: page.page_no, n: pages.length })}</option>
+              {chapters.filter((c) => c.pages.length).map((c) => (
+                <optgroup key={c.chapter_no} label={`${fmt(t("quiz.chapter"), { n: c.chapter_no })}${c.title ? ` · ${c.title}` : ""}`}>
+                  {c.pages.map((pn) => <option key={pn} value={pn}>{fmt(t("reader.pageNo"), { p: pn })}</option>)}
+                </optgroup>
+              ))}
+            </select>
             <span className="label text-secondary-text tabular-nums">
               {page.has_audio ? `${formatTime(current)} / ${formatTime(duration)}` : <span data-noaudio>{t("reader.noAudio")}</span>}
             </span>
