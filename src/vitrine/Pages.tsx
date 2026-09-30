@@ -359,7 +359,7 @@ export function CollectionPage({ d }: { d: CollectionData }) {
                 {n === 1 ? (
                   <>
                     <EmptySlot className="hidden w-[30%] lg:grid" />
-                    <CoverImg c={first} className="relative z-10 w-[45%] lg:-mx-[4%] lg:w-[40%]" />
+                    <CoverImg c={first} className="relative z-10 w-[45%] lg:mx-[4%] lg:w-[36%]" />
                     <EmptySlot className="hidden w-[30%] lg:grid" />
                   </>
                 ) : (
