@@ -261,12 +261,53 @@ export function MethodPage({ d }: { d: BlocksPageData }) {
   );
 }
 
+const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+
+function EmailCopy({ email }: { email: string }) {
+  const { t } = useI18n();
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      const el = ref.current;
+      if (el) {
+        const r = document.createRange();
+        r.selectNodeContents(el);
+        const s = window.getSelection();
+        s?.removeAllRanges();
+        s?.addRange(r);
+      }
+    }
+  };
+  return (
+    <div className="border-line bg-paper mt-8 border p-6">
+      <p ref={ref} className="break-all text-[26px] leading-tight sm:text-[32px]">{email}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <button type="button" onClick={copy} className={`${linkBtn} min-h-11`}>{t("vitrine.copyEmail")}</button>
+        <span role="status" aria-live="polite" className="text-secondary-text text-[15px]">{copied ? t("vitrine.emailCopied") : ""}</span>
+      </div>
+    </div>
+  );
+}
+
 export function SimplePage({ d, titleKey }: { d: BlocksPageData; titleKey: DictKey }) {
   const { t } = useI18n();
+  const titles = d.blocks.filter((b) => b.kind === "titre" && b.title);
+  const withToc = titles.length > 4;
+  const allText = d.blocks.map((b) => [b.title, b.body, ...b.items.flatMap((i) => Object.values(i))].join(" ")).join(" ");
+  const email = titleKey === "page.contact" ? EMAIL_RE.exec(allText)?.[0] : undefined;
   return (
-    <main className={`${READ} py-10`}>
-      <h1 className="text-[34px]">{t(titleKey)}</h1>
-      <div className="mt-6"><Blocks blocks={d.blocks} /></div>
+    <main className="frame py-10">
+      <h1 className="read text-[34px]">{t(titleKey)}</h1>
+      {email && <div className="read"><EmailCopy email={email} /></div>}
+      <div className={withToc ? "mt-8 lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-16" : "mt-6"}>
+        {withToc && <div className="hidden lg:block"><PageToc titles={titles} /></div>}
+        <div className="min-w-0 [&>*]:read"><Blocks blocks={d.blocks} /></div>
+      </div>
     </main>
   );
 }
