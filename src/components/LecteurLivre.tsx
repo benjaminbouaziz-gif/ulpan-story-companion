@@ -125,6 +125,20 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
 
   useEffect(() => { const el = audioRef.current; if (el) { setPitch(el); el.playbackRate = speed; } }, [speed]);
 
+  // Après tout changement de page, le texte revient à son début.
+  const firstIndex = useRef(true);
+  useEffect(() => {
+    if (firstIndex.current) { firstIndex.current = false; return; }
+    const el = textRef.current;
+    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start" });
+  }, [index]);
+
+  const openChapter = (no: number) => {
+    const c = chapters.find((x) => x.chapter_no === no);
+    const i = c?.first_page != null ? pages.findIndex((p) => p.page_no === c.first_page) : -1;
+    if (i >= 0) { pause(); goIndex(i, false); }
+  };
+
   const onEnded = () => {
     setPlaying(false);
     if (autoAdvance && index < pages.length - 1) goIndex(index + 1, true);
@@ -172,8 +186,30 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
   const btn = "border-line label touch inline-flex min-h-[44px] min-w-[44px] items-center justify-center border px-3 disabled:opacity-40";
   const heb = { fontFamily: "var(--font-hebrew)", letterSpacing: "normal", textTransform: "none" } as const;
 
+  const listed = chapters.filter((c) => c.pages.length);
+  const chapLabel = (c: CompagnonChapter) => `${fmt(t("quiz.chapter"), { n: c.chapter_no })}${c.title ? ` · ${c.title}` : ""}`;
+
   return (
-    <section className="select-none pb-56" onCopy={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} style={{ WebkitUserSelect: "none", userSelect: "none" }}>
+    <section className="select-none pb-48 lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-14" onCopy={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} style={{ WebkitUserSelect: "none", userSelect: "none" }}>
+      <aside className="hidden lg:block">
+        <nav aria-label={t("reader.chapters")} className="sticky top-20 max-h-[calc(100dvh-14rem)] overflow-y-auto" data-chapter-list>
+          <p className="label text-secondary-text">{t("reader.chapters")}</p>
+          <ul className="border-line mt-3 border-l">
+            {listed.map((c) => {
+              const cur = c.chapter_no === page.chapter_no;
+              return (
+                <li key={c.chapter_no}>
+                  <button type="button" onClick={() => openChapter(c.chapter_no)} aria-current={cur ? "true" : undefined}
+                    className={`-ml-px block w-full border-l-2 py-2 pl-3 text-left text-[15px] leading-snug ${cur ? "border-collection font-bold" : "text-secondary-text hover:text-foreground border-transparent"}`}>
+                    <span className="tabular-nums">{c.chapter_no}</span>{c.title ? ` · ${c.title}` : ""}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </aside>
+      <div className="min-w-0">
       {retour ? (
         <button type="button" className="label touch mb-3 inline-flex items-center border-b border-current" onClick={retour.onClick}>← {retour.label}</button>
       ) : null}
@@ -184,15 +220,9 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
         onEnded={onEnded} onError={() => void onError()} />
 
       <select aria-label={t("reader.chapters")} data-chapter-select value={page.chapter_no}
-        className="label border-line bg-background text-foreground mb-3 min-h-[44px] w-full border px-3 sm:w-auto"
-        onChange={(e) => {
-          const c = chapters.find((x) => x.chapter_no === Number(e.target.value));
-          const i = c?.first_page != null ? pages.findIndex((p) => p.page_no === c.first_page) : -1;
-          if (i >= 0) { pause(); goIndex(i, false); }
-        }}>
-        {chapters.filter((c) => c.pages.length).map((c) => (
-          <option key={c.chapter_no} value={c.chapter_no}>{fmt(t("quiz.chapter"), { n: c.chapter_no })}{c.title ? ` · ${c.title}` : ""}</option>
-        ))}
+        className="label border-line bg-background text-foreground mb-3 min-h-[44px] w-full border px-3 sm:w-auto lg:hidden"
+        onChange={(e) => openChapter(Number(e.target.value))}>
+        {listed.map((c) => <option key={c.chapter_no} value={c.chapter_no}>{chapLabel(c)}</option>)}
       </select>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" className={btn} disabled={plainMissing} aria-pressed={nikud} onClick={() => setNikud((v) => !v)} data-nikud={nikud ? "on" : "off"}>
@@ -205,7 +235,7 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
       </div>
       {plainMissing ? <p className="label text-secondary-text mt-2">{t("reader.noPlain")}</p> : null}
 
-      <div ref={textRef} className="mx-auto mt-6 scroll-mt-4" style={{ maxWidth: "65ch" }} data-page={page.page_no}>
+      <div ref={textRef} className="mt-6 ml-auto scroll-mt-20" style={{ maxWidth: "62ch" }} data-page={page.page_no}>
         {opensChapter ? (
           <header className="border-line border-b pb-4">
             {chap?.title_he ? <p dir="rtl" lang="he" style={{ ...heb, fontSize: "calc(24px * var(--text-scale))", lineHeight: 1.7 }}>{chap.title_he}</p> : null}
@@ -219,61 +249,51 @@ export function LecteurLivre({ editionId, editionTitle, coverUrl, pages, chapter
             <p key={b.id} dir="rtl" lang="he" style={{ ...heb, fontSize: "calc(21px * var(--text-scale))", lineHeight: 1.95, marginTop: b.kind === "dialogue" ? "1.9em" : "1.3em" }}>{text}</p>
           );
         })}
-        <nav className="mt-10 flex flex-col gap-3 sm:flex-row-reverse sm:items-center" data-page-nav>
-          {index < pages.length - 1 ? (
-            <button type="button" data-next-page className="bg-foreground text-background label touch min-h-[48px] w-full px-4 sm:flex-1"
-              onClick={() => { goIndex(index + 1, playing); requestAnimationFrame(() => textRef.current?.scrollIntoView({ block: "start" })); }}>
-              {t("reader.nextPage")} →
-            </button>
-          ) : (
-            <p className="label text-secondary-text min-h-[48px] w-full py-3 text-center sm:flex-1" data-end-book>{t("reader.endOfBook")}</p>
-          )}
-          {index > 0 ? (
-            <button type="button" data-prev-page className="border-line label touch text-secondary-text min-h-[48px] w-full border px-4 sm:w-auto"
-              onClick={() => { goIndex(index - 1, playing); requestAnimationFrame(() => textRef.current?.scrollIntoView({ block: "start" })); }}>
-              ← {t("reader.prevPage")}
-            </button>
-          ) : null}
-        </nav>
+      </div>
       </div>
 
-      {/* Barre de lecture fixe, au-dessus de la zone de sécurité du téléphone. */}
-      <div className="bg-background border-line safe-bottom fixed inset-x-0 bottom-0 z-30 border-t px-3 pt-2" data-player>
-        <div className="mx-auto w-full max-w-3xl">
-          <input type="range" min={0} max={duration || 0} step={0.1} value={Math.min(current, duration || 0)} disabled={!page.has_audio || !duration}
-            onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = Number(e.target.value); }}
-            aria-label={t("reader.seek")} className="block w-full" />
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <select aria-label={t("reader.pagePicker")} data-where data-page-select value={page.page_no}
-              className="label border-line bg-background text-foreground min-h-[44px] border px-2 tabular-nums"
-              onChange={(e) => {
-                const i = pages.findIndex((p) => p.page_no === Number(e.target.value));
-                if (i >= 0) { pause(); goIndex(i, false); requestAnimationFrame(() => textRef.current?.scrollIntoView({ block: "start" })); }
-              }}>
-              <option value={page.page_no} hidden>{fmt(t("reader.pageOf"), { p: page.page_no, n: pages.length })}</option>
-              {chapters.filter((c) => c.pages.length).map((c) => (
-                <optgroup key={c.chapter_no} label={`${fmt(t("quiz.chapter"), { n: c.chapter_no })}${c.title ? ` · ${c.title}` : ""}`}>
-                  {c.pages.map((pn) => <option key={pn} value={pn}>{fmt(t("reader.pageNo"), { p: pn })}</option>)}
-                </optgroup>
-              ))}
-            </select>
-            <span className="label text-secondary-text tabular-nums">
-              {page.has_audio ? `${formatTime(current)} / ${formatTime(duration)}` : <span data-noaudio>{t("reader.noAudio")}</span>}
-            </span>
-          </div>
-          <div className="mt-2 flex items-center justify-center gap-2 pb-2">
-            <button type="button" className={btn} disabled={index === 0} onClick={() => goIndex(index - 1, playing)} aria-label={t("reader.prevPage")}>‹‹</button>
-            <button type="button" className={`${btn} min-w-[96px]`} disabled={!page.has_audio || loading} onClick={() => { autoRef.current = false; if (playing) pause(); else void play(); }} data-play>
-              {loading ? "…" : playing ? t("reader.pause") : t("reader.play")}
-            </button>
-            <button type="button" className={btn} disabled={index >= pages.length - 1} onClick={() => goIndex(index + 1, playing)} aria-label={t("reader.nextPage")}>››</button>
-            <select aria-label={t("reader.speed")} className="border-line touch label min-h-[44px] border bg-transparent px-2" value={speed} onChange={(e) => setSpeed(Number(e.target.value))} data-speed>
-              {SPEEDS.map((v) => <option key={v} value={v}>× {speedLabel(v)}</option>)}
-            </select>
+      {/* Barre fixe en deux lignes : les pages, puis l'audio. Alignée sur la colonne du texte dès 1024 px. */}
+      <div className="bg-background border-line safe-bottom fixed inset-x-0 bottom-0 z-30 border-t pt-2" data-player>
+        <div className="frame lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-14">
+          <div className="min-w-0 lg:col-start-2">
+            <div className="grid grid-cols-[1fr_1.3fr_1fr] gap-2" data-page-row>
+              <button type="button" className={`${btn} min-h-12`} disabled={index === 0} onClick={() => goIndex(index - 1, playing)} aria-label={t("reader.prevPage")} data-prev-page>
+                ‹<span className="ml-1 hidden min-[420px]:inline">{t("reader.prevShort")}</span>
+              </button>
+              <select aria-label={t("reader.pagePicker")} data-where data-page-select value={page.page_no}
+                className="label border-line bg-background text-foreground min-h-12 w-full border px-2 text-center tabular-nums"
+                onChange={(e) => {
+                  const i = pages.findIndex((p) => p.page_no === Number(e.target.value));
+                  if (i >= 0) { pause(); goIndex(i, false); }
+                }}>
+                <option value={page.page_no} hidden>{fmt(t("reader.pageOf"), { p: page.page_no, n: pages.length })}</option>
+                {listed.map((c) => (
+                  <optgroup key={c.chapter_no} label={chapLabel(c)}>
+                    {c.pages.map((pn) => <option key={pn} value={pn}>{fmt(t("reader.pageNo"), { p: pn })}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+              <button type="button" className={`${btn} min-h-12`} disabled={index >= pages.length - 1} onClick={() => goIndex(index + 1, playing)} aria-label={t("reader.nextPage")} data-next-page>
+                <span className="mr-1 hidden min-[420px]:inline">{t("reader.nextShort")}</span>›
+              </button>
+            </div>
+            <div className="mt-2 flex items-center gap-3 pb-2" data-audio-row>
+              <button type="button" className={`${btn} shrink-0 min-w-[88px]`} disabled={!page.has_audio || loading} onClick={() => { autoRef.current = false; if (playing) pause(); else void play(); }} data-play>
+                {loading ? "…" : playing ? t("reader.pause") : t("reader.play")}
+              </button>
+              <input type="range" min={0} max={duration || 0} step={0.1} value={Math.min(current, duration || 0)} disabled={!page.has_audio || !duration}
+                onChange={(e) => { const el = audioRef.current; if (el) el.currentTime = Number(e.target.value); }}
+                aria-label={t("reader.seek")} className="min-w-0 flex-1" />
+              <span className="label text-secondary-text shrink-0 tabular-nums">
+                {page.has_audio ? `${formatTime(current)} / ${formatTime(duration)}` : <span data-noaudio>{t("reader.noAudio")}</span>}
+              </span>
+              <select aria-label={t("reader.speed")} className="border-line touch label min-h-[44px] shrink-0 border bg-transparent px-2" value={speed} onChange={(e) => setSpeed(Number(e.target.value))} data-speed>
+                {SPEEDS.map((v) => <option key={v} value={v}>× {speedLabel(v)}</option>)}
+              </select>
+            </div>
           </div>
         </div>
       </div>
-
     </section>
   );
 }

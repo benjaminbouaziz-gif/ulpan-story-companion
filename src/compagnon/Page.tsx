@@ -83,11 +83,18 @@ function Compagnon() {
   if (q.isError || !q.data || !q.data.allowed) return <Verrou />;
 
   const d = q.data;
+  const telecharger = async () => {
+    setGlossBusy(true); setGlossErr(false);
+    try {
+      const { url } = await glossaire({ data: { slug } });
+      if (url) window.location.href = url; else setGlossErr(true);
+    } catch { setGlossErr(true); } finally { setGlossBusy(false); }
+  };
   const concentre = focus && onglet === "entrainement";
   const style = d.color ? ({ "--collection": d.color } as React.CSSProperties) : undefined;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-4" style={style}>
+    <main className="frame py-4" style={style}>
       {!concentre ? (
         <div className="flex items-center gap-3">
           {d.coverUrl ? <img src={d.coverUrl} alt="" className="border-line h-14 w-10 border object-cover" /> : null}
@@ -96,17 +103,25 @@ function Compagnon() {
         </div>
       ) : null}
 
-      <div role="tablist" className="border-line mt-4 flex gap-5 border-b">
+      <div className="border-line mt-4 flex items-end gap-3 border-b">
+      <div role="tablist" className="flex flex-1 gap-5">
         {ONGLETS.map((o) => {
           const active = onglet === o.id;
           return (
-            <button key={o.id} role="tab" type="button" aria-selected={active} onClick={() => go(o.id)} className="label touch border-b-2 pb-2"
+            <button key={o.id} role="tab" type="button" aria-selected={active} onClick={() => go(o.id)} className={`label touch border-b-2 pb-2 ${o.id === "glossaire" ? "hidden md:inline-flex" : ""}`}
               style={{ borderColor: active ? "currentColor" : "transparent", opacity: active ? 1 : 0.6 }}>
               {t(o.key)}
             </button>
           );
         })}
       </div>
+        {/* Téléphone : le glossaire se télécharge directement, sans onglet. */}
+        <button type="button" data-glossary-mobile disabled={!d.hasGlossary || glossBusy} onClick={() => void telecharger()}
+          className="label bg-foreground text-background mb-1.5 min-h-11 shrink-0 px-3 disabled:opacity-40 md:hidden">
+          {d.hasGlossary ? `↓ ${t("companion.tab.glossaire")}` : t("companion.glossarySoon").replace(/\.$/, "")}
+        </button>
+      </div>
+      {glossErr && onglet !== "glossaire" ? <p className="label mt-2 md:hidden" role="alert">{t("lecteur.error")}</p> : null}
 
       {onglet === "lecture" ? (
         <div role="tabpanel" className="mt-4">
@@ -139,13 +154,7 @@ function Compagnon() {
           {d.hasGlossary ? (
             <>
               <button type="button" disabled={glossBusy} className="label touch bg-foreground text-background px-4 py-3 disabled:opacity-40" data-glossary
-                onClick={async () => {
-                  setGlossBusy(true); setGlossErr(false);
-                  try {
-                    const { url } = await glossaire({ data: { slug } });
-                    if (url) window.location.href = url; else setGlossErr(true);
-                  } catch { setGlossErr(true); } finally { setGlossBusy(false); }
-                }}>
+                onClick={() => void telecharger()}>
                 {t("companion.glossaryDownload")}
               </button>
               {glossErr ? <p className="label mt-3" role="alert">{t("lecteur.error")}</p> : null}
