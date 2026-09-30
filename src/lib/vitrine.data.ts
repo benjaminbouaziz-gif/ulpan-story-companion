@@ -240,7 +240,7 @@ export async function bookData(db: Db, lang: Lang, mode: Mode, by: { slug?: stri
     learnItems: (e.learn_items ?? []).map((s) => s.trim()).filter(Boolean),
     chapters: pos(b.chapters_count), vocab: pos(b.vocab_count), pages: pos(e.print_page_count), levelNote: clean(e.level_note),
     collection: coll ? { slug: coll.slug, name: clean(collText?.name), color: coll.color_hex } : null,
-    sameCollection: siblings.filter((s) => s.books.id !== b.id).sort((x, y) => (x.books.tome_no ?? 999) - (y.books.tome_no ?? 999)).map((s) => toCard(db, s)),
+    sameCollection: siblings.sort((x, y) => (x.books.tome_no ?? 999) - (y.books.tome_no ?? 999)).map((s) => toCard(db, s)),
     hidden: !edVisible(e),
     alternateExists: otherEd.length > 0,
   };
