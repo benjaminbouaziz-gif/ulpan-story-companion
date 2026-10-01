@@ -10,7 +10,7 @@ import { BlockEditor } from "@/admin/BlockEditor";
 import { LangTabs } from "@/admin/LangTabs";
 import { Apercu } from "@/admin/Apercu";
 import { ERREURS, messageErreur } from "@/admin/textes";
-import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, inputCls, Section } from "@/admin/ui";
+import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, FieldGroup, inputCls, Section } from "@/admin/ui";
 
 export const Route = createFileRoute("/admin/collections/$slug")({ component: Fiche });
 
