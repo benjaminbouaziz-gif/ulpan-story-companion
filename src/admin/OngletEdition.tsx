@@ -16,7 +16,7 @@ import {
   uploadGlossaire,
 } from "@/lib/admin-editions.functions";
 import { addEdition } from "@/lib/admin-livres.functions";
-import { absoluteUrl, DOMAINS, pathFor } from "@/i18n/routes";
+import { absoluteUrl, estProduction, pathFor } from "@/i18n/routes";
 import { messageErreur } from "@/admin/textes";
 import { btnCls, btnPrimaryCls, Field, FieldGroup, hebrewStyle, inputCls, Section } from "@/admin/ui";
 import { EditionQuiz } from "@/admin/EditionQuiz";
@@ -236,6 +236,7 @@ function Titres({ d, refresh }: { d: Data; refresh: () => void }) {
   return (
     <div className="max-w-[760px] space-y-2">
       {t.map((c, i) => (
+  const [copieErr, setCopieErr] = useState(false);
         <div key={c.chapterNo} className="flex items-center gap-3">
           <span className="label w-24 shrink-0">Chapitre {c.chapterNo}</span>
           <span className="w-48 shrink-0 truncate" dir="rtl" lang="he" style={{ ...hebrewStyle, fontSize: "16px" }}>{c.titleHe || "—"}</span>
