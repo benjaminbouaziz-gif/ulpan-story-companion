@@ -66,9 +66,13 @@ export function redirectTarget(pathname: string, lang: Lang): string | null {
 }
 
 /** Lien vers la même page dans l'autre langue : autre domaine en production, ?lang= ailleurs. */
+/** Vrai sur un domaine de production (oulpanstory.fr, ulpanstory.com, www compris). */
+export function estProduction(host: string): boolean {
+  const h = host.toLowerCase().split(":")[0] ?? "";
+  return /(^|\.)(ulpanstory\.com|oulpanstory\.fr)$/.test(h);
+}
+
 export function otherLangHref(id: PageId, lang: Lang, params: RouteParams = {}, host = ""): string {
   const o: Lang = lang === "fr" ? "en" : "fr";
-  const h = host.toLowerCase().split(":")[0] ?? "";
-  const prod = /(^|\.)(ulpanstory\.com|oulpanstory\.fr)$/.test(h);
-  return prod ? absoluteUrl(id, o, params) : `${pathFor(id, o, params)}?lang=${o}`;
+  return estProduction(host) ? absoluteUrl(id, o, params) : `${pathFor(id, o, params)}?lang=${o}`;
 }
