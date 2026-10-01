@@ -236,7 +236,6 @@ function Titres({ d, refresh }: { d: Data; refresh: () => void }) {
   return (
     <div className="max-w-[760px] space-y-2">
       {t.map((c, i) => (
-  const [copieErr, setCopieErr] = useState(false);
         <div key={c.chapterNo} className="flex items-center gap-3">
           <span className="label w-24 shrink-0">Chapitre {c.chapterNo}</span>
           <span className="w-48 shrink-0 truncate" dir="rtl" lang="he" style={{ ...hebrewStyle, fontSize: "16px" }}>{c.titleHe || "—"}</span>
@@ -268,6 +267,7 @@ function Qr({ d, refresh }: { d: Data; refresh: () => void }) {
   const url = absoluteUrl("entree_qr", d.edition.lang, { slug: d.book.slug });
   const [svg, setSvg] = useState("");
   const [copie, setCopie] = useState(false);
+  const [copieErr, setCopieErr] = useState(false);
   useEffect(() => { void QRCode.toString(url, { ...QR_OPTS, type: "svg" }).then(setSvg); }, [url]);
   const nom = `qr-${d.book.slug}-${d.edition.lang}`;
 
