@@ -214,3 +214,20 @@
 @utility read {
   max-width: 65ch;
 }
+
+/* Haut et pied de page (direction C) */
+.site-bar { background: #15171a; color: #f3f1ea; }
+:root.night .site-bar { background: #0e0e0c; color: var(--color-foreground); }
+.site-bar-in { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; padding-block: 7px; }
+.site-row { background: var(--color-paper); }
+.site-row-in { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding-block: 26px; }
+.site-nav { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 26px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; }
+.site-cta { background: #15171a; color: #f3f1ea; padding: 11px 16px; }
+:root.night .site-cta { background: var(--color-foreground); color: var(--color-background); }
+.site-motto { font-size: 15px; opacity: 0.75; }
+@media (max-width: 719px) {
+  .site-motto { display: none; }
+  .site-nav { margin-left: 0; width: 100%; gap: 6px 16px; }
+  .site-bar .label { font-size: 10px; letter-spacing: 0.06em; }
+  .site-bar-in { gap: 4px 10px; }
+}
