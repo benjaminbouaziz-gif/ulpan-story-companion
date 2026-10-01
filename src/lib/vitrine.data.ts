@@ -254,3 +254,8 @@ export async function sitemapEntries(db: Db, lang: Lang) {
   const { data: cols } = await db.from("collections").select("slug,updated_at").in("slug", cards.map((c) => c.slug).concat(["\u0000"]));
   return { books, collections: (cols ?? []).map((c) => ({ slug: c.slug, updatedAt: c.updated_at })) };
 }
+
+/** Couleurs de la bande du site : mêmes collections que collectionCards en mode public. */
+export async function stripeColors(db: Db, lang: Lang): Promise<string[]> {
+  return (await collectionCards(db, lang, "public")).map((c) => c.color);
+}

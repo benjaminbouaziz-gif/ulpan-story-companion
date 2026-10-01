@@ -8,6 +8,8 @@ const fr = {
   "site.comingSoon": "Contenu à venir",
 
   "nav.label": "Navigation principale",
+  "header.kicker": "Livres pour lire l'hébreu",
+  "header.motto": "Lire l'hébreu dans une histoire vraie",
   "nav.method": "Méthode",
   "nav.collections": "Collections",
   "nav.companion": "Espace lecteur",
@@ -199,6 +201,8 @@ const en: Record<DictKey, string> = {
   "site.comingSoon": "Content coming soon",
 
   "nav.label": "Main navigation",
+  "header.kicker": "Books to read Hebrew",
+  "header.motto": "Read Hebrew in a true story",
   "nav.method": "Method",
   "nav.collections": "Collections",
   "nav.companion": "Reader space",

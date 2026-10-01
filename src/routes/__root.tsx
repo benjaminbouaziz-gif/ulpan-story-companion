@@ -15,7 +15,7 @@ import { I18nProvider } from "@/i18n/context";
 import { detectLang } from "@/i18n/lang.functions";
 import type { Lang } from "@/i18n/dictionaries";
 import { redirectTarget, type PageId } from "@/i18n/routes";
-import { getFooterTagline } from "@/lib/site.functions";
+import { getFooterTagline, getStripeColors } from "@/lib/site.functions";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ErrorPage, NotFoundPage } from "@/pages/SystemPages";
@@ -57,10 +57,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     }
     return { lang };
   },
-  loader: async ({ context }) => ({
-    lang: context.lang,
-    tagline: await getFooterTagline({ data: { lang: context.lang } }),
-  }),
+  loader: async ({ context }) => {
+    const [tagline, stripe] = await Promise.all([
+      getFooterTagline({ data: { lang: context.lang } }),
+      getStripeColors({ data: { lang: context.lang } }),
+    ]);
+    return { lang: context.lang, tagline, stripe };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -109,12 +112,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider lang={lang}>
         <div className="bg-background text-foreground flex min-h-screen flex-col">
-          {!isAdmin && <SiteHeader />}
+          {!isAdmin && <SiteHeader stripe={data?.stripe ?? []} />}
           <div className="flex-1">
             {/* Required: nested routes render here. */}
             <Outlet />
           </div>
-          {!isAdmin && <SiteFooter tagline={data?.tagline ?? null} />}
+          {!isAdmin && <SiteFooter tagline={data?.tagline ?? null} stripe={data?.stripe ?? []} />}
         </div>
       </I18nProvider>
     </QueryClientProvider>

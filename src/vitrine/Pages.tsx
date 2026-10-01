@@ -7,6 +7,7 @@ import { SiteLink } from "@/components/SiteLink";
 import { BookOpen, Headphones, ListChecks } from "lucide-react";
 import type { BlocksPageData, BookData, CollectionData, HomeCard, HomeData, VBlock, VCard, VCollCard } from "@/lib/vitrine.data";
 import { Lamed } from "@/components/Lamed";
+import { luminance } from "@/lib/couleurs";
 import { anchorOf, Blocks, Paragraphs } from "./Blocks";
 import { CoverGrid } from "./CoverGrid";
 import { MethodTabs } from "./MethodTabs";
@@ -322,17 +323,6 @@ export function CollectionsPage({ d }: { d: { collections: VCollCard[] } }) {
   );
 }
 
-/** Luminance relative WCAG d'une couleur #RRGGBB. */
-function luminance(hex: string) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return 0;
-  const n = parseInt(m[1]!, 16);
-  const ch = [n >> 16, (n >> 8) & 255, n & 255].map((v) => {
-    const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * ch[0]! + 0.7152 * ch[1]! + 0.0722 * ch[2]!;
-}
 
 function CoverImg({ c, className = "" }: { c: VCard; className?: string }) {
   return (
