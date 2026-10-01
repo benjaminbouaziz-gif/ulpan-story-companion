@@ -35,8 +35,18 @@ function PageEcran() {
   const [msg, setMsg] = useState<string | null>(null);
   const [audioMsg, setAudioMsg] = useState<string | null>(null);
 
+  const [pubMsg, setPubMsg] = useState<string | null>(null);
+  const [base, setBase] = useState<string | null>(null);
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const dirty = base !== null && JSON.stringify(paras) !== base;
   useEffect(() => {
-    if (q.data) setParas(q.data.paragraphs);
+    if (!q.data) return;
+    if (loadedId !== q.data.page.id || !dirty) {
+      setParas(q.data.paragraphs);
+      setBase(JSON.stringify(q.data.paragraphs));
+      setLoadedId(q.data.page.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.data]);
 
   const refresh = () => {
@@ -48,6 +58,7 @@ function PageEcran() {
   if (q.error || !q.data) return <p>{messageErreur(q.error)}</p>;
   const d = q.data;
 
+  const setParasM = (v: Para[]) => { setMsg(null); setParas(v); };
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
     if (j < 0 || j >= paras.length) return;
@@ -55,7 +66,7 @@ function PageEcran() {
     [c[i], c[j]] = [c[j]!, c[i]!];
     setParas(c);
   };
-  const upd = (i: number, patch: Partial<Para>) => setParas(paras.map((p, k) => (k === i ? { ...p, ...patch } : p)));
+  const upd = (i: number, patch: Partial<Para>) => setParasM(paras.map((p, k) => (k === i ? { ...p, ...patch } : p)));
 
   async function envoyerAudio() {
     const file = fileRef.current?.files?.[0];
@@ -85,10 +96,11 @@ function PageEcran() {
         <span className="text-secondary-text text-[13px]">Chapitre {d.page.chapterNo}</span>
         <label className="flex items-center gap-2 text-[13px]">
           <input type="checkbox" checked={d.page.isPublished} onChange={async (e) => {
-            try { await setPub({ data: { pageId: d.page.id, value: e.target.checked } }); refresh(); } catch (err) { setMsg(messageErreur(err)); }
+            try { await setPub({ data: { pageId: d.page.id, value: e.target.checked } }); setPubMsg(null); refresh(); } catch (err) { setPubMsg(messageErreur(err)); }
           }} />
           Publiée
         </label>
+        {pubMsg && <span className="text-[13px]">{pubMsg}</span>}
         <span className="ml-auto flex gap-3">
           {d.prev !== null && <Link to="/admin/livres/$slug/pages/$pageNo" params={{ slug, pageNo: String(d.prev) }} className={btnCls}>Page précédente</Link>}
           {d.next !== null && <Link to="/admin/livres/$slug/pages/$pageNo" params={{ slug, pageNo: String(d.next) }} className={btnCls}>Page suivante</Link>}
@@ -126,9 +138,10 @@ function PageEcran() {
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className={btnCls} onClick={() => setParas([...paras, { kind: "narration", heNikud: "", hePlain: "" }])}>Ajouter un paragraphe</button>
             <button type="button" className={btnPrimaryCls} onClick={async () => {
-              try { await save({ data: { pageId: d.page.id, paragraphs: paras } }); setMsg("Enregistré."); refresh(); } catch (e) { setMsg(messageErreur(e)); }
+              try { await save({ data: { pageId: d.page.id, paragraphs: paras } }); setBase(JSON.stringify(paras)); setMsg("Enregistré."); refresh(); } catch (e) { setMsg(messageErreur(e)); }
             }}>Enregistrer les paragraphes</button>
             {msg && <span className="text-[13px]">{msg}</span>}
+            {dirty && <span className="text-[13px]">Modifications non enregistrées</span>}
           </div>
         </div>
       </Section>
