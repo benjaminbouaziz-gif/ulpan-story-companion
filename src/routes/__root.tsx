@@ -42,7 +42,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 let clientLang: Lang | null = null;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ location }): Promise<{ lang: Lang }> => {
     const query = new URLSearchParams(location.searchStr).get("lang") ?? undefined;
     let lang: Lang;
     if (typeof window !== "undefined" && clientLang && !query) {
