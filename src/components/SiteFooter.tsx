@@ -1,34 +1,34 @@
-import { useMatches } from "@tanstack/react-router";
 import { useI18n } from "@/i18n/context";
-import { absoluteUrl, type PageId } from "@/i18n/routes";
+import { BandeCollections, ChoixLangue, SiteLogo } from "./BandeCollections";
 import { SiteLink } from "./SiteLink";
 
-const linkCls = "label text-foreground hover:underline";
+const navCls = "whitespace-nowrap py-1 border-b-2 border-transparent text-foreground hover:underline";
 
-export function SiteFooter({ tagline }: { tagline: string | null }) {
-  const { t, lang } = useI18n();
-  const matches = useMatches();
-  const leaf = [...matches].reverse().find((m) => m.staticData?.pageId);
-  const pageId: PageId = leaf?.staticData?.pageId ?? "accueil";
-  const params = (leaf?.params ?? {}) as Record<string, string>;
-  const other = lang === "fr" ? "en" : "fr";
-  // Même page dans l'autre langue si elle y existe, sinon accueil de l'autre domaine.
-  const alt = (leaf?.loaderData as { alternateExists?: boolean } | undefined)?.alternateExists;
-  const otherHref = alt === false ? absoluteUrl("accueil", other) : absoluteUrl(pageId, other, params);
-
+export function SiteFooter({ tagline, stripe }: { tagline: string | null; stripe: string[] }) {
+  const { t } = useI18n();
   return (
-    <footer className="border-line mt-16 border-t">
-      <div className="frame flex flex-col gap-3 py-6">
-        {tagline && <p className="text-secondary-text">{tagline}</p>}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <SiteLink page="contact" className={linkCls}>{t("footer.contact")}</SiteLink>
-          <SiteLink page="mentions" className={linkCls}>{t("footer.mentions")}</SiteLink>
-          <SiteLink page="confidentialite" className={linkCls}>{t("footer.privacy")}</SiteLink>
-          <a href={otherHref} hrefLang={other} lang={other} className={linkCls}>
-            {t("footer.otherLang")}
-          </a>
+    <footer className="mt-16">
+      <BandeCollections colors={stripe} />
+      <div className="site-row">
+        <div className="frame site-row-in">
+          <SiteLogo colors={stripe} phrase={tagline} />
+          <nav aria-label={t("nav.label")} className="site-nav">
+            <SiteLink page="methode" className={navCls}>{t("nav.method")}</SiteLink>
+            <SiteLink page="collections" className={navCls}>{t("nav.collections")}</SiteLink>
+            <SiteLink page="espace_lecteur" className={navCls}>{t("nav.companion")}</SiteLink>
+            <SiteLink page="contact" className={navCls}>{t("footer.contact")}</SiteLink>
+          </nav>
         </div>
-        <p className="text-secondary-text text-sm">© Ulpan Story {new Date().getFullYear()}</p>
+      </div>
+      <div className="site-bar">
+        <div className="frame site-bar-in">
+          <span className="label">
+            © Ulpan Story {new Date().getFullYear()} ·{" "}
+            <SiteLink page="mentions" className="underline">{t("footer.mentions")}</SiteLink> ·{" "}
+            <SiteLink page="confidentialite" className="underline">{t("footer.privacy")}</SiteLink>
+          </span>
+          <ChoixLangue />
+        </div>
       </div>
     </footer>
   );
