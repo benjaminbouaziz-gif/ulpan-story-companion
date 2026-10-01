@@ -32,7 +32,7 @@ export function SiteLogo({ colors, phrase }: { colors: string[]; phrase: string 
         <Lamed />
       </span>
       <span className="flex flex-col">
-        <span style={{ fontSize: 15, letterSpacing: "0.24em", fontWeight: 600 }} className="uppercase">
+        <span style={{ fontFamily: "var(--font-ui)", fontSize: 15, letterSpacing: "0.24em", fontWeight: 600 }} className="uppercase">
           {t("site.name")}
         </span>
         {phrase && <span className="site-motto">{phrase}</span>}

@@ -221,7 +221,7 @@
 .site-bar-in { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; padding-block: 7px; }
 .site-row { background: var(--color-paper); }
 .site-row-in { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding-block: 26px; }
-.site-nav { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 26px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; }
+.site-nav { font-family: var(--font-ui); margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 26px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; }
 .site-cta { background: #15171a; color: #f3f1ea; padding: 11px 16px; }
 :root.night .site-cta { background: var(--color-foreground); color: var(--color-background); }
 .site-motto { font-size: 15px; opacity: 0.75; }
