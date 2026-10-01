@@ -10,7 +10,7 @@ import { BlockEditor } from "@/admin/BlockEditor";
 import { LangTabs } from "@/admin/LangTabs";
 import { Apercu } from "@/admin/Apercu";
 import { ERREURS, messageErreur } from "@/admin/textes";
-import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, inputCls, Section } from "@/admin/ui";
+import { btnCls, btnPrimaryCls, cellCls, EditionPastilles, Field, FieldGroup, inputCls, Section } from "@/admin/ui";
 
 export const Route = createFileRoute("/admin/collections/$slug")({ component: Fiche });
 
@@ -91,14 +91,14 @@ function Commun({ d, refresh }: { d: Data; refresh: () => void }) {
         <input className={inputCls} value={f.slug} disabled={d.collection.slugLocked} onChange={(e) => setF({ ...f, slug: e.target.value })} />
         {d.collection.slugLocked && <span className="mt-1 block text-[12px]">Un livre de la collection a une édition publiée : le slug ne change plus.</span>}
       </Field>
-      <Field label="Couleur">
+      <FieldGroup label="Couleur">
         <span className="flex items-center gap-2">
-          <input className={`${inputCls} !w-32`} value={f.color} onChange={(e) => setF({ ...f, color: e.target.value })} />
+          <input className={`${inputCls} !w-32`} aria-label="Couleur" value={f.color} onChange={(e) => setF({ ...f, color: e.target.value })} />
           {NUANCIER.map((c) => (
             <button key={c} type="button" aria-label={c} className="border-line h-6 w-6 border" style={{ backgroundColor: c }} onClick={() => setF({ ...f, color: c })} />
           ))}
         </span>
-      </Field>
+      </FieldGroup>
       {colorOk && <Bandeau color={f.color}>{f.slug}</Bandeau>}
       <Field label="Ordre d'affichage"><input className={`${inputCls} !w-24`} type="number" min={0} value={f.sortOrder} onChange={(e) => setF({ ...f, sortOrder: e.target.value })} /></Field>
       <label className="flex items-center gap-2">

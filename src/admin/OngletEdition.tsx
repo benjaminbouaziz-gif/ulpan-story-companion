@@ -16,9 +16,9 @@ import {
   uploadGlossaire,
 } from "@/lib/admin-editions.functions";
 import { addEdition } from "@/lib/admin-livres.functions";
-import { absoluteUrl, DOMAINS, pathFor } from "@/i18n/routes";
+import { absoluteUrl, estProduction, pathFor } from "@/i18n/routes";
 import { messageErreur } from "@/admin/textes";
-import { btnCls, btnPrimaryCls, Field, hebrewStyle, inputCls, Section } from "@/admin/ui";
+import { btnCls, btnPrimaryCls, Field, FieldGroup, hebrewStyle, inputCls, Section } from "@/admin/ui";
 import { EditionQuiz } from "@/admin/EditionQuiz";
 import { Apercu } from "@/admin/Apercu";
 
@@ -131,14 +131,20 @@ function Vitrine({ d, refresh }: { d: Data; refresh: () => void }) {
   const [base, setBase] = useState(() => JSON.stringify(init()));
   const [msg, setMsg] = useState<string | null>(null);
   const dirty = JSON.stringify(f) !== base;
-  const set = (p: Partial<typeof f>) => setF({ ...f, ...p });
+  const set = (p: Partial<typeof f>) => { setMsg(null); setF({ ...f, ...p }); };
   const items = f.learnItems;
   const move = (i: number, j: number) => {
     const n = [...items];
     [n[i], n[j]] = [n[j]!, n[i]!];
     set({ learnItems: n });
   };
-  const urlOk = !f.amazonUrl.trim() || /^https:\/\/\S+$/.test(f.amazonUrl.trim());
+  const amazon = f.amazonUrl.trim();
+  const urlOk = !amazon || /^https:\/\/\S+$/.test(amazon);
+  const lienTestable = !!amazon && /^https:\/\/\S+$/.test(amazon);
+  const accueilAmazon = lienTestable && (() => {
+    try { const u = new URL(amazon); return /(^|\.)amazon\./i.test(u.hostname) && (u.pathname === "" || u.pathname === "/"); } catch { return false; }
+  })();
+  const amazonModifie = amazon !== (JSON.parse(base) as { amazonUrl: string }).amazonUrl.trim();
 
   async function enregistrer() {
     if (!urlOk) return setMsg("Le lien Amazon doit commencer par https://");
@@ -160,7 +166,7 @@ function Vitrine({ d, refresh }: { d: Data; refresh: () => void }) {
 
   return (
     <div className="grid max-w-[760px] gap-4">
-      <Field label="Couverture"><ImageEdition d={d} kind="cover" url={d.edition.coverUrl} refresh={refresh} /></Field>
+      <FieldGroup label="Couverture"><ImageEdition d={d} kind="cover" url={d.edition.coverUrl} refresh={refresh} /></FieldGroup>
       <Field label="Titre"><input className={inputCls} value={f.title} onChange={(e) => set({ title: e.target.value })} /></Field>
       <Field label="Sous-titre"><input className={inputCls} value={f.subtitle} onChange={(e) => set({ subtitle: e.target.value })} /></Field>
       <Field label="Résumé"><textarea className={`${inputCls} h-32`} value={f.blurb} onChange={(e) => set({ blurb: e.target.value })} /></Field>
@@ -180,17 +186,28 @@ function Vitrine({ d, refresh }: { d: Data; refresh: () => void }) {
         </div>
       </div>
       <Field label="Nombre de pages du livre imprimé"><input className={`${inputCls} !w-32`} type="number" min={1} value={f.printPageCount} onChange={(e) => set({ printPageCount: e.target.value })} /></Field>
-      <Field label="Lien Amazon">
-        <span className="flex gap-2">
-          <input className={inputCls} value={f.amazonUrl} placeholder="https://…" onChange={(e) => set({ amazonUrl: e.target.value })} />
-          <button type="button" className={btnCls} disabled={!f.amazonUrl.trim() || !urlOk} onClick={() => window.open(f.amazonUrl.trim(), "_blank", "noopener")}>Tester le lien</button>
-        </span>
+      <div>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <Field label="Lien Amazon">
+              <input className={inputCls} value={f.amazonUrl} placeholder="https://…" onChange={(e) => set({ amazonUrl: e.target.value })} />
+            </Field>
+          </div>
+          {lienTestable ? (
+            <a className={btnCls} href={amazon} target="_blank" rel="noopener noreferrer">Tester le lien</a>
+          ) : (
+            <a className={`${btnCls} pointer-events-none opacity-40`} aria-disabled="true">Tester le lien</a>
+          )}
+        </div>
         {!urlOk && <span className="mt-1 block text-[12px]">Le lien doit commencer par https://</span>}
-      </Field>
-      <Field label="Extrait (une vraie double page)"><ImageEdition d={d} kind="excerpt" url={d.edition.excerptUrl} refresh={refresh} /></Field>
+        {accueilAmazon && <span className="mt-1 block text-[12px]">Ce lien mène à l'accueil d'Amazon, pas à la page du livre.</span>}
+        {amazonModifie && <span className="mt-1 block text-[12px]">Pensez à enregistrer</span>}
+      </div>
+      <FieldGroup label="Extrait (une vraie double page)"><ImageEdition d={d} kind="excerpt" url={d.edition.excerptUrl} refresh={refresh} /></FieldGroup>
       <div className="flex items-center gap-3">
         <button type="button" className={btnPrimaryCls} onClick={() => void enregistrer()}>Enregistrer</button>
-        {dirty ? <span className="text-[13px]">Modifications non enregistrées</span> : msg && <span className="text-[13px]">{msg}</span>}
+        {msg && <span className="text-[13px]">{msg}</span>}
+        {dirty && <span className="text-[13px]">Modifications non enregistrées</span>}
       </div>
     </div>
   );
@@ -201,8 +218,20 @@ function Vitrine({ d, refresh }: { d: Data; refresh: () => void }) {
 function Titres({ d, refresh }: { d: Data; refresh: () => void }) {
   const save = useServerFn(saveEditionChapterTitles);
   const [t, setT] = useState(d.chapitres);
+  const [base, setBase] = useState(() => JSON.stringify(d.chapitres));
   const [msg, setMsg] = useState<string | null>(null);
-  useEffect(() => setT(d.chapitres), [d.chapitres]);
+  const dirty = JSON.stringify(t) !== base;
+  const editionId = d.edition.id;
+  const [lastId, setLastId] = useState(editionId);
+  useEffect(() => {
+    const srv = JSON.stringify(d.chapitres);
+    if (lastId !== editionId || !dirty) {
+      setT(d.chapitres);
+      setBase(srv);
+      setLastId(editionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [d.chapitres, editionId]);
   if (!t.length) return <p className="text-secondary-text text-[13px]">Aucun chapitre : ils viennent des pages du livre.</p>;
   return (
     <div className="max-w-[760px] space-y-2">
@@ -210,18 +239,20 @@ function Titres({ d, refresh }: { d: Data; refresh: () => void }) {
         <div key={c.chapterNo} className="flex items-center gap-3">
           <span className="label w-24 shrink-0">Chapitre {c.chapterNo}</span>
           <span className="w-48 shrink-0 truncate" dir="rtl" lang="he" style={{ ...hebrewStyle, fontSize: "16px" }}>{c.titleHe || "—"}</span>
-          <input className={inputCls} value={c.title} onChange={(e) => setT(t.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} />
+          <input className={inputCls} value={c.title} onChange={(e) => { setMsg(null); setT(t.map((x, j) => (j === i ? { ...x, title: e.target.value } : x))); }} />
         </div>
       ))}
       <div className="flex items-center gap-3">
         <button type="button" className={btnPrimaryCls} onClick={async () => {
           try {
             await save({ data: { editionId: d.edition.id, titles: t.map((c) => ({ chapterNo: c.chapterNo, title: c.title })) } });
+            setBase(JSON.stringify(t));
             setMsg("Enregistré.");
             refresh();
           } catch (e) { setMsg(messageErreur(e)); }
         }}>Enregistrer les titres</button>
         {msg && <span className="text-[13px]">{msg}</span>}
+        {dirty && <span className="text-[13px]">Modifications non enregistrées</span>}
       </div>
     </div>
   );
@@ -236,6 +267,7 @@ function Qr({ d, refresh }: { d: Data; refresh: () => void }) {
   const url = absoluteUrl("entree_qr", d.edition.lang, { slug: d.book.slug });
   const [svg, setSvg] = useState("");
   const [copie, setCopie] = useState(false);
+  const [copieErr, setCopieErr] = useState(false);
   useEffect(() => { void QRCode.toString(url, { ...QR_OPTS, type: "svg" }).then(setSvg); }, [url]);
   const nom = `qr-${d.book.slug}-${d.edition.lang}`;
 
@@ -254,9 +286,12 @@ function Qr({ d, refresh }: { d: Data; refresh: () => void }) {
 
   return (
     <div className="text-[13px]">
-      <p className="flex items-center gap-2">
+      <p className="flex flex-wrap items-center gap-2">
         <span>Adresse imprimée : <strong>{url}</strong></span>
-        <button type="button" className={btnCls} onClick={async () => { await navigator.clipboard.writeText(url); setCopie(true); }}>{copie ? "Copié" : "Copier"}</button>
+        <button type="button" className={btnCls} onClick={async () => {
+          try { await navigator.clipboard.writeText(url); setCopie(true); setCopieErr(false); } catch { setCopieErr(true); }
+        }}>{copie ? "Copié" : "Copier"}</button>
+        {copieErr && <span>Copie impossible : sélectionnez l'adresse à la main</span>}
       </p>
       <div className="mt-3 w-48 bg-background" dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="mt-3 flex gap-2">
@@ -320,7 +355,7 @@ function Glossaire({ d, refresh }: { d: Data; refresh: () => void }) {
 /* ---------------- 6. Publication ---------------- */
 
 function lienPublic(id: "livre" | "entree_qr", lang: Lang, slug: string) {
-  if (typeof window !== "undefined" && DOMAINS[lang].endsWith(window.location.hostname)) return absoluteUrl(id, lang, { slug });
+  if (typeof window !== "undefined" && estProduction(window.location.hostname)) return absoluteUrl(id, lang, { slug });
   return `${pathFor(id, lang, { slug })}?lang=${lang}`;
 }
 

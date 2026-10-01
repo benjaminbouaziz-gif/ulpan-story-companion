@@ -110,10 +110,21 @@ function OngletLivre({ d, refresh }: { d: Data; refresh: () => void }) {
     vocab: d.book.vocabCount?.toString() ?? "",
   });
   const [titles, setTitles] = useState(d.chapters);
-  useEffect(() => setTitles(d.chapters), [d.chapters]);
+  const [titlesBase, setTitlesBase] = useState(() => JSON.stringify(d.chapters));
+  const titlesDirty = JSON.stringify(titles) !== titlesBase;
+  const [titlesBookId, setTitlesBookId] = useState(d.book.id);
+  useEffect(() => {
+    if (titlesBookId !== d.book.id || !titlesDirty) {
+      setTitles(d.chapters);
+      setTitlesBase(JSON.stringify(d.chapters));
+      setTitlesBookId(d.book.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [d.chapters, d.book.id]);
   const [msg, setMsg] = useState<string | null>(null);
   const [titlesMsg, setTitlesMsg] = useState<string | null>(null);
   const [edMsg, setEdMsg] = useState<string | null>(null);
+  const [delMsg, setDelMsg] = useState<string | null>(null);
   const [confirmEd, setConfirmEd] = useState<Record<string, string>>({});
   const [confirmBook, setConfirmBook] = useState("");
   const num = (v: string) => (v.trim() === "" ? null : Number(v));
@@ -184,7 +195,7 @@ function OngletLivre({ d, refresh }: { d: Data; refresh: () => void }) {
                   lang="he"
                   style={hebrewStyle}
                   value={c.titleHe}
-                  onChange={(e) => setTitles(titles.map((t, j) => (j === i ? { ...t, titleHe: e.target.value } : t)))}
+                  onChange={(e) => { setTitlesMsg(null); setTitles(titles.map((t, j) => (j === i ? { ...t, titleHe: e.target.value } : t))); }}
                 />
               </label>
             ))}
@@ -195,6 +206,7 @@ function OngletLivre({ d, refresh }: { d: Data; refresh: () => void }) {
                 onClick={async () => {
                   try {
                     await saveTitles({ data: { bookId: d.book.id, titles } });
+                    setTitlesBase(JSON.stringify(titles));
                     setTitlesMsg("Enregistré.");
                     refresh();
                   } catch (e) {
@@ -205,6 +217,7 @@ function OngletLivre({ d, refresh }: { d: Data; refresh: () => void }) {
                 Enregistrer les titres
               </button>
               {titlesMsg && <span className="text-[13px]">{titlesMsg}</span>}
+              {titlesDirty && <span className="text-[13px]">Modifications non enregistrées</span>}
             </div>
           </div>
         )}
@@ -255,11 +268,12 @@ function OngletLivre({ d, refresh }: { d: Data; refresh: () => void }) {
                 refresh();
                 navigate({ to: "/admin/livres" });
               } catch (e) {
-                setMsg(messageErreur(e));
+                setDelMsg(messageErreur(e));
               }
             }}>
               Supprimer le livre
             </button>
+            {delMsg && <span>{delMsg}</span>}
           </div>
         ) : (
           <p className="text-secondary-text text-[13px]">
@@ -277,6 +291,17 @@ function OngletPages({ d, refresh }: { d: Data; refresh: () => void }) {
   const [local, setLocal] = useState<Record<string, boolean>>({});
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [panneau, setPanneau] = useState<"coller" | "audios" | null>(null);
+  const [allMsg, setAllMsg] = useState<string | null>(null);
+  async function toutes(value: boolean) {
+    try {
+      await setAll({ data: { bookId: d.book.id, value } });
+      setAllMsg(null);
+      setLocal({});
+      refresh();
+    } catch (e) {
+      setAllMsg(messageErreur(e));
+    }
+  }
 
   async function toggle(id: string, value: boolean) {
     setLocal((s) => ({ ...s, [id]: value }));
@@ -295,9 +320,10 @@ function OngletPages({ d, refresh }: { d: Data; refresh: () => void }) {
       <div className="flex flex-wrap gap-3">
         <button type="button" className={btnCls} onClick={() => setPanneau(panneau === "coller" ? null : "coller")}>Coller l'hébreu</button>
         <button type="button" className={btnCls} onClick={() => setPanneau(panneau === "audios" ? null : "audios")}>Déposer des audios</button>
-        <span className="ml-auto flex gap-3">
-          <button type="button" className={btnCls} disabled={!d.pages.length} onClick={async () => { await setAll({ data: { bookId: d.book.id, value: true } }); setLocal({}); refresh(); }}>Tout publier</button>
-          <button type="button" className={btnCls} disabled={!d.pages.length} onClick={async () => { await setAll({ data: { bookId: d.book.id, value: false } }); setLocal({}); refresh(); }}>Tout dépublier</button>
+        <span className="ml-auto flex items-center gap-3">
+          <button type="button" className={btnCls} disabled={!d.pages.length} onClick={() => void toutes(true)}>Tout publier</button>
+          <button type="button" className={btnCls} disabled={!d.pages.length} onClick={() => void toutes(false)}>Tout dépublier</button>
+          {allMsg && <span className="text-[13px]">{allMsg}</span>}
         </span>
       </div>
       {panneau === "coller" && (

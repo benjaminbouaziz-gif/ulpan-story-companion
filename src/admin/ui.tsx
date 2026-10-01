@@ -21,6 +21,16 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
+/** Comme Field, sans <label> : pour les contenus qui portent des boutons ou un input fichier. */
+export function FieldGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="block">
+      <span className="label text-secondary-text">{label}</span>
+      <div className="mt-1 block">{children}</div>
+    </div>
+  );
+}
+
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="border-line mt-8 border-t pt-4">
