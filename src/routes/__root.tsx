@@ -42,7 +42,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 let clientLang: Lang | null = null;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  beforeLoad: async ({ location }): Promise<{ lang: Lang }> => {
+  beforeLoad: async ({ location }) => {
     const query = new URLSearchParams(location.searchStr).get("lang") ?? undefined;
     let lang: Lang;
     if (typeof window !== "undefined" && clientLang && !query) {
@@ -104,7 +104,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient, lang } = Route.useRouteContext();
-  const data = Route.useLoaderData() as { tagline: string | null; stripe: string[] } | undefined;
+  const data = Route.useLoaderData();
   const { pathname } = useLocation();
   // L'admin a sa propre enveloppe : pas d'en-tête ni de pied du site public.
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
