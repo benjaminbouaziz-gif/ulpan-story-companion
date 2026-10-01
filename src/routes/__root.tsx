@@ -104,7 +104,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient, lang } = Route.useRouteContext();
-  const data = Route.useLoaderData();
+  const data = Route.useLoaderData() as { tagline: string | null; stripe: string[] } | undefined;
   const { pathname } = useLocation();
   // L'admin a sa propre enveloppe : pas d'en-tête ni de pied du site public.
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
